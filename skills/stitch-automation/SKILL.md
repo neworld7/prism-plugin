@@ -203,3 +203,4 @@ async with websockets.connect(iframe_tab['webSocketDebuggerUrl']) as ws:
 | Stitch prompting best practices | `references/prompting.md` |
 | MCP tool parameters & usage | `references/tools.md` |
 | Design/implement sheet template | `references/sheet-template.md` |
+| CDP iframe helper (Stitch 웹 조작) | `references/cdp-iframe-helper.md` |
