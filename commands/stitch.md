@@ -25,6 +25,31 @@ Parse user arguments to determine the subcommand:
 | `variants` | `/stitch variants '화면명'` | 디자인 변형 생성 |
 | `theme` | `/stitch theme` | 디자인 시스템 생성/적용 |
 | `export` | `/stitch export html\|image` | 화면 HTML/이미지 다운로드 |
+| `analyze` | `/stitch analyze [app]` | 코드+시뮬레이터 분석 → Feature별 상세 프롬프트 → analysis.md 산출 |
+| `design-md` | `/stitch design-md` | DESIGN.md 생성/업데이트. 입력: 프로젝트 컨텍스트. 산출물: `.stitch/DESIGN.md` |
+| `remotion` | `/stitch remotion` | **P2** 워크스루 영상 생성. 입력: Stitch 프로젝트. 산출물: Remotion 프로젝트 + MP4 |
+
+## `/stitch analyze [app]` — 코드+시뮬레이터 분석
+
+코드와 실행 화면을 분석하여 Feature별 상세 프롬프트를 산출한다. `/stitch design`의 입력 자료가 된다.
+
+### 실행 절차
+
+1. **파이프라인 레퍼런스 로드**:
+   ```
+   Read: references/workflows-analyze.md
+   Read: references/official/enhance-prompt/
+   Read: references/prompting.md
+   ```
+
+2. **Phase 1-5 실행** (workflows-analyze.md 참조)
+
+3. **산출물**: `docs/plans/{date}-{app}-analysis.md`
+
+4. **사용자 확인 요청** — 산출물을 승인해야 `/stitch design`에서 사용 가능
+
+`app` 인자 예시: `/stitch analyze readcodex`, `/stitch analyze bookflip`
+인자 없으면 현재 프로젝트 이름 사용.
 
 ## `/stitch design [feature]` — 전체 파이프라인
 
@@ -43,6 +68,8 @@ Parse user arguments to determine the subcommand:
    ---
    ```
 
+1-1. **analysis.md 확인**: `docs/plans/*-analysis.md` 존재 시 Phase 1-3 생략, Phase 4부터 실행
+
 2. **파이프라인 레퍼런스 로드**:
    ```
    Read: references/workflows-design.md
@@ -55,7 +82,10 @@ Parse user arguments to determine the subcommand:
 4. **Phase 3**: 프롬프트 최적화
 
 5. **Phase 4**: Stitch MCP로 디자인 생성
-   - `create_project` → `create_design_system` → `generate_screen_from_text` × N → `apply_design_system`
+   - `create_project`
+   - 디자인 시스템: `create_design_system` 시도 → 실패 시 DESIGN.md 워크플로우 전환
+   - `generate_screen_from_text(... modelId: "GEMINI_3_PRO")` × N
+   - 검증 후 수정은 `edit_screens(... modelId: "GEMINI_3_FLASH")`
 
 6. **Phase 4 완료 후**: 상태 파일의 `phase`를 `verify`로 변경 → 검증 루프 자동 시작
    - Stop hook이 `<promise>DESIGN_VERIFIED</promise>` 감지까지 루프 반복
@@ -92,6 +122,9 @@ Stitch 디자인을 실제 코드에 반영하는 **역방향 파이프라인**.
 4. **Phase 3**: 코드 시트 작성 → `docs/plans/` 에 생성 → **사용자 확인 요청**
 
 5. **Phase 4**: 시트 기반으로 코드 작성/수정
+   - Flutter: 기존 변환 전략
+   - React: `Read references/official/react-components/` → 컴포넌트 변환
+   - React + shadcn: `Read references/official/shadcn-ui/` → shadcn/ui 통합
 
 6. **Phase 4 완료 후**: 상태 파일의 `phase`를 `code_verify`로 변경 → 시각 검증 루프 자동 시작
 
@@ -162,26 +195,50 @@ list_projects(filter: "view=owned") → 프로젝트 목록 표시
 - `'프로젝트명'` → `create_project`
 - `'프롬프트'` (프로젝트 컨텍스트 있을 때) → `generate_screen_from_text`
 
+**v0.2.0**: `deviceType`에 `TABLET`, `AGNOSTIC` 추가. `modelId`로 `GEMINI_3_PRO` 또는 `GEMINI_3_FLASH` 지정 가능.
+
 ## `/stitch edit` — 편집
 
 `edit_screens(projectId, selectedScreenIds: [...], prompt: "수정 프롬프트")`
 
 프로젝트와 화면 선택이 필요하면 `list_projects` → `list_screens`로 안내.
 
+**v0.2.0**: `deviceType`에 `TABLET`, `AGNOSTIC` 추가. `modelId`로 `GEMINI_3_PRO` 또는 `GEMINI_3_FLASH` 지정 가능.
+
 ## `/stitch variants` — 변형
 
 `generate_variants(projectId, selectedScreenIds: [...], prompt, variantOptions)`
 
+**v0.2.0 variantOptions**: `creativeRange` (`REFINE`/`EXPLORE`/`REIMAGINE`), `aspects` (`LAYOUT`/`COLOR_SCHEME`/`IMAGES`/`TEXT_FONT`/`TEXT_CONTENT`), `variantCount` (1-5).
+
 ## `/stitch theme` — 디자인 시스템
 
-1. `list_design_systems(projectId)` → 기존 시스템 확인
-2. 없으면 `create_design_system(...)` / 있으면 `update_design_system(...)`
-3. `apply_design_system(projectId, designSystemId)`
+1. `create_design_system` 호출 시도
+2. **MCP 도구 없을 시**: DESIGN.md 워크플로우로 전환 (`/stitch design-md` 참조)
+   - "MCP 디자인 시스템 도구가 현재 비활성 상태입니다. DESIGN.md 워크플로우로 대체합니다."
+3. MCP 도구 사용 가능 시: 기존 플로우 유지
+   - `list_design_systems(projectId)` → 기존 시스템 확인
+   - 없으면 `create_design_system(...)` / 있으면 `update_design_system(...)`
+   - `apply_design_system(projectId, designSystemId)`
 
 ## `/stitch export` — 내보내기
 
 - `html`: `get_screen` → `web_fetch(downloadUrl.html)` → 파일 저장
 - `image`: `get_screen` → `web_fetch(downloadUrl.screenshot)` → 파일 저장
+
+## `/stitch design-md` — DESIGN.md 생성/업데이트
+
+1. `Read: references/official/design-md/` → 실행 절차 참조
+2. 입력: Stitch 프로젝트 컨텍스트 또는 URL
+3. 산출물: `.stitch/DESIGN.md`
+4. 기존 DESIGN.md가 있으면 업데이트, 없으면 생성
+
+## `/stitch remotion` — 워크스루 영상 생성 (P2)
+
+1. `Read: references/official/remotion/` → 실행 절차 참조
+2. 입력: Stitch 프로젝트
+3. 산출물: Remotion 프로젝트 + MP4
+4. **P2**: 초기 구현에서 제외 가능
 
 ## Execution
 
@@ -194,7 +251,21 @@ If called without arguments (`/stitch`), show the usage table above and ask what
 
 ## Error Handling
 
-- If MCP auth fails: prompt user to run `gcloud auth application-default login`
+- **인증 실패**:
+  1. STITCH_API_KEY 확인 → 없으면
+  2. gcloud ADC 토큰 확인 → 만료/없으면
+  3. 안내: "아래 중 하나를 설정해주세요:
+     - STITCH_API_KEY 환경변수 (Stitch 웹 → 프로필 → Exports에서 발급)
+     - gcloud auth application-default login 실행"
+
+- **Rate limit 대응**:
+  - 파이프라인 시작 시: "총 N개 화면을 PRO로 생성합니다 (PRO 한도: 50/월)" 안내
+  - PRO rate limit 도달: "PRO 한도에 도달했습니다. FLASH로 전환할까요?" 확인
+  - FLASH도 소진: 파이프라인 일시 정지
+
+- **디자인 시스템 도구 누락**:
+  - create_design_system 호출 시 도구 미발견 → DESIGN.md 워크플로우 자동 전환
+  - "MCP 디자인 시스템 도구가 현재 비활성 상태입니다. DESIGN.md 워크플로우로 대체합니다."
+
 - If project/screen not found: show list and ask user to select
 - If generation fails: retry up to 3 times, then report error
-- If rate limit hit: inform user of Stitch limits and pause
