@@ -141,12 +141,56 @@ Use a warm white theme with serif font for book titles.
 iOS-style design with safe area padding.
 ```
 
-## PRO 원샷 품질 전략
+## Vibe Design 전략
 
-PRO 모델(50/월)로 첫 생성에서 최대 품질을 얻으려면:
+Stitch AI의 창의성을 최대화하면서 방향성을 잡는 접근법.
 
-1. **가능한 모든 디테일 포함**: 레이아웃, 컴포넌트, 색상, 폰트, 간격까지 명시
-2. **시뮬레이터 분석 활용**: `/stitch analyze`로 사전 분석 → 현재 앱의 색상/분위기를 프롬프트에 반영
-3. **네거티브 프롬프트**: "No sidebar", "No gradient background" 등 불필요한 요소 명시적 제외
-4. **디바이스 명시**: `MOBILE`, `DESKTOP`, `TABLET`, `AGNOSTIC` 중 정확히 지정
-5. **enhance-prompt 참조**: `references/official/enhance-prompt/` 로직으로 프롬프트 자동 강화
+**핵심 원칙**: 디테일을 지정할수록 AI의 자유도가 줄어든다. UX 목표와 분위기만 전달하고, 시각적 구현은 AI에게 맡겨라.
+
+### ✅ 프롬프트에 포함할 것
+1. **사용자 목표**: 이 화면에서 사용자가 달성하려는 것
+2. **무드/바이브**: 2-3개 형용사로 분위기 전달
+3. **핵심 섹션**: 번호 매긴 고수준 레이아웃 구조
+4. **UI 컴포넌트 이름**: card, nav bar, CTA button (크기/색상 안 줌)
+5. **앱 컨텍스트**: 앱 이름, 카테고리
+6. **네거티브**: "No sidebar", "No gradient" 등 제외 사항
+7. **레퍼런스** (선택): "Similar to Spotify's Now Playing"
+8. **디바이스**: `MOBILE`, `DESKTOP`, `TABLET`, `AGNOSTIC`
+
+### ❌ 프롬프트에 포함하지 않을 것
+- hex 코드 (#FF6B6B 등) → "warm coral accent" 같은 자연어 사용
+- px 값 (12px, 24px 등) → "rounded corners", "generous spacing" 사용
+- 특정 폰트명 (Inter, Poppins 등) → "modern sans-serif", "friendly typography" 사용
+- border-radius, shadow, opacity 수치
+- 정확한 간격/마진/패딩 값
+
+### 프롬프트 분량 가이드
+- **화면당 150-400자** 적정 (5,000자 이상은 컴포넌트 누락 위험)
+- 짧을수록 AI가 더 다양한 해석 가능 → 변형(Variants)에 유리
+- 영어로 작성 (Stitch AI 최적화)
+
+### 좋은 프롬프트 예시
+```
+A clean, welcoming login screen for 'ReadCodex' reading tracker app.
+
+Centered app branding with tagline. Modern email/password form.
+Prominent sign-in button. Social login options (Google, Apple).
+"Forgot password?" and "Sign up" links for alternative flows.
+
+Mood: warm, trustworthy, bookish. Mobile-first, iOS patterns.
+No sidebar. No dark theme.
+```
+
+### 나쁜 프롬프트 예시
+```
+Design a mobile login screen with email field (envelope icon, border-radius 12px,
+#F3F4F6 background), password field (eye toggle, same styling), coral (#FF6B6B)
+sign-in button (full-width, 24px radius, 16px padding), Inter font for body at 14px,
+Poppins Bold for heading at 24px, warm white (#FEFEFE) background...
+```
+→ AI가 지시를 그대로 따르느라 창의적 대안을 탐색하지 않음
+
+### 변형(Variants) 전략
+- 기본 프롬프트를 짧고 열린 형태로 유지하면 `generate_variants`로 다양한 시안 확보 가능
+- 변형 시 `creativeRange: "EXPLORE"` 또는 `"REIMAGINE"` 사용
+- 각 화면에 2-3개 변형 방향 메모 (다크 모드, 일러스트 배경, 미니멀 등)

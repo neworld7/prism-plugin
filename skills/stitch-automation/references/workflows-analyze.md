@@ -122,31 +122,56 @@ Phase 1-5 execution guide for `/stitch analyze [app]`.
 
 **Transition:** Feature 분리 완료 시 Phase 4로 이동.
 
-## Phase 4: Feature별 상세 프롬프트 작성
+## Phase 4: Feature별 UX-First 프롬프트 작성
 
-**Goal:** 각 화면에 대해 PRO 원샷 품질의 Stitch 프롬프트를 작성한다.
+**Goal:** 각 화면에 대해 Stitch AI의 창의성을 최대화하는 UX 중심 프롬프트를 작성한다.
+
+**철학:** Vibe Design — AI에 자유도를 주되, 방향성은 명확히. 구현 디테일(px, hex, 폰트명)은 AI가 결정하도록 맡긴다.
 
 **Steps:**
 
 1. 참조 자료 확인:
+   - `references/prompting.md` — UX-First 프롬프트 원칙
    - `references/official/enhance-prompt/` — Stitch 공식 프롬프트 강화 가이드
-   - `references/prompting.md` — 프롬프트 작성 원칙
 
-2. Feature별로 포함된 각 화면에 대해 상세 프롬프트 작성:
-   - **화면 목적**: 페이지 유형 명시 (login screen, dashboard, list view 등)
-   - **핵심 UI 컴포넌트 목록**: nav bar, cards, buttons, forms, icons 등 구체적 열거
-   - **레이아웃/구조 명세**: 상단/중단/하단 영역 구성, 그리드, 패딩
-   - **스타일/테마 지시**: Phase 2 스크린샷에서 추출한 색상(hex 코드), 분위기, 무드
-   - **동적 콘텐츠 유형**: 리스트 아이템, 카드 콘텐츠, 빈 상태 메시지
-   - **브랜딩**: 앱 이름, 로고 위치, 아이콘 스타일
-   - **디바이스 타입**: Flutter → `MOBILE`, 웹 → `DESKTOP` (태블릿 시 `TABLET`)
+2. Feature별로 포함된 각 화면에 대해 UX-First 프롬프트 작성. 각 프롬프트는 아래 요소를 포함:
 
-3. PRO 원샷 품질 목표:
-   - 한 번의 생성으로 완성도 높은 결과가 나오도록 충분히 상세하게 작성
-   - 모호한 표현 금지 — 구체적인 색상값, 크기, 컴포넌트명 사용
-   - 스크린샷 분석 결과를 프롬프트에 반영하여 현재 앱 분위기와 일치시킴
+   - **화면 목적** (1줄): 사용자가 이 화면에서 달성하려는 것
+     - 예: "기존 사용자가 빠르고 신뢰감 있게 앱에 접근"
+   - **무드/바이브** (2-3 형용사): 화면의 분위기와 감정
+     - 예: "warm, inviting, trustworthy" / "bold, energetic, modern"
+   - **핵심 섹션** (번호 매긴 고수준 레이아웃):
+     - 상단/중단/하단 영역을 자연어로 설명 (px, 패딩 값 없이)
+     - 예: "1. Top: App branding  2. Center: Login form  3. Bottom: Alternative actions"
+   - **UI 컴포넌트** (이름만 — 크기/색상 지정 안 함):
+     - card, nav bar, CTA button, form field, icon 등
+   - **사용자 흐름**: 이 화면에서 사용자가 하는 핵심 행동
+     - 예: "이메일/비밀번호 입력 → 로그인 → 홈으로 이동"
+   - **앱 컨텍스트**: 앱 이름, 카테고리 (reading tracker, fitness, etc.)
+   - **플랫폼**: Mobile / Desktop / Tablet
+   - **레퍼런스** (선택): "Similar to [known app]'s [screen]"
+     - 예: "Similar to Goodreads' library view" / "Inspired by Spotify's Now Playing"
+   - **제외 사항** (선택): 원하지 않는 요소 명시적 배제
+     - 예: "No sidebar navigation" / "No gradient background"
 
-**Output:** 화면별 최적화된 Stitch 프롬프트 초안.
+3. **금지 사항** — 프롬프트에 절대 포함하지 않을 것:
+   - ❌ hex 코드 (#FF6B6B, #FEFEFE 등)
+   - ❌ px 값 (12px, 24px, 16px radius 등)
+   - ❌ 특정 폰트명 (Inter, Poppins, Roboto 등)
+   - ❌ border-radius, shadow, opacity 값
+   - ❌ 정확한 간격/마진/패딩 수치
+
+4. 프롬프트 품질 기준:
+   - **분량**: 화면당 150-400자 (과도한 디테일은 AI 창의성 저하)
+   - **언어**: 영어 (Stitch AI 최적화)
+   - **구조**: 자연스러운 문단 또는 짧은 bullet 형태
+   - **복사 독립성**: 각 프롬프트가 다른 프롬프트 없이 단독으로 Stitch에 붙여넣기 가능
+
+5. 각 화면에 **변형 아이디어** 2-3개 추가:
+   - 나중에 `generate_variants`로 다양한 시안을 뽑기 위한 방향 메모
+   - 예: "다크 모드 버전", "일러스트 배경", "미니멀 원페이지"
+
+**Output:** 화면별 UX-First 프롬프트 + 변형 아이디어.
 
 **Transition:** 전체 화면 프롬프트 작성 완료 시 Phase 5로 이동.
 
