@@ -114,3 +114,78 @@ Use this template for `/stitch implement` pipeline. Save to `docs/plans/{date}-{
 | LOW | 1 |
 | total_diffs | 1 |
 ```
+
+---
+
+## Analysis Sheet Template (Code+Simulator→Prompts)
+
+Use this template for `/stitch analyze` pipeline. Save to `docs/plans/{date}-{app}-analysis.md`.
+
+```markdown
+# {App} Analysis
+
+| 항목 | 값 |
+|------|------|
+| App | {app name} |
+| Date | {YYYY-MM-DD} |
+| Stack | Flutter / React / Next.js |
+| Device | Mobile / Desktop / Tablet |
+| Total Features | N |
+| Total Screens | N |
+
+## Feature 요약
+
+| # | Feature | 화면 수 | 핵심 화면 |
+|---|---------|---------|-----------|
+| 1 | 인증 | 3 | 로그인, 회원가입, 비밀번호 재설정 |
+| 2 | 홈 | 2 | 대시보드, 알림 |
+| ... | ... | ... | ... |
+
+## Feature 1: {feature name}
+
+### 화면 목록
+
+| # | 화면 | 코드 파일 | 현재 상태 | 스크린샷 분석 요약 |
+|---|------|-----------|-----------|-------------------|
+| 1 | 로그인 | lib/.../login_screen.dart | 기본 폼 | 단순 이메일/비밀번호, 브랜딩 없음 |
+
+### 인터랙션
+
+- [ ] 이메일/비밀번호 입력
+- [ ] 로그인 버튼 → 홈으로 이동
+- [ ] "비밀번호 찾기" 링크
+- [ ] 소셜 로그인 버튼
+
+### 상태별 화면
+
+| 상태 | 설명 |
+|------|------|
+| 로딩 | 로그인 처리 중 스피너 |
+| 에러 | 잘못된 자격 증명 메시지 |
+
+### Stitch 프롬프트
+
+#### 로그인 화면
+```
+Design a mobile login screen for a reading tracker app called 'ReadCodex'.
+Center: App logo with tagline "Track your reading journey".
+Form: Email field with envelope icon, password field with eye toggle,
+rounded input borders (12px), subtle shadow on focus.
+Below form: "Forgot password?" link in muted text.
+Primary CTA: "Sign In" button, full-width, coral (#FF6B6B) background,
+white text, rounded (24px).
+Bottom: "Don't have an account? Sign up" with link highlight.
+Social login section: Google and Apple sign-in buttons with brand icons,
+outlined style.
+Use warm white (#FEFEFE) background, serif font for logo,
+sans-serif (Inter) for body. iOS-style with safe area padding.
+```
+
+#### 회원가입 화면
+```
+...
+```
+
+## Feature 2: {feature name}
+...
+```
