@@ -56,6 +56,7 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
 **Steps:**
 
 1. Read `references/prompting.md`
+1-1. Read `references/official/enhance-prompt/` → 공식 프롬프트 최적화 로직 참조
 2. For each screen prompt:
    - Add UI/UX keywords (modern, clean, minimal, etc.)
    - Add atmosphere/vibe adjectives
@@ -71,6 +72,10 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
 
 **Goal:** Create Stitch project and generate all screens.
 
+**analysis.md 통합:**
+- `docs/plans/*-analysis.md` 존재 시 → 해당 파일의 Feature별 프롬프트를 직접 사용 (Phase 1-3 산출물 대체)
+- 없으면 → Phase 2 design sheet의 프롬프트 사용 (하위 호환)
+
 **Steps:**
 
 1. Create project:
@@ -79,13 +84,15 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
    → Save projectId to state file
    ```
 
-2. Create design system (optional but recommended):
+2. Create design system (DESIGN.md 폴백):
    ```
-   create_design_system(projectId, theme: {
-     appearance: "LIGHT" or "DARK",
-     colors, fonts, etc.
-   })
-   → Save designSystemId
+   Try: create_design_system(projectId, theme: {...})
+   If tool_not_found error:
+     → Read references/official/design-md/
+     → 프로젝트에 .stitch/DESIGN.md 생성
+     → "MCP 디자인 시스템 도구가 현재 비활성입니다. DESIGN.md로 대체합니다."
+   If success:
+     → Save designSystemId (기존 플로우)
    ```
 
 3. Generate screens (one by one):
@@ -94,7 +101,8 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
      generate_screen_from_text(
        projectId: "{projectId}",
        prompt: "{optimized prompt}",
-       deviceType: "MOBILE" or "DESKTOP"
+       deviceType: "MOBILE" or "DESKTOP" or "TABLET" or "AGNOSTIC",
+       modelId: "GEMINI_3_PRO"
      )
      → Record screenId in design sheet
      → Mark screen as [DONE]
@@ -112,11 +120,16 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
    generate_variants(projectId, selectedScreenIds, prompt, variantOptions)
    ```
 
-6. Update state file:
+6. 멀티페이지 일괄 생성 옵션:
+   - 화면 수가 5개 이상일 때 `references/official/stitch-loop/` 패턴 참조 가능
+   - 단일 프롬프트로 여러 화면을 일괄 생성하여 크레딧 효율화
+
+7. Update state file:
    ```yaml
    phase: verify
    project_id: "{projectId}"
    ```
+
 
 **Transition:** All screens generated → Phase 5 (verification loop starts).
 
@@ -155,6 +168,10 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
 ## Phase 6: Fix
 
 **Goal:** Fix gaps found in verification.
+
+**모델:** 수정/재생성에는 `GEMINI_3_FLASH` 사용 (크레딧 절약)
+- edit_screens(..., modelId: "GEMINI_3_FLASH")
+- generate_screen_from_text(..., modelId: "GEMINI_3_FLASH")
 
 **Steps:**
 
