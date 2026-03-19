@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Google Stitch AI design tool automation plugins",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "plugins": [
     {
       "name": "stitch-automation",
       "source": "./",
-      "description": "Google Stitch AI design tool automation — design pipeline, code pipeline, screen CRUD, design systems",
-      "version": "0.1.0",
+      "description": "Google Stitch AI design tool automation — analyze, design pipeline, code pipeline, screen CRUD, design systems, variants",
+      "version": "0.2.0",
       "author": {
         "name": "Taekwan Kim"
       },
