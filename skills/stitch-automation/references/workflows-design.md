@@ -95,18 +95,48 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
      → Save designSystemId (기존 플로우)
    ```
 
-3. Generate screens (one by one):
+3. **Generate screens (Feature 단위 일괄 생성 — 기본 전략)**:
+
+   크레딧 효율을 위해 화면당 1회 호출이 아닌, **Feature 단위로 프롬프트를 묶어 1회 호출**한다.
+
+   **일괄 프롬프트 결합 방법:**
    ```
-   For each screen in design sheet:
-     generate_screen_from_text(
-       projectId: "{projectId}",
-       prompt: "{optimized prompt}",
-       deviceType: "MOBILE" or "DESKTOP" or "TABLET" or "AGNOSTIC",
-       modelId: "GEMINI_3_PRO"
-     )
-     → Record screenId in design sheet
-     → Mark screen as [DONE]
+   analysis.md (또는 design sheet)에서 같은 Feature의 화면 프롬프트들을 하나로 결합:
+
+   ---
+   Design a multi-screen {deviceType} app for '{App Name}' ({app category}).
+
+   Screen 1 — {screen name}:
+   {screen prompt from analysis.md}
+
+   Screen 2 — {screen name}:
+   {screen prompt from analysis.md}
+
+   Screen 3 — {screen name}:
+   {screen prompt from analysis.md}
+
+   All screens share: {common mood/vibe}, {platform patterns}.
+   ---
    ```
+
+   **호출:**
+   ```
+   generate_screen_from_text(
+     projectId: "{projectId}",
+     prompt: "{combined multi-screen prompt}",
+     deviceType: "MOBILE" or "DESKTOP" or "TABLET" or "AGNOSTIC",
+     modelId: "GEMINI_3_PRO"
+   )
+   → 생성된 복수 화면의 screenId를 list_screens로 확인
+   → 각 화면을 design sheet에 매핑하여 [DONE] 처리
+   ```
+
+   **배치 분할 기준:**
+   - 결합 프롬프트가 **5,000자 초과** 시 → 2개 이상 배치로 분할
+   - Feature 내 화면이 **8개 초과** 시 → 4개씩 분할
+   - 분할 시에도 "All screens share:" 공통 컨텍스트는 각 배치에 포함
+
+   **크레딧 효과:** Feature당 1 크레딧 (기존: 화면당 1 크레딧)
 
    **Important:** Each generation can take 1-3 minutes. Do NOT retry on timeout.
 
@@ -120,11 +150,7 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
    generate_variants(projectId, selectedScreenIds, prompt, variantOptions)
    ```
 
-6. 멀티페이지 일괄 생성 옵션:
-   - 화면 수가 5개 이상일 때 `references/official/stitch-loop/` 패턴 참조 가능
-   - 단일 프롬프트로 여러 화면을 일괄 생성하여 크레딧 효율화
-
-7. Update state file:
+6. Update state file:
    ```yaml
    phase: verify
    project_id: "{projectId}"
