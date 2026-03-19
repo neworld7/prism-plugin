@@ -125,7 +125,7 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
      projectId: "{projectId}",
      prompt: "{combined multi-screen prompt}",
      deviceType: "MOBILE" or "DESKTOP" or "TABLET" or "AGNOSTIC",
-     modelId: "GEMINI_3_PRO"
+     modelId: "GEMINI_3_1_PRO"
    )
    → 생성된 복수 화면의 screenId를 list_screens로 확인
    → 각 화면을 design sheet에 매핑하여 [DONE] 처리
@@ -195,9 +195,9 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
 
 **Goal:** Fix gaps found in verification.
 
-**모델:** 수정/재생성에는 `GEMINI_3_FLASH` 사용 (크레딧 절약)
-- edit_screens(..., modelId: "GEMINI_3_FLASH")
-- generate_screen_from_text(..., modelId: "GEMINI_3_FLASH")
+**모델:** 수정/재생성에는 `GEMINI_3_1_FLASH` 사용 (크레딧 절약)
+- edit_screens(..., modelId: "GEMINI_3_1_FLASH")
+- generate_screen_from_text(..., modelId: "GEMINI_3_1_FLASH")
 
 **Steps:**
 

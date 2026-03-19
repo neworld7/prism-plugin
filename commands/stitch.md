@@ -84,8 +84,8 @@ Parse user arguments to determine the subcommand:
 5. **Phase 4**: Stitch MCP로 디자인 생성
    - `create_project`
    - 디자인 시스템: `create_design_system` 시도 → 실패 시 DESIGN.md 워크플로우 전환
-   - `generate_screen_from_text(... modelId: "GEMINI_3_PRO")` × N
-   - 검증 후 수정은 `edit_screens(... modelId: "GEMINI_3_FLASH")`
+   - `generate_screen_from_text(... modelId: "GEMINI_3_1_PRO")` × N
+   - 검증 후 수정은 `edit_screens(... modelId: "GEMINI_3_1_FLASH")`
 
 6. **Phase 4 완료 후**: 상태 파일의 `phase`를 `verify`로 변경 → 검증 루프 자동 시작
    - Stop hook이 `<promise>DESIGN_VERIFIED</promise>` 감지까지 루프 반복
@@ -195,7 +195,7 @@ list_projects(filter: "view=owned") → 프로젝트 목록 표시
 - `'프로젝트명'` → `create_project`
 - `'프롬프트'` (프로젝트 컨텍스트 있을 때) → `generate_screen_from_text`
 
-**v0.2.0**: `deviceType`에 `TABLET`, `AGNOSTIC` 추가. `modelId`로 `GEMINI_3_PRO` 또는 `GEMINI_3_FLASH` 지정 가능.
+**v0.2.0**: `deviceType`에 `TABLET`, `AGNOSTIC` 추가. `modelId`로 `GEMINI_3_1_PRO` 또는 `GEMINI_3_1_FLASH` 지정 가능.
 
 ## `/stitch edit` — 편집
 
@@ -203,7 +203,7 @@ list_projects(filter: "view=owned") → 프로젝트 목록 표시
 
 프로젝트와 화면 선택이 필요하면 `list_projects` → `list_screens`로 안내.
 
-**v0.2.0**: `deviceType`에 `TABLET`, `AGNOSTIC` 추가. `modelId`로 `GEMINI_3_PRO` 또는 `GEMINI_3_FLASH` 지정 가능.
+**v0.2.0**: `deviceType`에 `TABLET`, `AGNOSTIC` 추가. `modelId`로 `GEMINI_3_1_PRO` 또는 `GEMINI_3_1_FLASH` 지정 가능.
 
 ## `/stitch variants` — 변형
 
