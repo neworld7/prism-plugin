@@ -25,7 +25,10 @@ Phase 1-7 execution guide for `/stitch implement [feature]`.
 3. Download screen data:
    ```
    For each screen:
-     get_screen(projectId, screenId) → metadata + downloadUrls
+     get_screen(name: "projects/{projectId}/screens/{screenId}",
+                projectId: "{projectId}",    # deprecated, 하위호환
+                screenId: "{screenId}")       # deprecated, 하위호환
+     → metadata + downloadUrls
      web_fetch(downloadUrl.html) → save to /tmp/stitch-{screenName}.html
      web_fetch(downloadUrl.screenshot) → save to /tmp/stitch-{screenName}.png
      sips -Z 1200 /tmp/stitch-{screenName}.png
@@ -121,6 +124,9 @@ For each screen (ordered by dependency):
 
 2. **React/Next.js:**
    ```
+   Read references/official/react-components/ → 컴포넌트 변환 전략
+   Read references/official/shadcn-ui/ → shadcn/ui 통합 가이드 (선택)
+
    Create: src/components/{ScreenName}.tsx (or app/{route}/page.tsx)
    - Copy relevant Stitch HTML structure
    - Split into sub-components
