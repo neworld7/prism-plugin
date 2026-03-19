@@ -1,5 +1,8 @@
 # Stitch Prompting Guide
 
+> **공식 참조**: `references/official/enhance-prompt/`에 Google 공식 프롬프트 최적화 스킬이 포크되어 있습니다.
+> 이 문서는 Stitch 프롬프팅 기본 가이드이며, enhance-prompt 스킬과 함께 사용하면 더 나은 결과를 얻을 수 있습니다.
+
 Best practices for crafting effective prompts for Stitch AI design generation.
 Based on official documentation at stitch.withgoogle.com/docs/learn/prompting/.
 
@@ -137,3 +140,13 @@ Bottom: Navigation bar with Home, Library, Stats, Profile tabs.
 Use a warm white theme with serif font for book titles.
 iOS-style design with safe area padding.
 ```
+
+## PRO 원샷 품질 전략
+
+PRO 모델(50/월)로 첫 생성에서 최대 품질을 얻으려면:
+
+1. **가능한 모든 디테일 포함**: 레이아웃, 컴포넌트, 색상, 폰트, 간격까지 명시
+2. **시뮬레이터 분석 활용**: `/stitch analyze`로 사전 분석 → 현재 앱의 색상/분위기를 프롬프트에 반영
+3. **네거티브 프롬프트**: "No sidebar", "No gradient background" 등 불필요한 요소 명시적 제외
+4. **디바이스 명시**: `MOBILE`, `DESKTOP`, `TABLET`, `AGNOSTIC` 중 정확히 지정
+5. **enhance-prompt 참조**: `references/official/enhance-prompt/` 로직으로 프롬프트 자동 강화
