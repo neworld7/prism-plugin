@@ -55,16 +55,19 @@ If not found, the `.mcp.json` in this plugin should auto-register the Stitch MCP
 | 1 | 코드 분석 | Glob/Grep으로 화면·인터랙션·상태 전수 조사 |
 | 2 | 시뮬레이터 분석 | 스크린샷 캡처 + 시각 분석 |
 | 3 | Feature 분리 | 코드+시각 분석 종합하여 Feature 단위 분리 |
-| 4 | 프롬프트 작성 | Feature별 상세 Stitch 프롬프트 (PRO 원샷 품질) |
+| 4 | 프롬프트 작성 | Feature별 UX-First Vibe Design 프롬프트 (hex/px/폰트명 금지) |
 | 5 | 산출물 | docs/plans/{date}-{app}-analysis.md 작성 |
 
 ### Pipeline 실행 시 반드시 참조
 
 ```
 Read: references/workflows-analyze.md     ← Phase별 실행 절차 상세
-Read: references/official/enhance-prompt/  ← 프롬프트 최적화
-Read: references/prompting.md             ← Stitch 프롬프팅 가이드
+Read: references/prompting.md             ← UX-First Vibe Design 프롬프트 원칙 (최우선)
 ```
+
+> **⚠️ 중요**: analyze 프롬프트에 hex 코드, px 값, 특정 폰트명을 포함하지 않는다.
+> 색상은 자연어("warm coral"), 크기는 형용사("rounded", "generous spacing")로 표현.
+> `enhance-prompt/` 레퍼런스의 hex/px 예시는 analyze에서 따르지 않는다.
 
 ## Design Pipeline (코드→디자인 워크플로우)
 
