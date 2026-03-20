@@ -1,6 +1,6 @@
 {
   "name": "stitch-automation",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Google Stitch AI design tool automation plugin for Claude Code",
   "author": {
     "name": "Taekwan Kim"
