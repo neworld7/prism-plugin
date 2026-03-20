@@ -195,9 +195,9 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
 
 **Goal:** Fix gaps found in verification.
 
-**모델:** 수정/재생성에는 `GEMINI_3_1_FLASH` 사용 (크레딧 절약)
-- edit_screens(..., modelId: "GEMINI_3_1_FLASH")
-- generate_screen_from_text(..., modelId: "GEMINI_3_1_FLASH")
+**모델:** 수정/재생성에도 `GEMINI_3_1_PRO` 기본 사용 (일일 400 크레딧 충분)
+- edit_screens(..., modelId: "GEMINI_3_1_PRO")
+- generate_screen_from_text(..., modelId: "GEMINI_3_1_PRO")
 
 **Steps:**
 

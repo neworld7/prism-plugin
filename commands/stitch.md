@@ -85,7 +85,7 @@ Parse user arguments to determine the subcommand:
    - `create_project`
    - 디자인 시스템: `create_design_system` 시도 → 실패 시 DESIGN.md 워크플로우 전환
    - `generate_screen_from_text(... modelId: "GEMINI_3_1_PRO")` × N
-   - 검증 후 수정은 `edit_screens(... modelId: "GEMINI_3_1_FLASH")`
+   - 검증 후 수정도 `edit_screens(... modelId: "GEMINI_3_1_PRO")`
 
 6. **Phase 4 완료 후**: 상태 파일의 `phase`를 `verify`로 변경 → 검증 루프 자동 시작
    - Stop hook이 `<promise>DESIGN_VERIFIED</promise>` 감지까지 루프 반복
