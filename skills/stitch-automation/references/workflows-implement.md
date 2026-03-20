@@ -127,12 +127,39 @@ Phase 1-7 execution guide for `/stitch implement [feature]`.
 
 For each screen (ordered by dependency):
 
+0. **Stitch HTML 속성 추출 (필수, 코드 작성 전 반드시 실행):**
+   ```
+   web_fetch(downloadUrl.html) → Stitch HTML 다운로드
+   HTML 내 CSS/Tailwind 클래스에서 아래 속성을 정확히 추출:
+
+   레이아웃: flex-direction, justify-content, align-items, gap
+   크기: width, height, min-height, max-width
+   간격: padding, margin (px 단위 정확히)
+   보더: border-width, border-color, border-radius
+   타이포그래피: font-size, font-weight, line-height, letter-spacing
+   버튼: height, padding-x, padding-y, border-radius, font-size
+   카드/컨테이너: padding, border-radius, box-shadow, gap
+   아이콘: width, height (size)
+
+   → 추출 결과를 implement sheet에 화면별로 기록
+   → 이 값들이 코드 구현의 기준 (대략적 추정 금지)
+   ```
+
 1. **Flutter:**
    ```
    Create: lib/features/{feature}/presentation/{screen_name}_screen.dart
    - Import material.dart and project theme
-   - Build widget tree matching Stitch HTML structure
-   - Apply theme colors from design system
+   - Build widget tree matching Stitch HTML structure EXACTLY:
+     · 추출한 px 값을 Flutter 단위로 1:1 매핑
+     · padding: 16px → EdgeInsets.all(16)
+     · border-radius: 12px → BorderRadius.circular(12)
+     · font-size: 14px → fontSize: 14
+     · height: 48px → SizedBox(height: 48) or minimumSize: Size.fromHeight(48)
+     · gap: 8px → SizedBox(height/width: 8)
+     · border: 1px solid → Border.all(width: 1, color: ...)
+     · max-width: 400px → ConstrainedBox(maxWidth: 400)
+   - Apply EXACT colors from Stitch CSS (hex → Color)
+   - 버튼 스타일: padding, height, border-radius, font-size 모두 Stitch와 동일
    - Add navigation connections
    ```
 
@@ -141,7 +168,10 @@ For each screen (ordered by dependency):
    Read references/official/react-components/ → 컴포넌트 변환 전략
 
    Create: src/components/{ScreenName}.tsx (or app/{route}/page.tsx)
-   - Copy relevant Stitch HTML structure
+   - Stitch HTML의 Tailwind 클래스를 그대로 보존
+     (p-4, rounded-xl, h-12, gap-3, border, text-sm 등)
+   - 인라인 style → Tailwind 등가 클래스 변환 또는 그대로 유지
+   - 버튼/카드/입력 필드의 크기·패딩·보더 클래스 정확히 복사
    - Split into sub-components
    - Add interactivity (onClick, useState)
    - Connect to routing
@@ -195,9 +225,13 @@ For each screen (ordered by dependency):
 4. Classify diffs:
    ```
    HIGH: Missing elements (buttons, sections, images)
-   MED: Color mismatch, layout structure differences
-   LOW: Spacing, font size, minor alignment
+   HIGH: Layout structure mismatch (flex direction, container nesting 다름)
+   HIGH: Button/card/input size mismatch (height, width, padding이 Stitch와 다름)
+   MED: Border-radius, border-width, font-size, font-weight 차이
+   MED: Spacing/gap mismatch (padding, margin, gap이 4px+ 차이)
+   LOW: 1-2px 미세 차이, 색상 톤 미세 차이
    ```
+   **⚠️ 레이아웃·크기 차이는 HIGH — 색상만 맞고 레이아웃이 다르면 미완성.**
 
 5. Record diffs in state file and implement sheet.
 

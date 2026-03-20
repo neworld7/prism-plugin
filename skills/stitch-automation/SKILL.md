@@ -169,8 +169,9 @@ Stop hook이 `<promise>CODE_VERIFIED</promise>` 감지까지 루프를 반복한
 2. **구현 코드 스크린샷**:
    - Flutter: `xcrun simctl io booted screenshot /tmp/{screen}.png` + `sips -Z 1200`
    - React/Next.js: chrome-viewer `cv_screenshot` 또는 Playwright `browser_take_screenshot`
-3. **비교**: 두 이미지를 나란히 Read → 레이아웃/색상/컴포넌트/콘텐츠 차이 분석
-4. **차이 리포트**: HIGH(누락)/MED(구조)/LOW(폴리싱) 분류
+3. **비교**: 두 이미지를 나란히 Read → 레이아웃/크기/간격/보더/색상/타이포 전수 비교
+4. **차이 리포트**: HIGH(누락, 레이아웃·크기 불일치)/MED(보더·타이포·간격 4px+)/LOW(1-2px 미세) 분류
+   - **⚠️ 색상만 맞고 레이아웃·버튼크기·패딩이 다르면 HIGH — 미완성 판정**
 5. **코드 수정 후 재검증**: diffs == 0이면 `<promise>CODE_VERIFIED</promise>`
 
 ### 완료 조건
