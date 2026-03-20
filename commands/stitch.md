@@ -14,8 +14,8 @@ Parse user arguments to determine the subcommand:
 | Subcommand | Usage | Action |
 |------------|-------|--------|
 | `analyze` | `/stitch analyze [app]` | 코드+시뮬레이터 분석 → Feature별 UX-First 프롬프트 → analysis.md 산출 |
-| `design` | `/stitch design [feature]` | **코드→디자인 파이프라인** (Phase 1-7, 일괄 생성 + 검증 루프) |
-| `implement` | `/stitch implement [feature]` | **디자인→코드 파이프라인** (Phase 1-7, 시각 검증 루프) |
+| `design` | `/stitch design <feature\|all>` | **코드→디자인 파이프라인** (Phase 1-7, 일괄 생성 + 검증 루프) |
+| `implement` | `/stitch implement <feature\|all>` | **디자인→코드 파이프라인** (Phase 1-7, 시각 검증 루프) |
 
 > MCP 직접 호출 (`list_projects`, `create_project`, `edit_screens`, `generate_variants` 등)은
 > Stitch MCP 도구를 직접 사용하세요. 이 커맨드는 파이프라인 자동화에 집중합니다.
@@ -51,10 +51,13 @@ Parse user arguments to determine the subcommand:
    ```yaml
    ---
    phase: analysis
-   feature: {feature 또는 "all"}
+   feature: {feature}
    session_id: {현재 세션 ID}
    iteration: 0
    max_iterations: 5
+   all_features: {all일 때: feature1|feature2|...}
+   current_index: {all일 때: 0}
+   completed_features: {all일 때: 빈 값}
    ---
    ```
 
@@ -79,8 +82,9 @@ Parse user arguments to determine the subcommand:
 6. **Phase 4 완료 후**: 상태 파일의 `phase`를 `verify`로 변경 → 검증 루프 자동 시작
    - Stop hook이 `<promise>DESIGN_VERIFIED</promise>` 감지까지 루프 반복
 
-`feature` 인자 예시: `/stitch design library`, `/stitch design dashboard`
-인자 없으면 전체 앱 대상 (feature 선택 프롬프트 표시).
+`feature` 인자 예시: `/stitch design library`, `/stitch design dashboard`, `/stitch design all`
+`all` 입력 시 전체 Feature를 순차 처리 (Feature 1 → 검증 → Feature 2 → ...).
+인자 없으면 feature 목록 표시 후 선택 요청.
 
 ## `/stitch implement [feature]` — 디자인→코드 파이프라인
 
@@ -92,11 +96,14 @@ Stitch 디자인을 실제 코드에 반영하는 **역방향 파이프라인**.
    ```yaml
    ---
    phase: collect
-   feature: {feature 또는 "all"}
+   feature: {feature}
    session_id: {현재 세션 ID}
    iteration: 0
    max_iterations: 5
    target_stack: flutter
+   all_features: {all일 때: feature1|feature2|...}
+   current_index: {all일 때: 0}
+   completed_features: {all일 때: 빈 값}
    ---
    ```
 
@@ -114,6 +121,9 @@ Stitch 디자인을 실제 코드에 반영하는 **역방향 파이프라인**.
 
 6. **Phase 4 완료 후**: 상태 파일의 `phase`를 `code_verify`로 변경 → 시각 검증 루프 자동 시작
 
+`feature` 인자 예시: `/stitch implement library`, `/stitch implement all`
+`all` 입력 시 전체 Feature를 순차 처리. 인자 없으면 feature 목록 표시 후 선택 요청.
+
 ## Execution
 
 1. Activate the `stitch-automation` skill — it contains all MCP tool patterns, workflows, and safety patterns.
@@ -122,6 +132,7 @@ Stitch 디자인을 실제 코드에 반영하는 **역방향 파이프라인**.
 ## No Arguments
 
 If called without arguments (`/stitch`), show the usage table above and ask what the user wants to do.
+`/stitch design` 또는 `/stitch implement` (feature 인자 없이) 실행 시, analysis.md의 Feature 목록을 보여주고 선택을 요청한다. 자동으로 `all`을 적용하지 않는다.
 
 ## Error Handling
 

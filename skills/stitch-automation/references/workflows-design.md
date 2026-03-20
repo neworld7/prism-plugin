@@ -67,6 +67,20 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
 
 **Transition:** All prompts optimized → Phase 4.
 
+## Feature Routing (all 모드 전용)
+
+> 단일 Feature 모드에서는 이 단계를 건너뛴다.
+
+**Goal:** all 모드에서 현재 Feature의 프롬프트만 선별하여 로드.
+
+**Steps:**
+
+1. Read `.claude/stitch-design-pipeline.local.md` → `feature` 필드 확인
+2. analysis.md (또는 design sheet)에서 해당 Feature 프롬프트만 추출
+3. 다른 Feature의 프롬프트는 무시 (이미 완료됨 or 아직 차례 아님)
+
+**Transition:** 해당 Feature 프롬프트 준비 → Phase 4.
+
 ## Phase 4: Stitch Design Generation
 
 **Goal:** Create Stitch project and generate all screens.
@@ -208,12 +222,15 @@ For each gap:
 
 ## Phase 7: Completion
 
-**Goal:** Mark pipeline as complete.
+**Goal:** Mark current Feature's pipeline as complete.
 
 **Steps:**
 
 1. Output: `<promise>DESIGN_VERIFIED</promise>`
 2. Update design sheet with final results (all `[DONE]`)
-3. State file is auto-cleaned by Stop hook
+3. Stop hook이 promise를 감지하고:
+   - **단일 Feature 모드**: 상태 파일 삭제 → allow (세션 종료)
+   - **All 모드 + 다음 Feature 있음**: 상태 파일 전환 → block (다음 Feature 생성 지시)
+   - **All 모드 + 마지막 Feature**: 상태 파일 삭제 → allow (세션 종료)
 
-**The Stop hook will detect the promise and allow the session to end.**
+**All 모드에서 다음 Feature로 전환되면 Feature Routing → Phase 4로 돌아간다.**

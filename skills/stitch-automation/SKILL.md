@@ -102,6 +102,23 @@ Phase 5-7 검증 루프는 **Stop hook**이 자동 관리한다.
 상태 파일 `.claude/stitch-design-pipeline.local.md`에 `phase: verify`가 설정되면
 Stop hook이 `<promise>DESIGN_VERIFIED</promise>` 감지까지 루프를 반복한다.
 
+### All 모드: Feature-by-Feature 순차 처리
+
+`/stitch design all` 실행 시 모든 Feature를 한꺼번에 처리하지 않고, **Feature별로 순차 처리**한다:
+
+1. Feature 1 디자인 생성 → 검증 루프 → `DESIGN_VERIFIED`
+2. Stop hook이 다음 Feature로 상태 파일 전환 (`phase: generation`, `feature: next`)
+3. Feature 2 디자인 생성 → 검증 루프 → `DESIGN_VERIFIED`
+4. ... 반복 ...
+5. 마지막 Feature 검증 완료 → 상태 파일 삭제 → allow
+
+상태 파일 추가 필드:
+- `all_features`: 전체 Feature 목록 (파이프 `|` 구분)
+- `current_index`: 현재 Feature 인덱스 (0부터)
+- `completed_features`: 완료된 Feature 목록 (파이프 `|` 구분)
+
+단일 Feature 모드 (`all_features` 없음)는 기존 동작 100% 호환.
+
 ### 완료 조건
 - [ ] 코드의 모든 화면이 Stitch 디자인에 1:1 매핑
 - [ ] 모든 버튼/인터랙션이 디자인에 반영
@@ -133,6 +150,18 @@ Read: references/tools.md                 ← MCP 도구 파라미터 참조
 Phase 5-7 검증 루프는 **Stop hook**이 자동 관리한다.
 상태 파일 `.claude/stitch-implement-pipeline.local.md`에 `phase: code_verify`가 설정되면
 Stop hook이 `<promise>CODE_VERIFIED</promise>` 감지까지 루프를 반복한다.
+
+### All 모드: Feature-by-Feature 순차 처리
+
+`/stitch implement all` 실행 시 모든 Feature를 순차 처리한다:
+
+1. Feature 1 코드 구현 → 시각 검증 루프 → `CODE_VERIFIED`
+2. Stop hook이 다음 Feature로 상태 파일 전환 (`phase: collect`, `feature: next`)
+3. Feature 2 코드 구현 → 시각 검증 루프 → `CODE_VERIFIED`
+4. ... 반복 ...
+5. 마지막 Feature 검증 완료 → 상태 파일 삭제 → allow → 빌드/테스트
+
+빌드/테스트는 모든 Feature 완료 후 한 번만 실행한다.
 
 ### 시각 검증 핵심
 

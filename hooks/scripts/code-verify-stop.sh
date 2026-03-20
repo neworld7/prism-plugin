@@ -53,8 +53,53 @@ fi
 
 # --- Check for completion promise in transcript ---
 if echo "$INPUT" | grep -q "<promise>${COMPLETION_PROMISE}</promise>" 2>/dev/null; then
-  rm -f "$STATE_FILE"
-  echo '{"decision": "allow"}'
+  ALL_FEATURES=$(get_field "all_features")
+  if [ -z "$ALL_FEATURES" ]; then
+    rm -f "$STATE_FILE"
+    echo '{"decision": "allow"}'
+    exit 0
+  fi
+
+  # --- All mode: advance to next feature ---
+  CURRENT_INDEX=$(get_field "current_index")
+  CURRENT_INDEX="${CURRENT_INDEX:-0}"
+  CURRENT_FEATURE=$(get_field "feature")
+  COMPLETED=$(get_field "completed_features")
+  TOTAL=$(echo "$ALL_FEATURES" | awk -F'|' '{print NF}')
+
+  NEXT_INDEX=$((CURRENT_INDEX + 1))
+  NEXT_FEATURE=$(echo "$ALL_FEATURES" | cut -d'|' -f$((NEXT_INDEX + 1)))
+
+  if [ -z "$COMPLETED" ]; then
+    NEW_COMPLETED="$CURRENT_FEATURE"
+  else
+    NEW_COMPLETED="${COMPLETED}|${CURRENT_FEATURE}"
+  fi
+
+  if [ -z "$NEXT_FEATURE" ]; then
+    rm -f "$STATE_FILE"
+    echo '{"decision": "allow"}'
+    exit 0
+  fi
+
+  # Transition to next feature: phase→collect, iteration→0
+  sed -i '' "s/^phase:.*/phase: collect/" "$STATE_FILE"
+  sed -i '' "s/^feature:.*/feature: ${NEXT_FEATURE}/" "$STATE_FILE"
+  sed -i '' "s/^current_index:.*/current_index: ${NEXT_INDEX}/" "$STATE_FILE"
+  sed -i '' "s/^iteration:.*/iteration: 0/" "$STATE_FILE"
+  if grep -q "^completed_features:" "$STATE_FILE"; then
+    sed -i '' "s/^completed_features:.*/completed_features: ${NEW_COMPLETED}/" "$STATE_FILE"
+  else
+    sed -i '' "/^---$/a\\
+completed_features: ${NEW_COMPLETED}" "$STATE_FILE"
+  fi
+
+  cat <<HOOK_OUTPUT
+{
+  "decision": "block",
+  "reason": "Feature '${CURRENT_FEATURE}' 코드 검증 완료! (${NEXT_INDEX}/${TOTAL})\\n\\n다음 Feature: '${NEXT_FEATURE}'\\n\\n1. Read .claude/stitch-implement-pipeline.local.md → 현재 feature 확인\\n2. Stitch 프로젝트에서 '${NEXT_FEATURE}' 스크린 수집 (Phase 1)\\n3. 코드 매핑 → 구현 → phase를 code_verify로 변경하고 검증 시작\\n\\nreferences/workflows-implement.md Phase 1 절차를 따르세요."
+}
+HOOK_OUTPUT
   exit 0
 fi
 
