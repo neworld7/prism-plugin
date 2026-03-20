@@ -2,7 +2,7 @@
 
 ## Design Sheet Template (Code→Design)
 
-Use this template for `/stitch design` pipeline. Save to `docs/plans/{date}-{feature}-design-sheet.md`.
+Use this template for `/stitch design` pipeline. Save to `.stitch/{date}-{feature}-design-sheet.md`.
 
 ```markdown
 # {Feature} Design Sheet
@@ -63,7 +63,7 @@ Use this template for `/stitch design` pipeline. Save to `docs/plans/{date}-{fea
 
 ## Implement Sheet Template (Design→Code)
 
-Use this template for `/stitch implement` pipeline. Save to `docs/plans/{date}-{feature}-implement-sheet.md`.
+Use this template for `/stitch implement` pipeline. Save to `.stitch/{date}-{feature}-implement-sheet.md`.
 
 ```markdown
 # {Feature} Implementation Sheet
@@ -119,7 +119,7 @@ Use this template for `/stitch implement` pipeline. Save to `docs/plans/{date}-{
 
 ## Analysis Sheet Template (Code+Simulator→Prompts)
 
-Use this template for `/stitch analyze` pipeline. Save to `docs/plans/{date}-{app}-analysis.md`.
+Use this template for `/stitch analyze` pipeline. Save to `.stitch/{date}-{app}-analysis.md`.
 
 프롬프트 블록은 **화면별로 독립 복사** 가능해야 한다. 사용자가 Stitch에 블록 단위로 붙여넣는다.
 

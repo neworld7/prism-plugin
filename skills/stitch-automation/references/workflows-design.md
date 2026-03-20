@@ -44,7 +44,7 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
    - 인터랙션 체크리스트: button/nav/form interactions
    - 상태별 화면: loading, error, empty variants
    - 프롬프트 초안: per-screen Stitch prompt
-3. Save to `docs/plans/{date}-{feature}-design-sheet.md`
+3. Save to `.stitch/{date}-{feature}-design-sheet.md`
 4. **사용자 확인 요청** — 시트를 승인해야 Phase 3로 진행
 
 **Transition:** User approves the design sheet.
@@ -72,7 +72,7 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
 **Goal:** Create Stitch project and generate all screens.
 
 **analysis.md 통합:**
-- `docs/plans/*-analysis.md` 존재 시 → 해당 파일의 Feature별 프롬프트를 직접 사용 (Phase 1-3 산출물 대체)
+- `.stitch/*-analysis.md` 존재 시 → 해당 파일의 Feature별 프롬프트를 직접 사용 (Phase 1-3 산출물 대체)
 - 없으면 → Phase 2 design sheet의 프롬프트 사용 (하위 호환)
 
 **Steps:**

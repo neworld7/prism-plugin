@@ -34,7 +34,7 @@ Parse user arguments to determine the subcommand:
 
 2. **Phase 1-5 실행** (workflows-analyze.md 참조)
 
-3. **산출물**: `docs/plans/{date}-{app}-analysis.md`
+3. **산출물**: `.stitch/{date}-{app}-analysis.md`
 
 4. **사용자 확인 요청** — 산출물을 승인해야 `/stitch design`에서 사용 가능
 
@@ -58,7 +58,7 @@ Parse user arguments to determine the subcommand:
    ---
    ```
 
-1-1. **analysis.md 확인**: `docs/plans/*-analysis.md` 존재 시 Phase 1-3 생략, Phase 4부터 실행
+1-1. **analysis.md 확인**: `.stitch/*-analysis.md` 존재 시 Phase 1-3 생략, Phase 4부터 실행
 
 2. **파이프라인 레퍼런스 로드**:
    ```
@@ -108,7 +108,7 @@ Stitch 디자인을 실제 코드에 반영하는 **역방향 파이프라인**.
 
 3. **Phase 1-2**: Stitch 디자인 수집 + 코드 매핑
 
-4. **Phase 3**: 코드 시트 작성 → `docs/plans/` 에 생성 → **사용자 확인 요청**
+4. **Phase 3**: 코드 시트 작성 → `.stitch/` 에 생성 → **사용자 확인 요청**
 
 5. **Phase 4**: 시트 기반으로 코드 작성/수정
 

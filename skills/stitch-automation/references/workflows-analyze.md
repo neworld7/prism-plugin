@@ -186,7 +186,7 @@ Phase 1-5 execution guide for `/stitch analyze [app]`.
 
 **Steps:**
 
-1. 파일 경로: `docs/plans/{date}-{app}-analysis.md`
+1. 파일 경로: `.stitch/{date}-{app}-analysis.md`
 
 2. 아래 템플릿 구조에 따라 작성:
 
@@ -260,8 +260,8 @@ sans-serif (Inter) for body. iOS-style with safe area padding.
 ```
 
 3. 파일 작성 완료 후 **사용자 확인 요청**:
-   - "분석 결과를 `docs/plans/{date}-{app}-analysis.md`에 저장했습니다. 검토 후 `/stitch design [feature]`로 디자인 생성을 시작하세요."
+   - "분석 결과를 `.stitch/{date}-{app}-analysis.md`에 저장했습니다. 검토 후 `/stitch design [feature]`로 디자인 생성을 시작하세요."
 
-**Output:** `docs/plans/{date}-{app}-analysis.md` — Feature 전체와 Stitch 프롬프트 포함 단일 파일.
+**Output:** `.stitch/{date}-{app}-analysis.md` — Feature 전체와 Stitch 프롬프트 포함 단일 파일.
 
 **Transition:** 사용자가 확인하면 파이프라인 완료. `/stitch design [feature]` 실행 시 analysis.md를 입력으로 사용 (Phase 1-3 생략, Phase 4부터 시작).

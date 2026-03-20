@@ -56,7 +56,7 @@ If not found, the `.mcp.json` in this plugin should auto-register the Stitch MCP
 | 2 | 시뮬레이터 분석 | 스크린샷 캡처 + 시각 분석 |
 | 3 | Feature 분리 | 코드+시각 분석 종합하여 Feature 단위 분리 |
 | 4 | 프롬프트 작성 | Feature별 UX-First Vibe Design 프롬프트 (hex/px/폰트명 금지) |
-| 5 | 산출물 | docs/plans/{date}-{app}-analysis.md 작성 |
+| 5 | 산출물 | .stitch/{date}-{app}-analysis.md 작성 |
 
 ### Pipeline 실행 시 반드시 참조
 
@@ -76,7 +76,7 @@ Stitch의 주 용도는 **코드→프로덕션 디자인 전환 파이프라인
 | Phase | 내용 | 핵심 |
 |-------|------|------|
 | 1 | 코드 분석 | Glob/Grep으로 화면·인터랙션·상태 전수 조사 |
-| 2 | 디자인 시트 작성 | `docs/plans/` 에 코드 vs 디자인 비교 문서 |
+| 2 | 디자인 시트 작성 | `.stitch/` 에 코드 vs 디자인 비교 문서 |
 | 3 | 프롬프트 최적화 | Stitch에 최적화된 프롬프트 작성 |
 | 4 | Stitch 디자인 생성 | MCP로 프로젝트/화면/디자인시스템 생성 |
 | 5 | 검증 | 코드 ↔ Stitch 크로스체크, gaps 카운트 |
@@ -85,7 +85,7 @@ Stitch의 주 용도는 **코드→프로덕션 디자인 전환 파이프라인
 
 ### analysis.md 통합
 
-`/stitch design` 실행 시 `docs/plans/*-analysis.md`가 존재하면:
+`/stitch design` 실행 시 `.stitch/*-analysis.md`가 존재하면:
 - Phase 1-3 생략, analysis.md의 프롬프트를 직접 사용
 - analysis.md가 design-sheet를 대체
 - Phase 4부터 실행

@@ -100,7 +100,7 @@ Phase 1-7 execution guide for `/stitch implement [feature]`.
    Add routing (Next.js file-based or React Router)
    ```
 
-5. Save to `docs/plans/{date}-{feature}-implement-sheet.md`
+5. Save to `.stitch/{date}-{feature}-implement-sheet.md`
 6. **사용자 확인 요청** — 시트를 승인해야 Phase 4로 진행
 
 **Transition:** User approves the implementation sheet.
