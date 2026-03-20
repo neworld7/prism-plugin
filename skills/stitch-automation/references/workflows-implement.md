@@ -2,6 +2,11 @@
 
 Phase 1-7 execution guide for `/stitch implement [feature]`.
 
+> **핵심 원칙: 기능 보존 + UI 리스킨**
+> 이 파이프라인의 목적은 **기존 기능 코드의 UI/레이아웃을 Stitch 디자인에 맞게 변경**하는 것이다.
+> 비즈니스 로직, 상태 관리, API 호출, 네비게이션 로직은 그대로 보존하고,
+> **위젯 트리/컴포넌트 구조, 스타일링, 레이아웃만** Stitch 디자인과 1:1 매칭한다.
+
 ## Feature Routing (all 모드 전용)
 
 > 단일 Feature 모드에서는 이 단계를 건너뛴다.
@@ -65,16 +70,19 @@ Phase 1-7 execution guide for `/stitch implement [feature]`.
 
 2. Build mapping table:
    ```
-   | Stitch Screen | Code File | Status |
-   |---------------|-----------|--------|
-   | Home Dashboard | lib/features/home/home_screen.dart | [EDIT] |
-   | Login Screen | (none) | [NEW] |
-   | Profile | lib/features/profile/profile_screen.dart | [OK] |
+   | Stitch Screen | Code File | Status | 보존할 기능 |
+   |---------------|-----------|--------|-------------|
+   | Home Dashboard | lib/features/home/home_screen.dart | [RESKIN] | API fetch, 상태관리, nav |
+   | Login Screen | lib/features/auth/login_screen.dart | [RESKIN] | auth 로직, validation |
+   | Profile | lib/features/profile/profile_screen.dart | [OK] | — |
+   | New Feature | (none) | [NEW] | — |
    ```
 
-   - `[NEW]` — no code exists, needs creation
-   - `[EDIT]` — code exists but needs update
-   - `[OK]` — code already matches design
+   - `[RESKIN]` — 코드 존재, UI/레이아웃을 Stitch에 맞게 변경 (기능 보존)
+   - `[NEW]` — 코드 없음, 새로 생성
+   - `[OK]` — 이미 디자인 일치
+
+   **대부분의 화면은 `[RESKIN]`** — 기능은 이미 구현되어 있고 디자인만 다른 상태.
 
 **Transition:** Mapping complete → Phase 3.
 
@@ -119,15 +127,18 @@ Phase 1-7 execution guide for `/stitch implement [feature]`.
 
 **Transition:** User approves the implementation sheet.
 
-## Phase 4: Code Implementation
+## Phase 4: Code Implementation (기능 보존 + UI 리스킨)
 
-**Goal:** Write actual code based on the plan sheet.
+**Goal:** 기존 기능 코드의 UI/레이아웃을 Stitch 디자인에 맞게 변경. 비즈니스 로직은 그대로 보존.
+
+> **⚠️ 절대 규칙**: 기존 코드의 상태 관리, API 호출, 비즈니스 로직, 네비게이션 로직을 삭제하거나 변경하지 않는다.
+> 변경 대상은 **위젯 트리 구조, 스타일 값, 레이아웃 속성**뿐이다.
 
 **Steps:**
 
 For each screen (ordered by dependency):
 
-0. **Stitch HTML 속성 추출 (필수, 코드 작성 전 반드시 실행):**
+0. **Stitch HTML 속성 추출 (필수, 코드 수정 전 반드시 실행):**
    ```
    web_fetch(downloadUrl.html) → Stitch HTML 다운로드
    HTML 내 CSS/Tailwind 클래스에서 아래 속성을 정확히 추출:
@@ -142,43 +153,70 @@ For each screen (ordered by dependency):
    아이콘: width, height (size)
 
    → 추출 결과를 implement sheet에 화면별로 기록
-   → 이 값들이 코드 구현의 기준 (대략적 추정 금지)
+   → 이 값들이 코드 수정의 기준 (대략적 추정 금지)
    ```
 
-1. **Flutter:**
+1. **[RESKIN] 기존 파일 수정 (대부분의 경우):**
+
+   기존 코드 파일을 열고, **build() 메서드 / return JSX 내부의 UI 부분만** 수정한다.
+
    ```
-   Create: lib/features/{feature}/presentation/{screen_name}_screen.dart
-   - Import material.dart and project theme
-   - Build widget tree matching Stitch HTML structure EXACTLY:
-     · 추출한 px 값을 Flutter 단위로 1:1 매핑
-     · padding: 16px → EdgeInsets.all(16)
-     · border-radius: 12px → BorderRadius.circular(12)
-     · font-size: 14px → fontSize: 14
-     · height: 48px → SizedBox(height: 48) or minimumSize: Size.fromHeight(48)
-     · gap: 8px → SizedBox(height/width: 8)
-     · border: 1px solid → Border.all(width: 1, color: ...)
-     · max-width: 400px → ConstrainedBox(maxWidth: 400)
-   - Apply EXACT colors from Stitch CSS (hex → Color)
-   - 버튼 스타일: padding, height, border-radius, font-size 모두 Stitch와 동일
-   - Add navigation connections
+   보존 (절대 건드리지 않음):
+   ─────────────────────────
+   - import 문 (기능 관련)
+   - 상태 변수 (useState, StateNotifier, BLoC, Provider 등)
+   - API 호출 (fetch, dio, http, repository 등)
+   - 이벤트 핸들러의 비즈니스 로직 (onTap 내부의 navigate, submit 등)
+   - 라이프사이클 (initState, useEffect, dispose 등)
+
+   변경 (Stitch 디자인에 맞춤):
+   ─────────────────────────
+   - 위젯 트리 / JSX 구조 (Container→Card, Column 순서 등)
+   - 스타일 값 (padding, margin, border-radius, font-size, color)
+   - 버튼 크기·모양 (height, borderRadius, padding)
+   - 카드/컨테이너 크기·보더·그림자
+   - 텍스트 스타일 (fontSize, fontWeight, color)
+   - 아이콘 크기·색상
+   - 간격 (gap, SizedBox, spacer)
+   - 레이아웃 구조 (Row↔Column, flex 비율, alignment)
    ```
 
-2. **React/Next.js:**
+2. **Flutter 리스킨 패턴:**
+   ```
+   기존 파일: lib/features/{feature}/presentation/{screen_name}_screen.dart
+   → 파일 내 build() 메서드의 위젯 트리만 Stitch에 맞게 재구성
+   → 추출한 px 값을 1:1 매핑:
+     padding: 16px → EdgeInsets.all(16)
+     border-radius: 12px → BorderRadius.circular(12)
+     font-size: 14px → fontSize: 14
+     height: 48px → SizedBox(height: 48) or minimumSize: Size.fromHeight(48)
+     gap: 8px → SizedBox(height/width: 8)
+     border: 1px solid → Border.all(width: 1, color: ...)
+   → 기존 onTap, onPressed 콜백의 내부 로직은 그대로 유지
+   → 기존 상태 변수(isLoading, data, error 등)를 새 위젯 트리에 연결
+   ```
+
+3. **React/Next.js 리스킨 패턴:**
    ```
    Read references/official/react-components/ → 컴포넌트 변환 전략
 
-   Create: src/components/{ScreenName}.tsx (or app/{route}/page.tsx)
-   - Stitch HTML의 Tailwind 클래스를 그대로 보존
+   기존 파일: src/components/{ScreenName}.tsx (or app/{route}/page.tsx)
+   → return (...) 내부의 JSX만 Stitch HTML 구조로 교체
+   → Stitch HTML의 Tailwind 클래스를 그대로 적용
      (p-4, rounded-xl, h-12, gap-3, border, text-sm 등)
-   - 인라인 style → Tailwind 등가 클래스 변환 또는 그대로 유지
-   - 버튼/카드/입력 필드의 크기·패딩·보더 클래스 정확히 복사
-   - Split into sub-components
-   - Add interactivity (onClick, useState)
-   - Connect to routing
+   → 기존 useState, useEffect, 이벤트 핸들러는 보존
+   → 새 JSX에 기존 상태/핸들러를 재연결
    ```
 
-3. After each screen:
+4. **[NEW] 신규 화면 (해당되는 경우에만):**
+   ```
+   Stitch에만 존재하고 기존 코드에 없는 화면 → 새 파일 생성
+   Stitch HTML 구조를 기반으로 위젯/컴포넌트 작성
+   ```
+
+5. After each screen:
    - Mark as `[DONE]` in implement sheet
+   - **기능 테스트**: 기존 기능(탭, 네비게이션, 데이터 로딩)이 정상 동작하는지 확인
    - Run project build to verify no errors
 
 4. Update state file:
