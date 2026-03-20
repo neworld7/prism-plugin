@@ -125,7 +125,6 @@ For each screen (ordered by dependency):
 2. **React/Next.js:**
    ```
    Read references/official/react-components/ → 컴포넌트 변환 전략
-   Read references/official/shadcn-ui/ → shadcn/ui 통합 가이드 (선택)
 
    Create: src/components/{ScreenName}.tsx (or app/{route}/page.tsx)
    - Copy relevant Stitch HTML structure

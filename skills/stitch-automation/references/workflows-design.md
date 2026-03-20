@@ -56,7 +56,6 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
 **Steps:**
 
 1. Read `references/prompting.md`
-1-1. Read `references/official/enhance-prompt/` → 공식 프롬프트 최적화 로직 참조
 2. For each screen prompt:
    - Add UI/UX keywords (modern, clean, minimal, etc.)
    - Add atmosphere/vibe adjectives
@@ -88,8 +87,7 @@ Phase 1-7 execution guide for `/stitch design [feature]`.
    ```
    Try: create_design_system(projectId, theme: {...})
    If tool_not_found error:
-     → Read references/official/design-md/
-     → 프로젝트에 .stitch/DESIGN.md 생성
+     → 공식 design-md 스킬 사용 또는 수동으로 .stitch/DESIGN.md 생성
      → "MCP 디자인 시스템 도구가 현재 비활성입니다. DESIGN.md로 대체합니다."
    If success:
      → Save designSystemId (기존 플로우)

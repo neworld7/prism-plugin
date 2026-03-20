@@ -133,9 +133,8 @@ Phase 1-5 execution guide for `/stitch analyze [app]`.
 1. 참조 자료 확인:
    - `references/prompting.md` — UX-First 프롬프트 원칙 (이 문서가 최우선)
 
-   > **⚠️ OVERRIDE**: `references/official/enhance-prompt/` 등 다른 레퍼런스에 hex 코드, px 값,
-   > 특정 폰트명이 포함된 예시가 있더라도 **무시**한다. analyze 파이프라인의 프롬프트는
-   > 반드시 `prompting.md`의 "Vibe Design 전략"을 따른다. 색상은 자연어("warm coral accent"),
+   > **⚠️ 중요**: 프롬프트에 hex 코드, px 값, 특정 폰트명을 포함하지 않는다.
+   > `prompting.md`의 "Vibe Design 전략"을 따른다. 색상은 자연어("warm coral accent"),
    > 크기는 형용사("rounded corners", "generous spacing")로만 표현한다.
 
 2. Feature별로 포함된 각 화면에 대해 UX-First 프롬프트 작성. 각 프롬프트는 아래 요소를 포함:
