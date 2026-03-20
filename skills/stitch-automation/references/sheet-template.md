@@ -182,6 +182,7 @@ Social login options (Google, Apple) below the form.
 
 Mood: warm, trustworthy, minimal.
 Mobile-first, iOS patterns. No sidebar.
+All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).
 ```
 
 🔄 **변형 아이디어** — Variants 생성 시 참고
@@ -209,6 +210,7 @@ Primary "Create Account" button.
 
 Mood: approachable, clean, encouraging.
 Mobile-first. Similar to {reference app}'s onboarding.
+All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).
 ```
 
 🔄 **변형 아이디어**

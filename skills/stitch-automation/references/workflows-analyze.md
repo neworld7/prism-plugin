@@ -167,7 +167,9 @@ Phase 1-5 execution guide for `/stitch analyze [app]`.
 
 4. 프롬프트 품질 기준:
    - **분량**: 화면당 150-400자 (과도한 디테일은 AI 창의성 저하)
-   - **언어**: 영어 (Stitch AI 최적화)
+   - **언어**: 프롬프트 지시문은 영어로 작성
+   - **한국어 UI 필수**: 모든 프롬프트 마지막에 반드시 아래 문구 포함:
+     `All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).`
    - **구조**: 자연스러운 문단 또는 짧은 bullet 형태
    - **복사 독립성**: 각 프롬프트가 다른 프롬프트 없이 단독으로 Stitch에 붙여넣기 가능
 

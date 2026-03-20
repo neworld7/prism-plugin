@@ -156,6 +156,8 @@ Stitch AI의 창의성을 최대화하면서 방향성을 잡는 접근법.
 6. **네거티브**: "No sidebar", "No gradient" 등 제외 사항
 7. **레퍼런스** (선택): "Similar to Spotify's Now Playing"
 8. **디바이스**: `MOBILE`, `DESKTOP`, `TABLET`, `AGNOSTIC`
+9. **한국어 UI 필수**: 모든 프롬프트 마지막에 반드시 포함:
+   `All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).`
 
 ### ❌ 프롬프트에 포함하지 않을 것
 - hex 코드 (#FF6B6B 등) → "warm coral accent" 같은 자연어 사용
@@ -167,7 +169,7 @@ Stitch AI의 창의성을 최대화하면서 방향성을 잡는 접근법.
 ### 프롬프트 분량 가이드
 - **화면당 150-400자** 적정 (5,000자 이상은 컴포넌트 누락 위험)
 - 짧을수록 AI가 더 다양한 해석 가능 → 변형(Variants)에 유리
-- 영어로 작성 (Stitch AI 최적화)
+- 프롬프트 지시문은 영어, **UI 콘텐츠는 한국어** 지정
 
 ### 좋은 프롬프트 예시
 ```
@@ -179,6 +181,7 @@ Prominent sign-in button. Social login options (Google, Apple).
 
 Mood: warm, trustworthy, bookish. Mobile-first, iOS patterns.
 No sidebar. No dark theme.
+All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).
 ```
 
 ### 나쁜 프롬프트 예시
