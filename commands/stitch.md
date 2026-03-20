@@ -259,9 +259,9 @@ If called without arguments (`/stitch`), show the usage table above and ask what
      - gcloud auth application-default login 실행"
 
 - **Rate limit 대응**:
-  - 파이프라인 시작 시: "총 N개 화면을 PRO로 생성합니다 (PRO 한도: 50/월)" 안내
-  - PRO rate limit 도달: "PRO 한도에 도달했습니다. FLASH로 전환할까요?" 확인
-  - FLASH도 소진: 파이프라인 일시 정지
+  - 파이프라인 시작 시: "총 N개 화면 생성 예정 (일일 한도: 400 크레딧)" 안내
+  - 크레딧 소진 시: 파이프라인 일시 정지, 다음 날 리셋 대기 안내
+  - 
 
 - **디자인 시스템 도구 누락**:
   - create_design_system 호출 시 도구 미발견 → DESIGN.md 워크플로우 자동 전환
