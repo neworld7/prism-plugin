@@ -1,6 +1,6 @@
-# Loom Orchestration Pipeline
+# Loom Workflows
 
-통합 파이프라인 실행 가이드. Analyze (A1-A6) → Design (D1-D6).
+통합 워크플로우 실행 가이드. Analyze (A1-A6) → Design (D1-D6).
 
 ## Analyze Pipeline — `/loom analyze [app]`
 
@@ -117,61 +117,192 @@
 
 **Output:** Feature별 원시 UX-First 프롬프트.
 
+### A4.5: Direction 생성 (멀티 모드 전용)
+
+> `--directions 1`이면 이 단계를 건너뛴다. Direction은 `default`로 자동 설정.
+
+**Goal:** `--directions N` (N >= 2)일 때, 3축 기반으로 N개 디자인 방향을 추천하고 사용자 확인을 받는다.
+
+**3축 프레임워크:**
+
+| 축 | 역할 | 예시 값 |
+|---|---|---|
+| **아키타입** | 전체 디자인 언어 결정 | Editorial Elegance, Flat Modern, Glassmorphism, Dark Minimalism, Playful Pastel, Japanese Zen, Warm Organic |
+| **레이아웃** | 화면 구조/배치 패턴 | Centered Stack, Split Screen, Bottom Sheet, Full-bleed Hero, Card-based, Centered Narrow |
+| **레퍼런스 앱** | AI가 참조할 구체적 디자인 DNA | Notion, Linear, Stripe, Duolingo, Airbnb, 밀리의서재, Spotify |
+
+**출력 형식:**
+
+```
+📐 Direction A: "{Direction 이름}"
+  아키타입: {아키타입} — {핵심 특성 1줄}
+  레이아웃: {레이아웃} — {구조 설명 1줄}
+  레퍼런스: {레퍼런스 앱} — {해당 앱의 어떤 측면을 참조하는지}
+
+  {이 방향이 앱에 적합한 이유 2-3줄.}
+```
+
+**사용자 응답 처리:**
+- "네" → N개 Direction 확정, A5로 진행
+- "B를 X로 바꿔주세요" → 교체 후 재표시
+- "하나 더 추가" → 추가 (최대 5개)
+- "A, C만" → 선택된 Direction만 진행
+
 ### A5: 프롬프트 최적화 — 공식 스킬 위임
 
 **Goal:** 원시 프롬프트를 Stitch에 최적화된 프롬프트로 변환한다.
 
-**실행:**
+**단일 모드 (--directions 1):**
 ```
-Skill("enhance-prompt") 호출
+Skill("enhance-prompt") 호출 1회
 → A4에서 작성한 원시 프롬프트를 전달
-→ 공식 스킬이 UI/UX 키워드, 분위기, 디자인 시스템 컨텍스트를 추가
-→ 최적화된 프롬프트를 반환
+→ 결과를 .loom/directions/default/prompts.md에 저장
 ```
 
-**Output:** Stitch 최적화된 프롬프트.
+**멀티 모드 (--directions N):**
+```
+각 Direction에 대해 Skill("enhance-prompt") 호출:
+→ 원시 프롬프트 + Direction Context 블록 삽입
+→ 결과를 .loom/directions/{direction-name}/prompts.md에 저장
+```
 
-### A6: 산출물 작성
+**Direction Context 삽입 예시:**
+```
+원시 프롬프트 앞에 삽입:
 
-**Goal:** 분석 결과를 단일 마크다운 파일로 작성하고 사용자 확인을 받는다.
+**Direction: Cozy Reading Nook**
+- Archetype: Warm Organic — natural textures, paper-like, serif typography
+- Layout: Centered Generous — ample margins, vertical stack
+- Reference: Inspired by 밀리의서재's warm, trustworthy onboarding
+```
 
-**Steps:**
-1. 파일 경로: `.loom/{date}-{app}-analysis.md`
-2. `references/sheet-template.md`의 Analysis Sheet Template에 따라 작성
-3. 사용자 확인 요청
+### A6: 산출물 저장
 
-**Output:** `.loom/{date}-{app}-analysis.md`
+**Goal:** 분석 결과를 저장하고 사용자 확인을 받는다.
+
+**파일 구조 (단일/멀티 동일):**
+
+```
+.loom/
+  analysis.md                    ← 공통 (A1-A4 산출물)
+  directions/
+    default/                     ← 단일 모드
+      prompts.md                 ← A5 결과
+    {direction-name}/            ← 멀티 모드
+      prompts.md                 ← A5 결과
+```
+
+**analysis.md 템플릿:**
+
+```markdown
+# {App} Analysis
+
+| 항목 | 값 |
+|------|------|
+| App | {app name} |
+| Date | {YYYY-MM-DD} |
+| Stack | Flutter / React / Next.js |
+| Device | Mobile / Desktop / Tablet |
+| Total Features | N |
+| Total Screens | N |
+
+## 앱 컨텍스트
+
+> {앱의 목적, 타겟 사용자, 전반적 분위기를 2-3줄로 요약}
+
+## Feature 요약
+
+| # | Feature | 화면 수 | 핵심 화면 |
+|---|---------|---------|-----------|
+| 1 | 인증 | 3 | 로그인, 회원가입, 비밀번호 재설정 |
+
+## Feature 1: {feature name}
+
+### 화면 목록
+
+| # | 화면 | 코드 파일 | 현재 상태 |
+|---|------|-----------|-----------|
+| 1 | 로그인 | lib/.../login_screen.dart | 기본 폼 |
+
+### 사용자 흐름
+
+이메일/비밀번호 입력 → 로그인 → 홈으로 이동
+
+### 원시 프롬프트
+
+#### 🎯 로그인
+
+```
+A warm, welcoming login screen for '{App Name}' {app category} app.
+Centered app branding with tagline.
+...
+All UI text must be in Korean (한국어).
+```
+```
+
+**prompts.md 템플릿 (Direction별):**
+
+```markdown
+# Direction: {Direction 이름}
+
+아키타입: {아키타입} / 레이아웃: {레이아웃} / 레퍼런스: {레퍼런스}
+
+## Feature 1: {feature name}
+
+### 🎯 로그인
+📋 **Stitch 프롬프트**
+(enhance-prompt 결과)
+
+### 🎯 회원가입
+📋 **Stitch 프롬프트**
+(enhance-prompt 결과)
+```
 
 ---
 
 ## Design Pipeline — `/loom design <feature|all>`
+
+### Direction Routing
+
+1. `.loom/directions/` 에서 현재 Direction 디렉토리 확인
+2. 해당 Direction의 `prompts.md`에서 Feature 프롬프트 로드
+3. 해당 Direction의 `DESIGN.md`를 `./DESIGN.md`로 복원 (첫 Feature 이후)
 
 ### Feature Routing (all 모드 전용)
 
 > 단일 Feature 모드에서는 건너뛴다.
 
 1. Read `.claude/loom-design-pipeline.local.md` → `feature` 필드 확인
-2. analysis.md에서 해당 Feature 프롬프트만 추출
-3. 다른 Feature의 프롬프트는 무시
+2. 현재 Direction의 prompts.md에서 해당 Feature 프롬프트만 추출
 
-### D1: analysis.md 로드
+### D1: prompts.md 로드
 
-**Goal:** 분석 산출물에서 Feature 프롬프트를 로드한다.
+**Goal:** 현재 Direction의 프롬프트를 로드한다.
 
 **Steps:**
-1. `.loom/*-analysis.md` 존재 확인
-2. 없으면 사용자에게 `/loom analyze` 먼저 실행 안내
+1. `.loom/directions/{direction}/prompts.md` 존재 확인
+2. 없으면 `/loom analyze` 먼저 실행 안내
 3. 있으면 해당 Feature의 프롬프트 로드
 
-### D2: 디자인 시스템 — 공식 스킬 위임
+### D2: 디자인 시스템 — 공식 스킬 위임 + DESIGN.md 스와핑
 
 **Goal:** Stitch 프로젝트의 디자인 시스템을 생성한다.
 
-**실행:**
+**첫 Feature에서:**
 ```
-Skill("design-md") 호출
-→ 프로젝트 컨텍스트와 analysis.md의 분위기/스타일 정보 전달
-→ 공식 스킬이 DESIGN.md 생성
+Skill("design-md") 호출 → ./DESIGN.md 생성
+원본 보존: cp ./DESIGN.md .loom/directions/{direction}/DESIGN.md
+```
+
+**이후 Feature에서 (같은 Direction):**
+```
+.loom/directions/{direction}/DESIGN.md를 ./DESIGN.md로 복원
+D2 재호출 불필요
+```
+
+**Direction 전환 시:**
+```
+새 Direction의 첫 Feature → D2 재호출 → DESIGN.md 새로 생성 → 보존
 ```
 
 ### D3: 디자인 생성 — 공식 스킬 위임
@@ -181,16 +312,12 @@ Skill("design-md") 호출
 **실행:**
 ```
 Skill("stitch-design") 호출
-→ analysis.md의 Feature 프롬프트 전달
-→ 공식 스킬이 create_project, generate_screen_from_text 등 MCP 도구 호출
-→ 생성된 프로젝트/화면 정보 반환
+→ 현재 Direction의 prompts.md에서 Feature 프롬프트 전달
+→ 프로젝트 이름: "{App} — {Direction 이름}"
+→ 생성된 프로젝트 ID를 .loom/directions/{direction}/project-id에 기록
 ```
 
-생성 완료 후 상태 파일의 `phase`를 `verify`로 변경.
-
 ### D4: 검증
-
-**Goal:** 생성된 디자인을 analysis.md의 프롬프트와 크로스체크한다.
 
 **실행 주체:** loom 자체 (읽기 전용 MCP 직접 호출)
 
@@ -203,39 +330,40 @@ Skill("stitch-design") 호출
    Read /tmp/loom-{screenName}.png → 시각 검증
    ```
 
-2. 체크리스트:
-   - [ ] 화면이 존재하고 설명과 매칭
-   - [ ] 핵심 UI 컴포넌트 존재
-   - [ ] 인터랙션이 시각적으로 표현
-   - [ ] 상태 화면 포함
-
-3. gaps 카운트:
-   ```
-   MISSING_SCREEN: N
-   MISSING_INTERACTION: N
-   MISSING_STATE: N
-   total_gaps: N
-   ```
+2. 체크리스트 + gaps 카운트
 
 **Transition:** gaps == 0 → D6, gaps > 0 → D5.
 
 ### D5: 수정 — 공식 스킬 위임
 
-**Goal:** 검증에서 발견된 gaps를 수정한다.
-
-**실행:**
 ```
 Skill("stitch-design") 호출
-→ 수정이 필요한 화면과 수정 프롬프트 전달
-→ 공식 스킬이 edit_screens 또는 generate_screen_from_text 호출
+→ 수정 프롬프트 전달
 ```
-
 **Transition:** D4로 복귀.
 
 ### D6: 완료
 
 1. `<promise>DESIGN_VERIFIED</promise>` 출력
-2. Stop hook이 감지하고:
-   - 단일 Feature: 상태 파일 삭제 → allow
-   - All + 다음 Feature: 상태 파일 전환 → block → 다음 Feature로
-   - All + 마지막: 상태 파일 삭제 → allow
+2. Stop hook이 감지:
+   - Direction 내부 루프: 다음 Direction → block
+   - Feature 외부 루프: 다음 Feature → block
+   - 모두 완료 → 상태 파일 삭제 → allow
+
+---
+
+## 이중 루프: Feature(외부) × Direction(내부)
+
+`/loom design all --directions 3`일 때:
+
+```
+Feature 1:
+  Direction A → D2(design-md) → DESIGN.md 보존 → D3 → D4-D6 → VERIFIED
+  Direction B → D2(design-md) → DESIGN.md 보존 → D3 → D4-D6 → VERIFIED
+  Direction C → D2(design-md) → DESIGN.md 보존 → D3 → D4-D6 → VERIFIED
+Feature 2:
+  Direction A → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
+  Direction B → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
+  Direction C → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
+...
+```
