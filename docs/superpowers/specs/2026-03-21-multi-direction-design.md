@@ -41,6 +41,61 @@ A1-A4 → [A4.5: Direction 생성] → A5 × N → A6
 → D1-D2 → D3 × N → D4-D6 × N (순차) → 모두 VERIFIED
 ```
 
+## 파일 구조
+
+### 단일 모드 (--directions 1)
+
+기존 v1.0.0과 동일:
+```
+.loom/
+  {date}-{app}-analysis.md       ← 공통 분석 + 프롬프트
+./DESIGN.md                      ← 디자인 시스템
+```
+
+### 멀티 모드 (--directions N)
+
+Direction별 디렉토리로 관리:
+```
+.loom/
+  analysis.md                    ← 공통 (A1-A4: 코드 분석, Feature, 원시 프롬프트)
+  directions/
+    cozy-reading-nook/
+      prompts.md                 ← A5 산출물 (enhance-prompt 결과)
+      DESIGN.md                  ← 디자인 시스템 원본
+      project-id                 ← Stitch 프로젝트 ID (텍스트 파일)
+    tech-library/
+      prompts.md
+      DESIGN.md
+      project-id
+    illustrated-journey/
+      prompts.md
+      DESIGN.md
+      project-id
+./DESIGN.md                      ← 활성 Direction의 DESIGN.md 복제본
+```
+
+### 파일 분류
+
+| 파일 | 공통 vs Direction별 | 이유 |
+|------|---------------------|------|
+| `analysis.md` (A1-A4) | **공통** | 코드 분석, Feature 분리, 원시 프롬프트는 모든 Direction이 공유 |
+| `prompts.md` (A5) | **Direction별** | enhance-prompt에 Direction Context를 넣으므로 결과가 다름 |
+| `DESIGN.md` (D2) | **Direction별** | Direction에 따라 디자인 시스템이 다름 |
+| `project-id` (D3) | **Direction별** | 각 Direction = 별도 Stitch 프로젝트 |
+| 상태 파일 | **공통 (transient)** | 파이프라인 실행 중에만 존재, 완료 시 삭제 |
+
+### Direction 정리
+
+Stitch 프로젝트 삭제 시 해당 Direction 디렉토리만 삭제:
+```bash
+rm -rf .loom/directions/tech-library/
+```
+
+전체 Direction 확인:
+```bash
+ls .loom/directions/
+```
+
 ## Phase A4.5: Direction 생성
 
 `--directions N`이 2 이상일 때 활성화. A4 원시 프롬프트 완성 후 실행.
@@ -129,76 +184,100 @@ Direction B용 (enhance-prompt 호출 2):
 
 enhance-prompt는 LLM 기반 스킬이므로 프롬프트 텍스트에 포함된 Direction Context(아키타입, 레이아웃, 레퍼런스)를 자연어로 인식하여 해당 방향에 맞게 UI/UX 용어, 분위기, 색상 체계를 증폭한다. 공식 파라미터가 아닌 프롬프트 텍스트 삽입 방식이므로, 만약 Direction이 무시된 경우(결과 프롬프트에 Direction 특성이 반영되지 않은 경우) Direction Context를 프롬프트 최상단으로 이동하거나 더 강조하여 재호출한다.
 
-## Phase A6: analysis.md 확장
+## Phase A6: 산출물 저장
 
-멀티 모드에서 analysis.md에 Direction별로 프롬프트 세트를 분리 저장:
+### 단일 모드
+
+기존과 동일: `.loom/{date}-{app}-analysis.md`에 전체 저장.
+
+### 멀티 모드
+
+공통 분석과 Direction별 프롬프트를 분리 저장:
+
+**1. 공통 분석** — `.loom/analysis.md`
+
+A1-A4 산출물 (코드 분석, Feature 분리, 원시 프롬프트). 모든 Direction이 공유.
 
 ```markdown
 # {App} Analysis
 
 | 항목 | 값 |
 |------|------|
-| Directions | 3 |
-| Direction A | Cozy Reading Nook |
-| Direction B | Tech Library |
-| Direction C | Illustrated Journey |
+| App | {app name} |
+| Date | {YYYY-MM-DD} |
+| Stack | Flutter / React / Next.js |
+| Total Features | N |
+| Total Screens | N |
 
-## Direction A: Cozy Reading Nook
+## Feature 1: 인증
 
-아키타입: Warm Organic / 레이아웃: Centered Generous / 레퍼런스: 밀리의서재
+### 화면 목록
+| # | 화면 | 코드 파일 | 현재 상태 |
+|---|------|-----------|-----------|
+| 1 | 로그인 | lib/.../login_screen.dart | 기본 폼 |
 
-### Feature 1: 인증
-
-#### 🎯 로그인
-📋 **Stitch 프롬프트**
-(enhance-prompt Direction A 결과)
-
-#### 🎯 회원가입
-📋 **Stitch 프롬프트**
-(enhance-prompt Direction A 결과)
-
----
-
-## Direction B: Tech Library
-
-아키타입: Dark Minimalism / 레이아웃: Centered Narrow / 레퍼런스: Linear
-
-### Feature 1: 인증
+### 원시 프롬프트
 
 #### 🎯 로그인
-📋 **Stitch 프롬프트**
-(enhance-prompt Direction B 결과)
-
+```
+A login screen for 'ReadCodex' reading tracker app.
+Centered app branding with tagline.
+Clean email and password form.
 ...
 ```
 
-단일 모드(`--directions 1`)에서는 Direction 섹션 없이 기존 구조 유지.
+## Feature 2: 홈
+...
+```
+
+**2. Direction별 프롬프트** — `.loom/directions/{direction-name}/prompts.md`
+
+A5 산출물 (enhance-prompt 결과). Direction별로 다름.
+
+```markdown
+# Direction: Cozy Reading Nook
+
+아키타입: Warm Organic / 레이아웃: Centered Generous / 레퍼런스: 밀리의서재
+
+## Feature 1: 인증
+
+### 🎯 로그인
+📋 **Stitch 프롬프트**
+(enhance-prompt Direction A 결과)
+
+### 🎯 회원가입
+📋 **Stitch 프롬프트**
+(enhance-prompt Direction A 결과)
+
+## Feature 2: 홈
+...
+```
 
 ## DESIGN.md 관리
 
 ### 파일 위치
 
-`DESIGN.md`는 **프로젝트 최상위 디렉토리**에 위치한다 (공식 `design-md` 스킬 요구사항). `.loom/`이 아님.
+`DESIGN.md`는 **프로젝트 최상위 디렉토리**에 위치한다 (공식 `design-md` 스킬 요구사항).
 
 - `./DESIGN.md` — 활성 디자인 시스템 (작업 파일). `design-md`와 `stitch-design` 스킬이 이 파일을 읽고 씀.
-- `.loom/DESIGN-{direction-name}.md` — Direction별 원본 보존.
+- `.loom/directions/{direction-name}/DESIGN.md` — Direction별 원본 보존.
 
 ### Direction 전환 시 DESIGN.md 스와핑
 
 ```
 Direction A 시작:
   1. D2: Skill("design-md") → ./DESIGN.md 생성 (프로젝트 루트)
-  2. 원본 보존: cp DESIGN.md .loom/DESIGN-cozy-reading-nook.md
+  2. 원본 보존: cp DESIGN.md .loom/directions/cozy-reading-nook/DESIGN.md
   3. D3-D6: stitch-design이 ./DESIGN.md를 참조하여 디자인 생성 + 검증
 
 Direction B 시작:
   1. D2: Skill("design-md") → ./DESIGN.md 덮어쓰기
-  2. 원본 보존: cp DESIGN.md .loom/DESIGN-tech-library.md
+  2. 원본 보존: cp DESIGN.md .loom/directions/tech-library/DESIGN.md
   3. D3-D6: stitch-design이 ./DESIGN.md를 참조하여 디자인 생성 + 검증
 
 Direction C 시작:
   1. D2: Skill("design-md") → ./DESIGN.md 덮어쓰기
-  2. 원본 보존: cp DESIGN.md .loom/DESIGN-illustrated-journey.md
+  2. 원본 보존: cp DESIGN.md .loom/directions/illustrated-journey/DESIGN.md
   3. D3-D6: 디자인 생성 + 검증
 ```
 
@@ -206,7 +285,7 @@ Direction C 시작:
 
 모든 Direction 완료 후, 사용자가 선호하는 Direction을 선택하면:
 ```
-cp .loom/DESIGN-{selected-direction}.md ./DESIGN.md
+cp .loom/directions/{selected-direction}/DESIGN.md ./DESIGN.md
 ```
 `./DESIGN.md`는 항상 "현재 활성/선택된 디자인 시스템"을 가리키는 작업 파일.
 
@@ -269,8 +348,9 @@ Feature 2:
 마지막 Feature × 마지막 Direction → VERIFIED → 상태 파일 삭제
 ```
 
-- 첫 Feature에서는 D2(design-md)로 DESIGN.md를 생성하고 `.loom/DESIGN-{name}.md`로 보존
+- 첫 Feature에서는 D2(design-md)로 DESIGN.md를 생성하고 `.loom/directions/{name}/DESIGN.md`로 보존
 - 이후 Feature에서는 이미 보존된 DESIGN.md를 `./DESIGN.md`로 복원하여 사용 (D2 재호출 불필요)
+- D3 실행 시 프로젝트 ID를 `.loom/directions/{name}/project-id`에 기록
 
 ## State Management
 
@@ -282,11 +362,11 @@ Feature 2:
 ---
 phase: verify
 feature: library
-direction: "Cozy Reading Nook"
+direction: "cozy-reading-nook"
 direction_index: 0
 total_directions: 3
+all_directions: "cozy-reading-nook|tech-library|illustrated-journey"
 completed_directions: ""
-project_ids: "id1|id2|id3"
 session_id: {unique-id}
 iteration: 2
 max_iterations: 5
@@ -297,16 +377,14 @@ completed_features: auth|home
 ```
 
 새 필드:
-- `direction`: 현재 Direction 이름
+- `direction`: 현재 Direction 디렉토리명
 - `direction_index`: 현재 Direction 인덱스 (0부터)
 - `total_directions`: 전체 Direction 수
+- `all_directions`: 전체 Direction 목록 (파이프 구분, 디렉토리명 기준)
 - `completed_directions`: 완료된 Direction 목록 (파이프 구분)
-- `project_ids`: Direction별 프로젝트 ID (파이프 구분, D3 실행 시 점진적으로 append)
 
-`project_ids`는 초기에 비어있고, 각 Direction의 D3 단계에서 `create_project` 반환값을 append한다:
-- Direction A 생성 후: `project_ids: "id1"`
-- Direction B 생성 후: `project_ids: "id1|id2"`
-- Direction C 생성 후: `project_ids: "id1|id2|id3"`
+프로젝트 ID는 상태 파일이 아닌 Direction 디렉토리에 저장:
+- D3 실행 시: `echo "{projectId}" > .loom/directions/{direction}/project-id`
 
 단일 모드(`--directions 1`)에서는 이 필드들이 없으므로 기존 동작 100% 호환.
 
