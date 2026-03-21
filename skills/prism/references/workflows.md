@@ -235,7 +235,15 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
    - 이는 **디자인 완성도**를 위한 것이며, 코드 존재 여부와 무관하다.
    - **Feature 배정 규칙**: 특정 Feature에 속하지 않는 공통 화면(스플래시, 오프라인 배너, 강제 업데이트 등)은 **"0. Common / System"** Feature를 만들어 배정한다.
 
-4. **화면 수 목표**: Feature당 최소 5개 이상. **개발자가 바로 코드로 옮길 수 있는 수준**의 모든 상태를 커버해야 한다. 전체 앱 기준 40~60개 화면.
+4. **화면 수 목표**: 전체 앱 기준 **40~60개 화면**. Feature당 최소 5개 이상.
+
+**화면 우선순위 (전체 수가 60개를 초과할 경우 하위 우선순위부터 제거):**
+   - **P1 (필수)**: Primary Screen (populated 상태) — 반드시 포함
+   - **P2 (필수)**: Primary Screen의 empty 상태 — 반드시 포함
+   - **P3 (중요)**: 핵심 Overlay (바텀시트, 확인 다이얼로그) — 앱 흐름에 필수적인 것만
+   - **P4 (중요)**: Interaction Mode (편집, 검색 활성) — 해당 Feature의 핵심 인터랙션
+   - **P5 (권장)**: System States, Transitions — 스플래시, 온보딩 등
+   - **P6 (선택)**: 로딩/스켈레톤, 에러 상태 — 중요 화면만 선별
 5. 각 Feature에 매핑: 포함 화면 목록 (축 태그 포함), 인터랙션, 상태
 
 **Output:** Feature 목록 + Screen State Matrix 기반 화면 목록 (전체 40~60개). 각 화면에 해당 축 태그를 표시한다:
