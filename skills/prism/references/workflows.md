@@ -309,8 +309,8 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 **A4 원시 프롬프트 규칙 (디자인 시스템 미포함):**
 - ❌ hex 코드, px 값, 특정 폰트명 — A4는 UX/구조만 기술
 - ❌ border-radius, shadow, opacity 수치
-- ✅ 디자인 시스템(DESIGN.md)의 색상/폰트는 **A5 최적화 단계**에서 삽입됨
-- ✅ A4는 "무엇을 보여줄지"에 집중, "어떻게 보일지"는 A5+D2에서 처리
+- ✅ 디자인 시스템은 Stitch가 D3에서 자체 생성 — A4/A5에서 디자인 토큰 삽입 불필요
+- ✅ A4는 "무엇을 보여줄지"에 집중, "어떻게 보일지"는 Stitch가 자체 결정 (D3에서 디자인 시스템 자동 생성)
 
 **품질 기준:**
 - 화면당 150-400자
@@ -371,7 +371,7 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 ```
 Skill("enhance-prompt") 호출 1회
 → A4에서 작성한 원시 프롬프트를 전달
-→ enhance-prompt 스킬이 .stitch/DESIGN.md 또는 .prism/directions/{direction}/DESIGN.md를 자동 Read
+→ DESIGN.md 경로 전달 안 함 (디자인 토큰은 Stitch가 D3에서 자체 결정)
 → 결과를 .prism/directions/default/prompts.md에 저장
 ```
 
@@ -379,7 +379,7 @@ Skill("enhance-prompt") 호출 1회
 ```
 각 Direction에 대해 Skill("enhance-prompt") 호출:
 → 원시 프롬프트 + Direction Context 블록 삽입
-→ DESIGN.md 경로를 명시: ".prism/directions/{direction-name}/DESIGN.md"
+→ DESIGN.md 경로 전달 안 함 (디자인 토큰은 Stitch가 D3에서 자체 결정)
 → 결과를 .prism/directions/{direction-name}/prompts.md에 저장
 ```
 
@@ -475,7 +475,7 @@ Skill("enhance-prompt") 호출 1회
 
 1. `.prism/directions/` 에서 현재 Direction 디렉토리 확인
 2. 해당 Direction의 `prompts.md`에서 Feature 프롬프트 로드
-3. 해당 Direction의 `DESIGN.md`를 `./DESIGN.md`로 복원 (첫 Feature 이후)
+3. 해당 Direction의 `design-identity.md` 존재 시 Read → 앵커 문구 준비
 
 ### Feature Routing (all 모드 전용)
 
@@ -493,38 +493,47 @@ Skill("enhance-prompt") 호출 1회
 2. 없으면 `/prism analyze` 먼저 실행 안내
 3. 있으면 해당 Feature의 프롬프트 로드
 
-### D2: 디자인 시스템 — DESIGN.md 일관성 보장
+### D2: (제거됨 — Phase 번호 호환성을 위해 유지)
 
-**Goal:** 모든 Feature 프로젝트에 동일한 디자인 시스템을 적용한다.
-
-**⚠️ 핵심 규칙: Feature별 프로젝트를 분리하되, 디자인 시스템(DESIGN.md)은 반드시 동일해야 한다.**
-
-**판단 기준:** `.prism/directions/{direction}/DESIGN.md` 파일 존재 여부로 결정한다.
-
-**파일 미존재 (첫 Feature 또는 새 Direction):**
-```
-Skill("design-md") 호출 → ./DESIGN.md 생성
-원본 보존: cp ./DESIGN.md .prism/directions/{direction}/DESIGN.md
-```
-
-**파일 존재 (이후 Feature, 같은 Direction):**
-```
-.prism/directions/{direction}/DESIGN.md를 ./DESIGN.md로 복원
-D2 재호출 불필요 — 동일 DESIGN.md가 새 프로젝트에도 적용됨
-```
-
-**Direction 전환 시:**
-```
-새 Direction의 첫 Feature → D2 재호출 → DESIGN.md 새로 생성 → 보존
-```
-
-**DESIGN.md 적용 방법:**
-Stitch `create_project` 시 DESIGN.md의 핵심 토큰(색상, 폰트, roundness)을 프로젝트 설정에 반영하고,
-`generate_screen_from_text` 프롬프트에 DESIGN.md 내용을 포함하여 디자인 일관성을 보장한다.
+> D2는 v2.10.0에서 제거되었다. Stitch가 첫 화면 생성 시 디자인 시스템을 자동 생성하므로 외부 DESIGN.md 생성이 불필요하다.
+> 디자인 시스템 일관성은 D3의 "Design System Name Anchor" 패턴으로 보장한다.
+> 기존 D3-D6 번호를 유지한다.
 
 ### D3: 디자인 생성 — Feature별 프로젝트
 
 **Goal:** Feature 프롬프트로 Stitch 디자인을 생성한다.
+
+**Design Identity 판단 (D3 시작 시):**
+
+`.prism/directions/{direction}/design-identity.md` 존재 여부로 분기:
+
+**미존재 (첫 Feature 또는 새 Direction):**
+```
+1. create_project → 첫 화면 generate_screen_from_text
+2. get_project → designTheme에서 이름 추출:
+   - 소스 1: outputComponents 텍스트에서 '{NAME}' design system/aesthetic/palette 패턴
+   - 소스 2: designTheme.designMd 첫 # 헤딩 파싱 (더 안정적)
+   - Fallback: 소스 1 실패 → get_project로 소스 2 / 소스 2도 실패 → 2번째 화면 후 재시도 / 2회 실패 → 앵커 없이 진행
+3. design-identity.md 저장:
+   | 항목 | 값 |
+   |------|------|
+   | Name | {추출된 이름} |
+   | Source Project | projects/{projectId} |
+   | Color Mode | {designTheme.colorMode} |
+   | Roundness | {designTheme.roundness} |
+   | Primary Font | {designTheme.font 또는 headlineFont} |
+   | Body Font | {designTheme.bodyFont} |
+4. 나머지 화면 생성 시 프롬프트 끝에 앵커 삽입:
+   Continue using the "{Name}" design system established in this project.
+```
+
+**존재 (이후 Feature, 같은 Direction):**
+```
+1. Read design-identity.md → Name, Color Mode, Primary Font, Roundness 추출
+2. 모든 화면 프롬프트에 앵커 삽입:
+   Use the same "{Name}" design system — {Color Mode} mode, {Primary Font} typography, {Roundness} corners.
+3. create_project → generate_screen_from_text (전체 화면 순차)
+```
 
 **⚠️ 프로젝트 구조: Feature별 프로젝트 분리**
 
@@ -617,14 +626,14 @@ Skill("stitch-design") 호출
 
 ```
 Feature 1:
-  Direction A → D2(design-md) → DESIGN.md 보존 → D3(새 프로젝트) → D4-D6 → VERIFIED
-  Direction B → D2(design-md) → DESIGN.md 보존 → D3(새 프로젝트) → D4-D6 → VERIFIED
-  Direction C → D2(design-md) → DESIGN.md 보존 → D3(새 프로젝트) → D4-D6 → VERIFIED
+  Direction A → D3(첫 화면 → 이름 추출 → identity 저장 → 나머지) → D4-D6 → VERIFIED
+  Direction B → D3(첫 화면 → 이름 추출 → identity 저장 → 나머지) → D4-D6 → VERIFIED
+  Direction C → D3(첫 화면 → 이름 추출 → identity 저장 → 나머지) → D4-D6 → VERIFIED
 Feature 2:
-  Direction A → DESIGN.md 복원 → D3(새 프로젝트, 같은 DESIGN.md) → D4-D6 → VERIFIED
-  Direction B → DESIGN.md 복원 → D3(새 프로젝트, 같은 DESIGN.md) → D4-D6 → VERIFIED
-  Direction C → DESIGN.md 복원 → D3(새 프로젝트, 같은 DESIGN.md) → D4-D6 → VERIFIED
+  Direction A → identity Read → D3(앵커 포함 프롬프트로 전체 생성) → D4-D6 → VERIFIED
+  Direction B → identity Read → D3(앵커 포함 프롬프트로 전체 생성) → D4-D6 → VERIFIED
+  Direction C → identity Read → D3(앵커 포함 프롬프트로 전체 생성) → D4-D6 → VERIFIED
 ...
 ```
 
-**핵심:** 같은 Direction 내의 모든 Feature 프로젝트는 동일한 DESIGN.md를 공유한다.
+**핵심:** 같은 Direction 내의 모든 Feature 프로젝트는 동일한 디자인 시스템 이름 앵커를 공유한다.
