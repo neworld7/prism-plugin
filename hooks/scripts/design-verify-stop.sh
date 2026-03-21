@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Stop hook: Loom design pipeline verification loop
+# Stop hook: Prism design pipeline verification loop
 #
 # When phase is "verify", checks if <promise>DESIGN_VERIFIED</promise>
 # appeared in the transcript. If not, re-injects verification prompt.
 #
-# State file: .claude/loom-design-pipeline.local.md (YAML frontmatter)
+# State file: .claude/prism-design-pipeline.local.md (YAML frontmatter)
 
 set -euo pipefail
 
 # --- Config ---
-STATE_FILE=".claude/loom-design-pipeline.local.md"
+STATE_FILE=".claude/prism-design-pipeline.local.md"
 COMPLETION_PROMISE="DESIGN_VERIFIED"
 DEFAULT_MAX_ITERATIONS=5
 
@@ -86,7 +86,7 @@ completed_directions: ${NEW_COMPLETED_DIRS}" "$STATE_FILE"
       cat <<HOOK_OUTPUT
 {
   "decision": "block",
-  "reason": "Direction '${CURRENT_DIRECTION}' 검증 완료! (${NEXT_DIR_INDEX}/${TOTAL_DIRECTIONS})\\n\\n다음 Direction: '${NEXT_DIRECTION}'\\n\\n1. Read .claude/loom-design-pipeline.local.md → 현재 direction 확인\\n2. .loom/directions/${NEXT_DIRECTION}/DESIGN.md → ./DESIGN.md 복원 또는 D2 실행\\n3. .loom/directions/${NEXT_DIRECTION}/prompts.md 로드\\n4. Skill(stitch-design)으로 디자인 생성\\n5. 생성 완료 후 phase를 verify로 변경\\n\\nreferences/workflows.md Design Pipeline 절차를 따르세요."
+  "reason": "Direction '${CURRENT_DIRECTION}' 검증 완료! (${NEXT_DIR_INDEX}/${TOTAL_DIRECTIONS})\\n\\n다음 Direction: '${NEXT_DIRECTION}'\\n\\n1. Read .claude/prism-design-pipeline.local.md → 현재 direction 확인\\n2. .prism/directions/${NEXT_DIRECTION}/DESIGN.md → ./DESIGN.md 복원 또는 D2 실행\\n3. .prism/directions/${NEXT_DIRECTION}/prompts.md 로드\\n4. Skill(stitch-design)으로 디자인 생성\\n5. 생성 완료 후 phase를 verify로 변경\\n\\nreferences/workflows.md Design Pipeline 절차를 따르세요."
 }
 HOOK_OUTPUT
       exit 0
@@ -151,7 +151,7 @@ completed_features: ${NEW_COMPLETED}" "$STATE_FILE"
   cat <<HOOK_OUTPUT
 {
   "decision": "block",
-  "reason": "Feature '${CURRENT_FEATURE}' 디자인 검증 완료! (${NEXT_INDEX}/${TOTAL})\\n\\n다음 Feature: '${NEXT_FEATURE}'\\n\\n1. Read .claude/loom-design-pipeline.local.md → 현재 feature 확인\\n2. analysis.md에서 '${NEXT_FEATURE}' Feature 프롬프트 로드\\n3. Skill(stitch-design)으로 '${NEXT_FEATURE}' 디자인 생성 (Phase D3)\\n4. 생성 완료 후 phase를 verify로 변경하고 검증 시작\\n\\nreferences/workflows.md Phase D3 절차를 따르세요."
+  "reason": "Feature '${CURRENT_FEATURE}' 디자인 검증 완료! (${NEXT_INDEX}/${TOTAL})\\n\\n다음 Feature: '${NEXT_FEATURE}'\\n\\n1. Read .claude/prism-design-pipeline.local.md → 현재 feature 확인\\n2. analysis.md에서 '${NEXT_FEATURE}' Feature 프롬프트 로드\\n3. Skill(stitch-design)으로 '${NEXT_FEATURE}' 디자인 생성 (Phase D3)\\n4. 생성 완료 후 phase를 verify로 변경하고 검증 시작\\n\\nreferences/workflows.md Phase D3 절차를 따르세요."
 }
 HOOK_OUTPUT
   exit 0
@@ -177,6 +177,6 @@ fi
 cat <<'HOOK_OUTPUT'
 {
   "decision": "block",
-  "reason": "디자인 검증 루프를 계속합니다.\n\n1. Read .claude/loom-design-pipeline.local.md → 남은 gaps 확인\n2. gaps > 0: Skill(stitch-design)으로 누락분 수정 또는 재생성 → Phase D4 재검증\n3. gaps == 0: <promise>DESIGN_VERIFIED</promise> 출력\n\nreferences/workflows.md Phase D4 절차를 따르세요."
+  "reason": "디자인 검증 루프를 계속합니다.\n\n1. Read .claude/prism-design-pipeline.local.md → 남은 gaps 확인\n2. gaps > 0: Skill(stitch-design)으로 누락분 수정 또는 재생성 → Phase D4 재검증\n3. gaps == 0: <promise>DESIGN_VERIFIED</promise> 출력\n\nreferences/workflows.md Phase D4 절차를 따르세요."
 }
 HOOK_OUTPUT

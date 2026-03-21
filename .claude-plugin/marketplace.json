@@ -1,5 +1,5 @@
 {
-  "name": "loom",
+  "name": "prism",
   "owner": {
     "name": "Taekwan Kim"
   },
@@ -9,14 +9,14 @@
   },
   "plugins": [
     {
-      "name": "loom",
+      "name": "prism",
       "source": "./",
       "description": "Google Stitch AI design tool orchestrator — analyze, design pipeline, verification loops",
       "version": "2.0.0",
       "author": {
         "name": "Taekwan Kim"
       },
-      "keywords": ["loom", "stitch", "design", "orchestrator", "automation"]
+      "keywords": ["prism", "stitch", "design", "orchestrator", "automation"]
     }
   ]
 }

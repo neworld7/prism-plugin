@@ -1,8 +1,8 @@
-# Loom Workflows
+# Prism Workflows
 
 통합 워크플로우 실행 가이드. Analyze (A1-A6) → Design (D1-D6).
 
-## Analyze Pipeline — `/loom analyze [app]`
+## Analyze Pipeline — `/prism analyze [app]`
 
 ### A1: 코드 분석
 
@@ -156,14 +156,14 @@
 ```
 Skill("enhance-prompt") 호출 1회
 → A4에서 작성한 원시 프롬프트를 전달
-→ 결과를 .loom/directions/default/prompts.md에 저장
+→ 결과를 .prism/directions/default/prompts.md에 저장
 ```
 
 **멀티 모드 (--directions N):**
 ```
 각 Direction에 대해 Skill("enhance-prompt") 호출:
 → 원시 프롬프트 + Direction Context 블록 삽입
-→ 결과를 .loom/directions/{direction-name}/prompts.md에 저장
+→ 결과를 .prism/directions/{direction-name}/prompts.md에 저장
 ```
 
 **Direction Context 삽입 예시:**
@@ -183,7 +183,7 @@ Skill("enhance-prompt") 호출 1회
 **파일 구조 (단일/멀티 동일):**
 
 ```
-.loom/
+.prism/
   analysis.md                    ← 공통 (A1-A4 산출물)
   directions/
     default/                     ← 단일 모드
@@ -260,11 +260,11 @@ All UI text must be in Korean (한국어).
 
 ---
 
-## Design Pipeline — `/loom design <feature|all>`
+## Design Pipeline — `/prism design <feature|all>`
 
 ### Direction Routing
 
-1. `.loom/directions/` 에서 현재 Direction 디렉토리 확인
+1. `.prism/directions/` 에서 현재 Direction 디렉토리 확인
 2. 해당 Direction의 `prompts.md`에서 Feature 프롬프트 로드
 3. 해당 Direction의 `DESIGN.md`를 `./DESIGN.md`로 복원 (첫 Feature 이후)
 
@@ -272,7 +272,7 @@ All UI text must be in Korean (한국어).
 
 > 단일 Feature 모드에서는 건너뛴다.
 
-1. Read `.claude/loom-design-pipeline.local.md` → `feature` 필드 확인
+1. Read `.claude/prism-design-pipeline.local.md` → `feature` 필드 확인
 2. 현재 Direction의 prompts.md에서 해당 Feature 프롬프트만 추출
 
 ### D1: prompts.md 로드
@@ -280,8 +280,8 @@ All UI text must be in Korean (한국어).
 **Goal:** 현재 Direction의 프롬프트를 로드한다.
 
 **Steps:**
-1. `.loom/directions/{direction}/prompts.md` 존재 확인
-2. 없으면 `/loom analyze` 먼저 실행 안내
+1. `.prism/directions/{direction}/prompts.md` 존재 확인
+2. 없으면 `/prism analyze` 먼저 실행 안내
 3. 있으면 해당 Feature의 프롬프트 로드
 
 ### D2: 디자인 시스템 — 공식 스킬 위임 + DESIGN.md 스와핑
@@ -291,12 +291,12 @@ All UI text must be in Korean (한국어).
 **첫 Feature에서:**
 ```
 Skill("design-md") 호출 → ./DESIGN.md 생성
-원본 보존: cp ./DESIGN.md .loom/directions/{direction}/DESIGN.md
+원본 보존: cp ./DESIGN.md .prism/directions/{direction}/DESIGN.md
 ```
 
 **이후 Feature에서 (같은 Direction):**
 ```
-.loom/directions/{direction}/DESIGN.md를 ./DESIGN.md로 복원
+.prism/directions/{direction}/DESIGN.md를 ./DESIGN.md로 복원
 D2 재호출 불필요
 ```
 
@@ -314,7 +314,7 @@ D2 재호출 불필요
 Skill("stitch-design") 호출
 → 현재 Direction의 prompts.md에서 Feature 프롬프트 전달
 → 프로젝트 이름: "{App} — {Direction 이름}"
-→ 생성된 프로젝트 ID를 .loom/directions/{direction}/project-id에 기록
+→ 생성된 프로젝트 ID를 .prism/directions/{direction}/project-id에 기록
 ```
 
 ### D4: 검증
@@ -325,9 +325,9 @@ Skill("stitch-design") 호출
 1. 각 화면에 대해:
    ```
    get_screen(name: "projects/{projectId}/screens/{screenId}") → downloadUrls
-   web_fetch(downloadUrl.screenshot) → /tmp/loom-{screenName}.png
-   sips -Z 1200 /tmp/loom-{screenName}.png
-   Read /tmp/loom-{screenName}.png → 시각 검증
+   web_fetch(downloadUrl.screenshot) → /tmp/prism-{screenName}.png
+   sips -Z 1200 /tmp/prism-{screenName}.png
+   Read /tmp/prism-{screenName}.png → 시각 검증
    ```
 
 2. 체크리스트 + gaps 카운트
@@ -354,7 +354,7 @@ Skill("stitch-design") 호출
 
 ## 이중 루프: Feature(외부) × Direction(내부)
 
-`/loom design all --directions 3`일 때:
+`/prism design all --directions 3`일 때:
 
 ```
 Feature 1:
