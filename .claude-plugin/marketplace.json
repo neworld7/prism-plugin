@@ -1,22 +1,22 @@
 {
-  "name": "stitch-plugins",
+  "name": "loom",
   "owner": {
     "name": "Taekwan Kim"
   },
   "metadata": {
-    "description": "Google Stitch AI design tool automation plugins",
-    "version": "0.2.0"
+    "description": "Google Stitch AI design tool orchestrator — code→design pipeline via official skills",
+    "version": "1.0.0"
   },
   "plugins": [
     {
-      "name": "stitch-automation",
+      "name": "loom",
       "source": "./",
-      "description": "Google Stitch AI design tool automation — analyze, design pipeline, code pipeline, screen CRUD, design systems, variants",
-      "version": "0.2.0",
+      "description": "Google Stitch AI design tool orchestrator — analyze, design pipeline, verification loops",
+      "version": "1.0.0",
       "author": {
         "name": "Taekwan Kim"
       },
-      "keywords": ["stitch", "design", "mcp", "automation"]
+      "keywords": ["loom", "stitch", "design", "orchestrator", "automation"]
     }
   ]
 }

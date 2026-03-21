@@ -1,9 +1,9 @@
 {
-  "name": "stitch-automation",
-  "version": "0.7.1",
-  "description": "Google Stitch AI design tool automation plugin for Claude Code",
+  "name": "loom",
+  "version": "1.0.0",
+  "description": "Google Stitch AI design tool orchestrator for Claude Code — code analysis, design pipeline via official Stitch skills",
   "author": {
     "name": "Taekwan Kim"
   },
-  "keywords": ["stitch", "design", "mcp", "automation", "ui-design", "google"]
+  "keywords": ["loom", "stitch", "design", "orchestrator", "automation", "google"]
 }
