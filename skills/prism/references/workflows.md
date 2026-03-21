@@ -15,32 +15,96 @@
    - React: `Glob: src/**/*.{tsx,jsx}`
    - Next.js: `Glob: app/**/*.{tsx,jsx}`
 
-2. **메인 화면** 추출:
-   - Flutter: `Grep: class.*Screen|class.*Page` in `lib/`
-   - React/Next: `Grep: export default|export function` in page files
+**Screen State Matrix 6축에 대응하는 코드 패턴을 모두 추출한다:**
 
-3. **서브 화면/탭** 추출:
-   - Flutter: `Grep: class.*Tab|class.*View|class.*Panel|class.*Section` in `lib/`
-   - React: `Grep: TabPanel|TabContent` in components
+#### 축 1: Primary Screens
+```
+Flutter: Grep: class.*Screen|class.*Page in lib/
+Flutter: Grep: GoRoute|path: in router file (라우트 구조)
+React/Next: Grep: export default|export function in page files
+```
 
-4. **모달/바텀시트/다이얼로그** 추출:
-   - Flutter: `Grep: showModalBottomSheet|showDialog|AlertDialog|SimpleDialog|showBottomSheet|BottomSheet`
-   - React: `Grep: Modal|Dialog|Drawer|Sheet`
+#### 축 2: Screen States
+```
+# 빈 상태 (empty)
+Grep: empty.*state|EmptyState|no.*data|아직.*없|등록된.*없|검색.*결과.*없|없어요|없습니다
 
-5. **빈 상태/에러/로딩** 추출:
-   - `Grep: empty.*state|EmptyState|no.*data|아직.*없|등록된.*없|검색.*결과.*없`
-   - `Grep: CircularProgressIndicator|Shimmer|skeleton|loading`
-   - `Grep: error|오류|실패`
+# 로딩/스켈레톤 (loading/skeleton)
+Grep: CircularProgressIndicator|Shimmer|skeleton|loading|Loading|isLoading|shimmer
 
-6. **편집 모드/특수 상태** 추출:
-   - `Grep: _isEditMode|editMode|isEditing|_isSelecting`
+# 에러 (error)
+Grep: error.*widget|ErrorWidget|오류|실패|Error.*state|hasError|onError
 
-7. **라우트/네비게이션 구조:**
-   - Flutter: `Grep: GoRoute|path:` in router file
-   - React/Next: 파일 기반 라우팅
+# 데이터 있음 (populated) — 코드 분석 불필요, 메인 화면이 이 상태
+```
 
-8. **인터랙션 추출:**
-   - `Grep: onTap|onPressed|onClick|onSubmit|onLongPress|GestureDetector`
+#### 축 3: Overlays
+```
+# 모달/바텀시트
+Grep: showModalBottomSheet|showBottomSheet|BottomSheet|showDialog
+
+# 다이얼로그/확인
+Grep: AlertDialog|SimpleDialog|showDialog|confirm|삭제.*할까|정말
+
+# 스낵바/토스트
+Grep: ScaffoldMessenger|showSnackBar|SnackBar|Toast|toast
+
+# 드로어
+Grep: Drawer|showDrawer|endDrawer
+
+# 팝오버/툴팁/메뉴
+Grep: PopupMenuButton|showMenu|Tooltip|DropdownButton
+```
+
+#### 축 4: Interaction Modes
+```
+# 편집/선택 모드
+Grep: _isEditMode|editMode|isEditing|_isSelecting|selectionMode
+
+# 드래그/리오더
+Grep: ReorderableListView|Draggable|DragTarget|onReorder|LongPressDraggable
+
+# 스와이프 액션
+Grep: Dismissible|SwipeAction|slidable
+
+# 검색 활성
+Grep: _focusNode|searchFocus|isSearching|SearchDelegate|showSearch
+
+# 키보드/입력 포커스
+Grep: TextEditingController|FocusNode|_controller|autofocus
+```
+
+#### 축 5: System States
+```
+# 스플래시
+Grep: SplashScreen|native_splash|launch_screen
+
+# 권한 요청
+Grep: Permission|permission|openAppSettings|requestPermission|getToken
+
+# 오프라인/네트워크
+Grep: connectivity|isOffline|noInternet|NetworkException|Connectivity
+
+# 강제 업데이트
+Grep: forceUpdate|appUpdate|remote_config|version.*check
+
+# 딥링크
+Grep: deepLink|universalLink|dynamicLink|incoming.*link
+```
+
+#### 축 6: Transitions
+```
+# 온보딩/투어
+Grep: Onboarding|onboarding|tutorial|coach|walkthrough|firstLaunch|isFirst
+
+# 완료/축하
+Grep: Completion|celebration|congrat|완료|축하|성공
+
+# 인터랙션
+Grep: onTap|onPressed|onClick|onSubmit|onLongPress|GestureDetector
+```
+
+**각 축에서 발견된 코드 위치를 화면 목록에 포함**시켜, A3에서 Screen State Matrix 분류의 입력 데이터로 사용한다.
 
 **Output:** 화면 목록 (메인 + 서브 + 모달 + 상태 변형), 인터랙션 목록.
 
