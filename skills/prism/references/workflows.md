@@ -68,28 +68,28 @@ Grep: ReorderableListView|Draggable|DragTarget|onReorder|LongPressDraggable
 Grep: Dismissible|SwipeAction|slidable
 
 # 검색 활성
-Grep: _focusNode|searchFocus|isSearching|SearchDelegate|showSearch
+Grep: isSearching|SearchDelegate|showSearch|searchController
 
-# 키보드/입력 포커스
-Grep: TextEditingController|FocusNode|_controller|autofocus
+# 폼/에디터 (입력 화면 식별용)
+Grep: Form\(|_formKey|TextFormField|validator:
 ```
 
 #### 축 5: System States
 ```
 # 스플래시
-Grep: SplashScreen|native_splash|launch_screen
+Grep: SplashScreen|native_splash|launch_screen|flutter_native_splash
 
 # 권한 요청
-Grep: Permission|permission|openAppSettings|requestPermission|getToken
+Grep: requestPermission|openAppSettings|Permission\.request|getNotificationPermission
 
 # 오프라인/네트워크
-Grep: connectivity|isOffline|noInternet|NetworkException|Connectivity
+Grep: ConnectivityResult|isOffline|noInternet|NetworkException|InternetConnection
 
 # 강제 업데이트
-Grep: forceUpdate|appUpdate|remote_config|version.*check
+Grep: forceUpdate|RemoteConfig|PackageInfo|version.*check
 
 # 딥링크
-Grep: deepLink|universalLink|dynamicLink|incoming.*link
+Grep: deepLink|universalLink|dynamicLink|getInitialLink
 ```
 
 #### 축 6: Transitions
@@ -98,11 +98,10 @@ Grep: deepLink|universalLink|dynamicLink|incoming.*link
 Grep: Onboarding|onboarding|tutorial|coach|walkthrough|firstLaunch|isFirst
 
 # 완료/축하
-Grep: Completion|celebration|congrat|완료|축하|성공
-
-# 인터랙션
-Grep: onTap|onPressed|onClick|onSubmit|onLongPress|GestureDetector
+Grep: CompletionScreen|celebration|congrat|축하|완독
 ```
+
+> **참고:** `onTap`, `onPressed` 등 기본 인터랙션 패턴은 모든 화면에 존재하므로 별도 grep하지 않는다. A2 시뮬레이터 분석에서 인터랙션 특성을 파악한다.
 
 **각 축에서 발견된 코드 위치를 아래 형식으로 정리**하여 A3의 입력 데이터로 사용한다.
 
@@ -232,6 +231,7 @@ Grep: onTap|onPressed|onClick|onSubmit|onLongPress|GestureDetector
    - A1에서 `splash` 패턴이 없어도 → "스플래시 스크린" 화면은 추가
    - A1에서 `snackbar` 패턴이 없어도 → 주요 액션의 "피드백 토스트" 화면은 추가
    - 이는 **디자인 완성도**를 위한 것이며, 코드 존재 여부와 무관하다.
+   - **Feature 배정 규칙**: 특정 Feature에 속하지 않는 공통 화면(스플래시, 오프라인 배너, 강제 업데이트 등)은 **"0. Common / System"** Feature를 만들어 배정한다.
 
 4. **화면 수 목표**: Feature당 최소 5개 이상. **개발자가 바로 코드로 옮길 수 있는 수준**의 모든 상태를 커버해야 한다. 전체 앱 기준 40~60개 화면.
 5. 각 Feature에 매핑: 포함 화면 목록 (축 태그 포함), 인터랙션, 상태
@@ -410,11 +410,12 @@ Skill("enhance-prompt") 호출 1회
 
 ### 화면 목록
 
-| # | 화면 | 유형 | 코드 파일 | 현재 상태 |
-|---|------|------|-----------|-----------|
-| 1 | 로그인 | 메인 | login_screen.dart | 기본 폼 |
-| 2 | 로그인 에러 | 에러 | login_screen.dart | 유효성 에러 표시 |
-| 3 | 비밀번호 재설정 | 모달 | login_screen.dart | 바텀시트 |
+| # | 화면 | 축 태그 | 소스 | 코드 파일 |
+|---|------|--------|------|-----------|
+| 1 | 로그인 | Primary | 코드 발견 | login_screen.dart |
+| 2 | 로그인 에러 | States: error | 코드 발견 | login_screen.dart |
+| 3 | 비밀번호 재설정 | Overlay: bottom-sheet | 코드 발견 | login_screen.dart |
+| 4 | 로그인 로딩 | States: loading | 디자인 필수 | — |
 
 ### 사용자 흐름
 
