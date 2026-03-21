@@ -23,7 +23,15 @@ loom (오케스트레이터)
   └── verify: loom 자체 로직 (Stop hook 검증 루프)
 ```
 
-loom은 Stitch MCP 도구를 직접 호출하지 않는다. 모든 MCP 상호작용은 공식 스킬이 담당한다.
+### MCP 호출 경계
+
+- **생성/수정 도구** (`generate_screen_from_text`, `edit_screens`, `generate_variants`) → 공식 스킬(`stitch-design`)을 경유하여 호출
+- **읽기 전용 도구** (`get_screen`, `list_screens`, `get_project`, `list_projects`) → loom이 검증 루프에서 직접 호출 가능
+- **`web_fetch`** → loom이 스크린샷/HTML 다운로드를 위해 직접 호출 가능
+
+### Skill() 호출 동작 모델
+
+`Skill("stitch-design")` 호출 시 해당 스킬의 SKILL.md가 에이전트 컨텍스트에 주입되고, 에이전트가 스킬의 지시에 따라 MCP 도구를 호출한다. 즉 MCP 호출 **방법**은 공식 스킬이 정의하고, loom은 **언제/무엇을** 호출할지만 결정한다. loom의 파이프라인 흐름과 공식 스킬의 실행이 하나의 에이전트 세션 안에서 이루어진다.
 
 ### Plugin Structure
 
@@ -47,6 +55,19 @@ loom-plugin/
 │       └── design-verify-stop.sh      # 검증 루프 (현재와 동일)
 └── docs/
 ```
+
+## 기존 SKILL.md 패턴 처리
+
+현재 SKILL.md의 6개 Critical Patterns에 대한 처리:
+
+| 패턴 | 현재 내용 | v1.0.0 처리 |
+|---|---|---|
+| Pattern 1 (Screen Data Retrieval) | `get_screen` + `web_fetch` 패턴 | **유지** — 검증 루프에서 loom이 읽기 전용 MCP로 직접 사용 |
+| Pattern 2 (Screenshot Discipline) | MCP 도구 우선, 스크린샷은 마일스톤에서만 | **유지** — 검증 루프에 여전히 적용 |
+| Pattern 3 (Design System — DESIGN.md) | MCP 폴백 분기 로직 | **삭제** — `Skill("design-md")`가 전담. MCP 도구 복구 여부와 무관하게 항상 공식 스킬 사용 |
+| Pattern 4 (Error Recovery) | MCP 재시도/인증 안내 | **삭제** — 공식 스킬이 에러 처리 담당. 인증 체크만 loom에 유지 |
+| Pattern 5 (크레딧 관리) | 일일 400 크레딧 체계 | **유지** — 파이프라인 시작 시 화면 수 안내는 loom이 담당 |
+| Pattern 6 (Stitch 웹 탐색) | chrome-viewer CDP 패턴 | **유지** — analyze 파이프라인에서 시뮬레이터 조작 시 사용 |
 
 ## 공식 스킬 의존성
 
@@ -123,7 +144,7 @@ SKILL.md 활성화 시:
 | Phase | 내용 |
 |-------|------|
 | 1 | `/loom analyze [app]` 실행 |
-| 2 | 산출물 자동 승인 (사용자 확인 스킵) |
+| 2 | 분석 요약 표시 후 자동 진행 (간략 요약만 출력, 명시적 거부 없으면 진행) |
 | 3 | `/loom design all` 실행 |
 | 4 | 전체 Feature 순차 처리 (Feature-by-Feature 루프) |
 
@@ -136,6 +157,41 @@ SKILL.md 활성화 시:
 3. Feature 2 디자인 생성 → 검증 루프 → `DESIGN_VERIFIED`
 4. 반복...
 5. 마지막 Feature 완료 → 상태 파일 삭제 → allow
+
+## workflows-pipeline.md 구성
+
+기존 `workflows-analyze.md`와 `workflows-design.md`를 공식 스킬 위임에 맞게 재구성하여 하나의 파일로 통합한다.
+
+### Phase 구성
+
+| Phase | 내용 | 출처 | 실행 주체 |
+|-------|------|------|-----------|
+| A1. 코드 분석 | Glob/Grep으로 화면·인터랙션·상태 추출 | analyze 유지 | loom |
+| A2. 시뮬레이터 분석 | idb/chrome-viewer로 스크린샷 캡처+분석 | analyze 유지 | loom |
+| A3. Feature 분리 | 코드+시각 분석 종합하여 Feature 단위 분류 | analyze 유지 | loom |
+| A4. 원시 프롬프트 작성 | Feature별 UX-First 프롬프트 초안 | analyze 유지 (Vibe Design 원칙 적용) | loom |
+| A5. 프롬프트 최적화 | Skill("enhance-prompt") 호출 | **신규** (기존 자체 prompting.md 대체) | 공식 스킬 |
+| A6. 산출물 작성 | `.loom/{date}-{app}-analysis.md` | analyze 유지 | loom |
+| D1. analysis.md 로드 | Feature 프롬프트 로드 | design 유지 | loom |
+| D2. 디자인 시스템 | Skill("design-md") 호출 | **신규** (기존 MCP 폴백 대체) | 공식 스킬 |
+| D3. 디자인 생성 | Skill("stitch-design") 호출 | **신규** (기존 MCP 직접 호출 대체) | 공식 스킬 |
+| D4. 검증 | `get_screen` + `web_fetch`로 스크린샷 비교, gaps 카운트 | design 유지 | loom |
+| D5. 수정 | gaps > 0 → Skill("stitch-design")으로 수정 | design 변경 (MCP→스킬) | 공식 스킬 |
+| D6. 완료 | `<promise>DESIGN_VERIFIED</promise>` | design 유지 | loom |
+
+### 기존 파일에서 삭제되는 내용
+
+- `workflows-analyze.md`의 프롬프트 예시 중 hex 코드/px 값 포함 예시 → UX-First Vibe Design 원칙에 맞게 수정
+- `workflows-design.md`의 MCP 직접 호출 절차 (Phase 4 `generate_screen_from_text` 호출 상세) → Skill 위임으로 대체
+- `workflows-design.md`의 배치 분할 기준/크레딧 효과 → 공식 스킬이 관리
+
+### 기존 파일에서 유지되는 내용
+
+- `workflows-analyze.md`의 Phase 1-3 전체 (코드 분석, 시뮬레이터, Feature 분리)
+- `workflows-analyze.md`의 Phase 4 프롬프트 작성 원칙 (Vibe Design, 금지 사항)
+- `workflows-design.md`의 검증 로직 (Phase 5 gaps 카운트, Phase 6 수정 판단)
+- `workflows-design.md`의 Feature Routing (all 모드 전용)
+- `sheet-template.md`의 Analysis Sheet Template (유지), Design Sheet Template (삭제 — 공식 스킬이 대체)
 
 ## State Management
 
@@ -161,8 +217,10 @@ completed_features: auth|home
 
 ### Stop Hook: `design-verify-stop.sh`
 
-현재 로직 그대로 유지. 변경점 하나:
-- 재시도 메시지에서 "Stitch MCP edit_screens로 수정" → "Skill(stitch-design)으로 수정"으로 지시문 변경
+현재 로직 그대로 유지. 변경점:
+- **재시도 메시지** (122번줄): "Stitch MCP edit_screens로 수정" → "Skill(stitch-design)으로 수정"
+- **Feature 전환 메시지** (98번줄): "Stitch MCP로 디자인 생성 (Phase 4)" → "Skill(stitch-design)으로 디자인 생성"
+- **참조 경로**: `references/workflows-design.md` → `references/workflows-pipeline.md`
 
 ## File Changes
 
@@ -180,16 +238,16 @@ completed_features: auth|home
 
 | 파일 | 내용 |
 |---|---|
-| `references/workflows-pipeline.md` | 통합 파이프라인 흐름 (analyze→enhance→design→verify) |
+| `skills/loom/references/workflows-pipeline.md` | 통합 파이프라인 흐름 (analyze→enhance→design→verify) |
 
 ### 삭제할 파일
 
 | 파일 | 이유 |
 |---|---|
-| `references/tools.md` | 공식 스킬이 MCP 호출 담당 |
-| `references/prompting.md` | `enhance-prompt` 스킬이 대체 |
-| `references/workflows-analyze.md` | `workflows-pipeline.md`로 통합 |
-| `references/workflows-design.md` | `workflows-pipeline.md`로 통합 |
+| `skills/loom/references/tools.md` | 공식 스킬이 MCP 호출 담당 |
+| `skills/loom/references/prompting.md` | `enhance-prompt` 스킬이 대체 |
+| `skills/loom/references/workflows-analyze.md` | `workflows-pipeline.md`로 통합 |
+| `skills/loom/references/workflows-design.md` | `workflows-pipeline.md`로 통합 |
 
 ### 변경 없는 파일
 
@@ -197,11 +255,15 @@ completed_features: auth|home
 |---|---|
 | `.mcp.json` | 비어있음 |
 | `hooks/hooks.json` | Stop hook 구조 동일 |
-| `references/sheet-template.md` | loom 고유 산출물 포맷 |
+| `skills/loom/references/sheet-template.md` | loom 고유 산출물 포맷 (Design Sheet Template 삭제, Analysis Sheet Template 유지) |
+
+### 버전 번호
+
+v0.8.0 → v1.0.0. 포크 모델에서 오케스트레이션 모델로의 아키텍처 전환이므로 1.0.0 메이저 릴리스.
 
 ## 현재 vs 개편 비교
 
-| 항목 | 현재 (v0.8.0) | 개편 후 (v2.0.0) |
+| 항목 | 현재 (v0.8.0) | 개편 후 (v1.0.0) |
 |---|---|---|
 | MCP 호출 | loom이 직접 (tools.md 참조) | 공식 스킬이 담당 |
 | 프롬프트 최적화 | loom 자체 (prompting.md) | Skill("enhance-prompt") |
