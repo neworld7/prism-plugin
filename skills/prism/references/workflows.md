@@ -104,9 +104,45 @@ Grep: Completion|celebration|congrat|완료|축하|성공
 Grep: onTap|onPressed|onClick|onSubmit|onLongPress|GestureDetector
 ```
 
-**각 축에서 발견된 코드 위치를 화면 목록에 포함**시켜, A3에서 Screen State Matrix 분류의 입력 데이터로 사용한다.
+**각 축에서 발견된 코드 위치를 아래 형식으로 정리**하여 A3의 입력 데이터로 사용한다.
 
-**Output:** 화면 목록 (메인 + 서브 + 모달 + 상태 변형), 인터랙션 목록.
+**Output 형식 (A1 → A3 전달 구조):**
+
+```markdown
+## A1 코드 분석 결과
+
+### 축 1: Primary Screens (N개)
+| # | 화면 클래스 | 파일 경로 | 라우트 |
+|---|-----------|----------|-------|
+| 1 | LoginScreen | auth/login_screen.dart | /login |
+
+### 축 2: Screen States (N개)
+| # | 상태 유형 | 발견 위치 | 관련 화면 |
+|---|---------|----------|----------|
+| 1 | empty | bookshelf_tab.dart:1032 "아직 등록된 책이 없어요" | 서재 |
+
+### 축 3: Overlays (N개)
+| # | 오버레이 유형 | 발견 위치 | 관련 화면 | 용도 |
+|---|------------|----------|----------|------|
+| 1 | bottom-sheet | book_detail_screen.dart:397 showModalBottomSheet | 책 상세 | 읽기 상태 변경 |
+
+### 축 4: Interaction Modes (N개)
+| # | 모드 | 발견 위치 | 관련 화면 |
+|---|-----|----------|----------|
+| 1 | edit-mode | bookshelf_tab.dart:36 _isEditMode | 서재 |
+
+### 축 5: System States (N개)
+| # | 상태 | 발견 위치 |
+|---|-----|----------|
+| 1 | permission | push_notification_service.dart getToken |
+
+### 축 6: Transitions (N개)
+| # | 전환 | 발견 위치 |
+|---|-----|----------|
+| 1 | onboarding | onboarding_screen.dart |
+```
+
+**중요:** 표가 비어있는 축도 반드시 포함한다. 빈 축은 A3에서 "코드에는 없지만 앱에 필요한 화면"을 추가하는 힌트가 된다.
 
 ### A2: 시뮬레이터 스크린샷 캡처 및 분석
 
@@ -190,10 +226,28 @@ Grep: onTap|onPressed|onClick|onSubmit|onLongPress|GestureDetector
 - Transitions: 서재 첫 방문 코치마크
 ```
 
-3. **화면 수 목표**: Feature당 최소 5개 이상. **개발자가 바로 코드로 옮길 수 있는 수준**의 모든 상태를 커버해야 한다. 전체 앱 기준 40~60개 화면.
-4. 각 Feature에 매핑: 포함 화면 목록, 인터랙션, 상태
+3. **코드에 없더라도 앱에 필수적인 화면은 추가한다:**
+   - A1에서 `offline` 패턴이 발견되지 않아도 → "오프라인 배너" 화면은 추가
+   - A1에서 `skeleton` 패턴이 없어도 → 주요 화면의 "로딩 스켈레톤" 화면은 추가
+   - A1에서 `splash` 패턴이 없어도 → "스플래시 스크린" 화면은 추가
+   - A1에서 `snackbar` 패턴이 없어도 → 주요 액션의 "피드백 토스트" 화면은 추가
+   - 이는 **디자인 완성도**를 위한 것이며, 코드 존재 여부와 무관하다.
 
-**Output:** Feature 목록 + Screen State Matrix 기반 화면 목록 (전체 40~60개).
+4. **화면 수 목표**: Feature당 최소 5개 이상. **개발자가 바로 코드로 옮길 수 있는 수준**의 모든 상태를 커버해야 한다. 전체 앱 기준 40~60개 화면.
+5. 각 Feature에 매핑: 포함 화면 목록 (축 태그 포함), 인터랙션, 상태
+
+**Output:** Feature 목록 + Screen State Matrix 기반 화면 목록 (전체 40~60개). 각 화면에 해당 축 태그를 표시한다:
+
+```markdown
+| # | 화면 | 축 태그 | 소스 |
+|---|------|--------|------|
+| 1 | 서재 (책장, 데이터 있음) | Primary | 코드 발견 |
+| 2 | 서재 (빈 상태) | Screen States: empty | 코드 발견 |
+| 3 | 서재 (스켈레톤 로딩) | Screen States: skeleton | 디자인 필수 추가 |
+| 4 | 서재 (편집 모드) | Interaction: edit-mode | 코드 발견 |
+| 5 | 정렬/필터 바텀시트 | Overlay: bottom-sheet | 코드 발견 |
+| 6 | 오프라인 배너 | System: offline | 디자인 필수 추가 |
+```
 
 ### A4: Feature별 원시 프롬프트 작성
 
@@ -227,16 +281,18 @@ Grep: onTap|onPressed|onClick|onSubmit|onLongPress|GestureDetector
 10. 책 등록 폼 — 제목/저자/페이지수 입력
 ```
 
-**금지 사항:**
-- ❌ hex 코드, px 값, 특정 폰트명
+**A4 원시 프롬프트 규칙 (디자인 시스템 미포함):**
+- ❌ hex 코드, px 값, 특정 폰트명 — A4는 UX/구조만 기술
 - ❌ border-radius, shadow, opacity 수치
+- ✅ 디자인 시스템(DESIGN.md)의 색상/폰트는 **A5 최적화 단계**에서 삽입됨
+- ✅ A4는 "무엇을 보여줄지"에 집중, "어떻게 보일지"는 A5+D2에서 처리
 
 **품질 기준:**
 - 화면당 150-400자
 - 프롬프트 지시문은 영어
 - 마지막에 반드시: `All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).`
 
-**Output:** Feature별 원시 UX-First 프롬프트 (전체 40개+).
+**Output:** Feature별 원시 UX-First 프롬프트 (전체 40개+). 디자인 시스템 토큰은 미포함.
 
 ### A4.5: Direction 생성 (멀티 모드 전용)
 
