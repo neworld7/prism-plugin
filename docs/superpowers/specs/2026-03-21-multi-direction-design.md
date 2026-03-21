@@ -429,7 +429,7 @@ Stitch 웹에서 비교하세요: https://stitch.withgoogle.com
 |---|---|
 | `skills/loom/SKILL.md` | `--directions` 옵션, Direction 생성 패턴, 멀티 검증 흐름 추가 |
 | `commands/loom.md` | `--directions N` 옵션 추가, 멀티 모드 실행 절차 |
-| `skills/loom/references/workflows-pipeline.md` | Phase A4.5, A5×N, D3×N, D4-D6×N 추가 |
+| `skills/loom/references/workflows.md` | `workflows-pipeline.md`에서 리네이밍 + Phase A4.5, A5×N, D3×N, D4-D6×N 추가 + analysis.md/prompts.md 산출물 구조 통합 (sheet-template.md 흡수) |
 | `hooks/scripts/design-verify-stop.sh` | Direction 순차 전환 로직 추가 |
 | `.claude-plugin/plugin.json` | version 1.0.0 → 1.1.0 |
 | `.claude-plugin/marketplace.json` | version 1.0.0 → 1.1.0 |
@@ -438,9 +438,14 @@ Stitch 웹에서 비교하세요: https://stitch.withgoogle.com
 
 | 파일 | 이유 |
 |---|---|
-| `skills/loom/references/sheet-template.md` | analysis.md 템플릿은 workflows-pipeline.md에서 정의 |
 | `hooks/hooks.json` | Stop hook 구조 동일 |
 | `.mcp.json` | 비어있음 |
+
+### 삭제할 파일
+
+| 파일 | 이유 |
+|---|---|
+| `skills/loom/references/sheet-template.md` | 산출물 구조가 `workflows.md`에 통합됨 |
 
 ### 버전
 
