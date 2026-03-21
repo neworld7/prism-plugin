@@ -317,6 +317,33 @@ Skill("stitch-design") 호출
 → 생성된 프로젝트 ID를 .prism/directions/{direction}/project-id에 기록
 ```
 
+**⚠️ Stitch API 중복 생성 방지 규칙 (필수):**
+
+Stitch `generate_screen_from_text`는 비동기적으로 동작한다. 다음 규칙을 반드시 지킨다:
+
+1. **"no output" 응답 ≠ 실패** — API가 `(completed with no output)`을 반환해도 화면이 생성되었을 수 있다. **절대 즉시 재시도하지 않는다.**
+
+2. **생성 확인은 `get_project`로** — `list_screens`는 빈 결과를 반환할 수 있으므로 사용하지 않는다. 대신 `get_project`의 `screenInstances` 배열에서 실제 화면 수를 확인한다.
+
+3. **생성 후 확인 절차:**
+   ```
+   generate_screen_from_text 호출 (1회만)
+   ↓
+   outputComponents 있으면 → 성공, screenId 기록
+   outputComponents 없으면 ("no output") → 30초 대기
+   ↓
+   get_project → screenInstances 배열 확인
+   ↓
+   이전 호출 전 화면 수 vs 현재 화면 수 비교
+   ↓
+   화면 수 증가 → 새 screenId 확인 → 성공
+   화면 수 동일 → 1회만 재시도 (최대)
+   ```
+
+4. **재시도 전 중복 체크** — 같은 title의 화면이 `screenInstances`에 이미 존재하면 재생성하지 않는다.
+
+5. **화면 수 기록** — 각 생성 호출 전에 `get_project`로 현재 `screenInstances.length`를 기록해두어 생성 후 비교한다.
+
 ### D4: 검증
 
 **실행 주체:** loom 자체 (읽기 전용 MCP 직접 호출)
