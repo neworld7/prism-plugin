@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Google Stitch AI design tool orchestrator — code→design pipeline via official skills",
-    "version": "2.3.0"
+    "version": "2.4.0"
   },
   "plugins": [
     {
       "name": "prism",
       "source": "./",
       "description": "Google Stitch AI design tool orchestrator — analyze, design pipeline, verification loops",
-      "version": "2.3.0",
+      "version": "2.4.0",
       "author": {
         "name": "Taekwan Kim"
       },

@@ -101,22 +101,35 @@
 **Steps:**
 
 1. 화면을 기능 단위(Feature)로 그룹화
-2. 각 Feature에 **다음 카테고리를 반드시 포함**:
+2. 각 Feature의 화면을 **Screen State Matrix**로 분해한다. 모든 축을 검토하여 빠진 화면이 없는지 확인한다:
 
-| 카테고리 | 설명 | 예시 |
-|---------|------|------|
-| **메인 화면** | 핵심 UI | 서재 (책장), 서재 (읽고 있는 책) |
-| **빈 상태** | 데이터 없을 때 | 서재 빈 상태 ("아직 등록된 책이 없어요") |
-| **모달/바텀시트** | 팝업 UI | 읽기 상태 변경 시트, 태그 선택 시트 |
-| **편집/입력 모드** | 수정 가능 상태 | 서재 편집 모드 (책 선택/삭제) |
-| **검색/필터 결과** | 검색/필터 적용 | 책 검색 결과, 필터 적용된 서재 |
-| **완료/성공 상태** | 작업 완료 | 완독 축하, 등록 완료 |
-| **에러/실패 상태** | 문제 발생 | 네트워크 에러, 검색 결과 없음 |
+**Screen State Matrix — 모바일 앱 화면 분류 체계:**
 
-3. **화면 수 목표**: Feature당 최소 5개 이상. 앱 제작에 필요한 **모든 상태**를 커버해야 한다.
+| 축 | 분류 | 포함 항목 |
+|---|------|----------|
+| **Primary Screens** | 라우트가 있는 독립 화면 | 메인 화면, 상세 화면, 폼/에디터, 설정 하위 화면 |
+| **Screen States** | 같은 화면의 상태 변형 | `empty` (데이터 없음), `loading` (스켈레톤/시머), `error` (에러 표시), `populated` (데이터 있음), `disabled` (비활성), `skeleton` (초기 로딩) |
+| **Overlays** | 화면 위에 뜨는 UI | `modal`, `bottom-sheet`, `dialog` (확인/삭제), `snackbar/toast`, `tooltip`, `popover`, `drawer`, `action-sheet`, `context-menu` |
+| **Interaction Modes** | 사용자 인터랙션에 의한 모드 전환 | `edit-mode`, `selection-mode`, `drag-reorder`, `swipe-actions`, `long-press-menu`, `keyboard-up` (입력 포커스), `search-active` (검색 활성), `filter-panel` |
+| **System States** | 앱/OS 수준 상태 | `splash`, `permission-prompt` (알림/카메라), `offline-banner`, `force-update`, `deep-link-landing`, `app-review-prompt` |
+| **Transitions** | 화면 간 전환/가이드 | `onboarding-tour`, `coach-marks`, `walkthrough`, `completion-celebration`, `first-use-hint` |
+
+**적용 방법:**
+각 Feature의 Primary Screen마다 위 매트릭스를 적용하여 필요한 화면을 도출한다.
+
+```
+예시 — "서재" Primary Screen 분해:
+- Primary: 서재 (책장, 그리드 뷰), 서재 (리스트 뷰), 서재 (읽고 있는 책)
+- Screen States: 서재 (empty), 서재 (skeleton loading)
+- Overlays: 정렬/필터 바텀시트, 책 삭제 확인 다이얼로그
+- Interaction Modes: 서재 (edit mode + 선택 바), 서재 (search active + 키보드)
+- Transitions: 서재 첫 방문 코치마크
+```
+
+3. **화면 수 목표**: Feature당 최소 5개 이상. **개발자가 바로 코드로 옮길 수 있는 수준**의 모든 상태를 커버해야 한다. 전체 앱 기준 40~60개 화면.
 4. 각 Feature에 매핑: 포함 화면 목록, 인터랙션, 상태
 
-**Output:** Feature 목록 + 화면/인터랙션/상태 매핑 구조 (전체 40개+ 화면).
+**Output:** Feature 목록 + Screen State Matrix 기반 화면 목록 (전체 40~60개).
 
 ### A4: Feature별 원시 프롬프트 작성
 
