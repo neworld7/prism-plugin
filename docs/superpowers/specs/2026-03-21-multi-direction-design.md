@@ -6,7 +6,7 @@ loom 플러그인에 `--directions N` 옵션을 추가하여, 동일한 analysis
 
 ### 핵심 원칙
 
-1. **하위 호환** — `--directions 1`(기본값)일 때 기존 v1.0.0 흐름과 100% 동일
+1. **통일된 구조** — 단일/멀티 모두 `directions/` 구조 사용. 단일 모드는 `directions/default/`. 추가 생성 시 자연스러운 전환.
 2. **3축 기반 Direction** — 아키타입, 레이아웃, 레퍼런스 앱 3개 축의 조합으로 근본적으로 다른 디자인 생성
 3. **전체 생성 + 전체 검증** — N개 프로젝트 모두 전체 화면 생성 및 검증 루프 완주
 
@@ -43,36 +43,41 @@ A1-A4 → [A4.5: Direction 생성] → A5 × N → A6
 
 ## 파일 구조
 
-### 단일 모드 (--directions 1)
+단일/멀티 모드 모두 동일한 `directions/` 구조를 사용한다. 단일 모드는 `directions/default/` 하나만 존재.
 
-기존 v1.0.0과 동일:
-```
-.loom/
-  {date}-{app}-analysis.md       ← 공통 분석 + 프롬프트
-./DESIGN.md                      ← 디자인 시스템
-```
-
-### 멀티 모드 (--directions N)
-
-Direction별 디렉토리로 관리:
 ```
 .loom/
   analysis.md                    ← 공통 (A1-A4: 코드 분석, Feature, 원시 프롬프트)
   directions/
-    cozy-reading-nook/
+    default/                     ← --directions 1일 때 (또는 인자 없을 때)
       prompts.md                 ← A5 산출물 (enhance-prompt 결과)
       DESIGN.md                  ← 디자인 시스템 원본
       project-id                 ← Stitch 프로젝트 ID (텍스트 파일)
-    tech-library/
+    cozy-reading-nook/           ← --directions N일 때 추가
       prompts.md
       DESIGN.md
       project-id
-    illustrated-journey/
+    tech-library/
       prompts.md
       DESIGN.md
       project-id
 ./DESIGN.md                      ← 활성 Direction의 DESIGN.md 복제본
 ```
+
+### 단일 → 멀티 전환 (추가 생성)
+
+```
+1차: /loom design library
+  → .loom/directions/default/ 에 결과 저장
+
+2차: /loom design library --directions 2
+  → .loom/directions/default/ 는 그대로 유지
+  → .loom/directions/cozy-reading-nook/ 추가
+  → .loom/directions/tech-library/ 추가
+  → 총 3개 Direction (default + 2개 추가)
+```
+
+기존 `default` Direction의 프로젝트와 새 Direction들을 Stitch 웹에서 함께 비교 가능.
 
 ### 파일 분류
 
@@ -186,13 +191,7 @@ enhance-prompt는 LLM 기반 스킬이므로 프롬프트 텍스트에 포함된
 
 ## Phase A6: 산출물 저장
 
-### 단일 모드
-
-기존과 동일: `.loom/{date}-{app}-analysis.md`에 전체 저장.
-
-### 멀티 모드
-
-공통 분석과 Direction별 프롬프트를 분리 저장:
+단일/멀티 모두 동일 구조. 공통 분석과 Direction별 프롬프트를 분리 저장:
 
 **1. 공통 분석** — `.loom/analysis.md`
 
@@ -291,7 +290,7 @@ cp .loom/directions/{selected-direction}/DESIGN.md ./DESIGN.md
 
 ### 단일 모드 (--directions 1)
 
-Direction 스와핑 없음. `design-md`가 `./DESIGN.md`를 직접 생성하고 그대로 사용. 기존 동작과 100% 동일.
+Direction은 `default`로 고정. `design-md`가 `./DESIGN.md`를 생성하고 `.loom/directions/default/DESIGN.md`로 보존.
 
 ## Phase D3 × N: 멀티 프로젝트 생성
 
@@ -439,7 +438,7 @@ Stitch 웹에서 비교하세요: https://stitch.withgoogle.com
 
 | 파일 | 이유 |
 |---|---|
-| `skills/loom/references/sheet-template.md` | Direction은 analysis.md 내부에 저장. 멀티 모드의 analysis.md 구조는 workflows-pipeline.md에서 정의 |
+| `skills/loom/references/sheet-template.md` | analysis.md 템플릿은 workflows-pipeline.md에서 정의 |
 | `hooks/hooks.json` | Stop hook 구조 동일 |
 | `.mcp.json` | 비어있음 |
 
