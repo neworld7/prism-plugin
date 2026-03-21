@@ -4,9 +4,9 @@
 
 ## Analyze Pipeline — `/prism analyze [app]`
 
-### A1: 코드 분석
+### A1: 코드 분석 (심층)
 
-**Goal:** 프로젝트 소스 코드에서 모든 화면, 인터랙션, 상태를 추출한다.
+**Goal:** 프로젝트 소스 코드에서 **모든 화면, 서브 화면, 모달, 바텀시트, 상태 변형**을 빠짐없이 추출한다.
 
 **Steps:**
 
@@ -15,21 +15,34 @@
    - React: `Glob: src/**/*.{tsx,jsx}`
    - Next.js: `Glob: app/**/*.{tsx,jsx}`
 
-2. 화면/페이지 추출:
-   - Flutter: `Grep: class.*Screen|class.*Page|class.*View` in `lib/`
+2. **메인 화면** 추출:
+   - Flutter: `Grep: class.*Screen|class.*Page` in `lib/`
    - React/Next: `Grep: export default|export function` in page files
 
-3. 라우트/네비게이션 구조:
-   - Flutter: `Grep: GoRoute|MaterialPageRoute|Navigator.push`
-   - React/Next: 파일 기반 라우팅 or `Grep: useRouter|Link`
+3. **서브 화면/탭** 추출:
+   - Flutter: `Grep: class.*Tab|class.*View|class.*Panel|class.*Section` in `lib/`
+   - React: `Grep: TabPanel|TabContent` in components
 
-4. 인터랙션 추출:
-   - `Grep: onTap|onPressed|onClick|onSubmit|GestureDetector`
+4. **모달/바텀시트/다이얼로그** 추출:
+   - Flutter: `Grep: showModalBottomSheet|showDialog|AlertDialog|SimpleDialog|showBottomSheet|BottomSheet`
+   - React: `Grep: Modal|Dialog|Drawer|Sheet`
 
-5. 상태 추출:
-   - `Grep: Loading|Error|Empty|CircularProgressIndicator|Shimmer|skeleton`
+5. **빈 상태/에러/로딩** 추출:
+   - `Grep: empty.*state|EmptyState|no.*data|아직.*없|등록된.*없|검색.*결과.*없`
+   - `Grep: CircularProgressIndicator|Shimmer|skeleton|loading`
+   - `Grep: error|오류|실패`
 
-**Output:** 화면 목록, 인터랙션 목록, 상태 목록.
+6. **편집 모드/특수 상태** 추출:
+   - `Grep: _isEditMode|editMode|isEditing|_isSelecting`
+
+7. **라우트/네비게이션 구조:**
+   - Flutter: `Grep: GoRoute|path:` in router file
+   - React/Next: 파일 기반 라우팅
+
+8. **인터랙션 추출:**
+   - `Grep: onTap|onPressed|onClick|onSubmit|onLongPress|GestureDetector`
+
+**Output:** 화면 목록 (메인 + 서브 + 모달 + 상태 변형), 인터랙션 목록.
 
 ### A2: 시뮬레이터 스크린샷 캡처 및 분석
 
@@ -81,20 +94,33 @@
 
 **Output:** 화면별 스크린샷 + 시각 분석 메모.
 
-### A3: Feature 분리
+### A3: Feature 분리 (심층 — 서브 화면 포함)
 
-**Goal:** 코드 분석 + 스크린샷 분석 결과를 종합하여 Feature 단위로 화면을 분류한다.
+**Goal:** 코드 분석 + 스크린샷 분석 결과를 종합하여 Feature 단위로 **모든 화면과 상태 변형**을 빠짐없이 분류한다.
 
 **Steps:**
 
 1. 화면을 기능 단위(Feature)로 그룹화
-2. 각 Feature에 매핑: 포함 화면 목록, 인터랙션, 상태
+2. 각 Feature에 **다음 카테고리를 반드시 포함**:
 
-**Output:** Feature 목록 + 화면/인터랙션/상태 매핑 구조.
+| 카테고리 | 설명 | 예시 |
+|---------|------|------|
+| **메인 화면** | 핵심 UI | 서재 (책장), 서재 (읽고 있는 책) |
+| **빈 상태** | 데이터 없을 때 | 서재 빈 상태 ("아직 등록된 책이 없어요") |
+| **모달/바텀시트** | 팝업 UI | 읽기 상태 변경 시트, 태그 선택 시트 |
+| **편집/입력 모드** | 수정 가능 상태 | 서재 편집 모드 (책 선택/삭제) |
+| **검색/필터 결과** | 검색/필터 적용 | 책 검색 결과, 필터 적용된 서재 |
+| **완료/성공 상태** | 작업 완료 | 완독 축하, 등록 완료 |
+| **에러/실패 상태** | 문제 발생 | 네트워크 에러, 검색 결과 없음 |
+
+3. **화면 수 목표**: Feature당 최소 5개 이상. 앱 제작에 필요한 **모든 상태**를 커버해야 한다.
+4. 각 Feature에 매핑: 포함 화면 목록, 인터랙션, 상태
+
+**Output:** Feature 목록 + 화면/인터랙션/상태 매핑 구조 (전체 40개+ 화면).
 
 ### A4: Feature별 원시 프롬프트 작성
 
-**Goal:** 각 화면에 대해 UX 중심 프롬프트 초안을 작성한다.
+**Goal:** 각 화면(메인 + 서브 + 모달 + 상태)에 대해 UX 중심 프롬프트 초안을 작성한다.
 
 **철학:** Vibe Design — AI에 자유도를 주되 방향성은 명확히. 구현 디테일은 AI가 결정.
 
@@ -106,6 +132,24 @@
 - 사용자 흐름
 - 앱 컨텍스트, 플랫폼, 레퍼런스, 제외 사항
 
+**서브 화면 프롬프트 작성 규칙:**
+
+모든 서브 화면에도 별도 프롬프트를 작성한다:
+
+```
+예시 — Library Feature:
+1. 서재 (책장, 데이터 있음) — 2열 그리드에 책 8권
+2. 서재 (책장, 빈 상태) — "아직 등록된 책이 없어요" + 추가 CTA
+3. 서재 (읽고 있는 책) — 커버 캐러셀 + 진행률
+4. 서재 (읽고 있는 책, 빈 상태) — "현재 읽고 있는 책이 없어요"
+5. 서재 (편집 모드) — 체크박스 + 삭제/태그 하단 바
+6. 서재 (리스트 뷰) — 리스트 형태 전환
+7. 책 추가 — 3가지 옵션 카드
+8. 책 검색 (결과 있음) — 검색 결과 4개
+9. 책 검색 (결과 없음) — "검색 결과가 없습니다"
+10. 책 등록 폼 — 제목/저자/페이지수 입력
+```
+
 **금지 사항:**
 - ❌ hex 코드, px 값, 특정 폰트명
 - ❌ border-radius, shadow, opacity 수치
@@ -115,7 +159,7 @@
 - 프롬프트 지시문은 영어
 - 마지막에 반드시: `All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).`
 
-**Output:** Feature별 원시 UX-First 프롬프트.
+**Output:** Feature별 원시 UX-First 프롬프트 (전체 40개+).
 
 ### A4.5: Direction 생성 (멀티 모드 전용)
 
@@ -204,7 +248,7 @@ Skill("enhance-prompt") 호출 1회
 | Stack | Flutter / React / Next.js |
 | Device | Mobile / Desktop / Tablet |
 | Total Features | N |
-| Total Screens | N |
+| Total Screens | N (메인 + 서브 + 모달 + 상태 변형 모두 포함) |
 
 ## 앱 컨텍스트
 
@@ -214,30 +258,21 @@ Skill("enhance-prompt") 호출 1회
 
 | # | Feature | 화면 수 | 핵심 화면 |
 |---|---------|---------|-----------|
-| 1 | 인증 | 3 | 로그인, 회원가입, 비밀번호 재설정 |
+| 1 | 인증 | 6 | 로그인, 회원가입, 비밀번호 재설정, 로딩, 에러 |
 
 ## Feature 1: {feature name}
 
 ### 화면 목록
 
-| # | 화면 | 코드 파일 | 현재 상태 |
-|---|------|-----------|-----------|
-| 1 | 로그인 | lib/.../login_screen.dart | 기본 폼 |
+| # | 화면 | 유형 | 코드 파일 | 현재 상태 |
+|---|------|------|-----------|-----------|
+| 1 | 로그인 | 메인 | login_screen.dart | 기본 폼 |
+| 2 | 로그인 에러 | 에러 | login_screen.dart | 유효성 에러 표시 |
+| 3 | 비밀번호 재설정 | 모달 | login_screen.dart | 바텀시트 |
 
 ### 사용자 흐름
 
-이메일/비밀번호 입력 → 로그인 → 홈으로 이동
-
-### 원시 프롬프트
-
-#### 🎯 로그인
-
-```
-A warm, welcoming login screen for '{App Name}' {app category} app.
-Centered app branding with tagline.
-...
-All UI text must be in Korean (한국어).
-```
+이메일/비밀번호 입력 → 로그인 → (에러 시) 에러 메시지 → (성공 시) 홈으로 이동
 ```
 
 **prompts.md 템플릿 (Direction별):**
@@ -253,7 +288,7 @@ All UI text must be in Korean (한국어).
 📋 **Stitch 프롬프트**
 (enhance-prompt 결과)
 
-### 🎯 회원가입
+### 🎯 로그인 에러 상태
 📋 **Stitch 프롬프트**
 (enhance-prompt 결과)
 ```
@@ -284,9 +319,11 @@ All UI text must be in Korean (한국어).
 2. 없으면 `/prism analyze` 먼저 실행 안내
 3. 있으면 해당 Feature의 프롬프트 로드
 
-### D2: 디자인 시스템 — 공식 스킬 위임 + DESIGN.md 스와핑
+### D2: 디자인 시스템 — DESIGN.md 일관성 보장
 
-**Goal:** Stitch 프로젝트의 디자인 시스템을 생성한다.
+**Goal:** 모든 Feature 프로젝트에 동일한 디자인 시스템을 적용한다.
+
+**⚠️ 핵심 규칙: Feature별 프로젝트를 분리하되, 디자인 시스템(DESIGN.md)은 반드시 동일해야 한다.**
 
 **첫 Feature에서:**
 ```
@@ -297,7 +334,7 @@ Skill("design-md") 호출 → ./DESIGN.md 생성
 **이후 Feature에서 (같은 Direction):**
 ```
 .prism/directions/{direction}/DESIGN.md를 ./DESIGN.md로 복원
-D2 재호출 불필요
+D2 재호출 불필요 — 동일 DESIGN.md가 새 프로젝트에도 적용됨
 ```
 
 **Direction 전환 시:**
@@ -305,21 +342,35 @@ D2 재호출 불필요
 새 Direction의 첫 Feature → D2 재호출 → DESIGN.md 새로 생성 → 보존
 ```
 
-### D3: 디자인 생성 — 공식 스킬 위임
+**DESIGN.md 적용 방법:**
+Stitch `create_project` 시 DESIGN.md의 핵심 토큰(색상, 폰트, roundness)을 프로젝트 설정에 반영하고,
+`generate_screen_from_text` 프롬프트에 DESIGN.md 내용을 포함하여 디자인 일관성을 보장한다.
+
+### D3: 디자인 생성 — Feature별 프로젝트
 
 **Goal:** Feature 프롬프트로 Stitch 디자인을 생성한다.
 
-**실행:**
+**⚠️ 프로젝트 구조: Feature별 프로젝트 분리**
+
 ```
-Skill("stitch-design") 호출
-→ 현재 Direction의 prompts.md에서 Feature 프롬프트 전달
-→ 프로젝트 이름: "{App} — {Direction 이름}"
-→ 생성된 프로젝트 ID를 .prism/directions/{direction}/project-id에 기록
-→ 모델: 반드시 modelId: "GEMINI_3_1_PRO" 사용 (필수)
+Feature별로 별도 Stitch 프로젝트를 생성한다:
+→ 프로젝트 이름: "{App} — {Direction} — {Feature번호}. {Feature명}"
+→ 예시: "ReadCodex — Cozy — 1. Auth & Onboarding"
+→ 예시: "ReadCodex — Cozy — 2. Library"
+→ 각 프로젝트에 해당 Feature의 모든 화면 (메인 + 서브 + 모달 + 상태)을 생성
+→ 생성된 프로젝트 ID를 .prism/directions/{direction}/project-ids.md에 기록
 ```
 
-**⚠️ 모델 강제 규칙:**
-`generate_screen_from_text` 호출 시 반드시 `modelId: "GEMINI_3_1_PRO"`를 명시한다. 생략하거나 다른 모델(GEMINI_3_FLASH 등)을 사용하지 않는다.
+**실행:**
+```
+1. create_project 호출 → 프로젝트 생성 (프로젝트 이름에 Feature 포함)
+2. 해당 Feature의 모든 화면 프롬프트를 순차 생성
+3. 각 화면: generate_screen_from_text 호출 (1회만)
+4. 생성 확인 후 다음 화면으로
+```
+
+**모델 강제 규칙:**
+`generate_screen_from_text` 호출 시 반드시 `modelId: "GEMINI_3_1_PRO"`를 명시한다.
 
 **⚠️ Stitch API 중복 생성 방지 규칙 (필수):**
 
@@ -387,12 +438,14 @@ Skill("stitch-design") 호출
 
 ```
 Feature 1:
-  Direction A → D2(design-md) → DESIGN.md 보존 → D3 → D4-D6 → VERIFIED
-  Direction B → D2(design-md) → DESIGN.md 보존 → D3 → D4-D6 → VERIFIED
-  Direction C → D2(design-md) → DESIGN.md 보존 → D3 → D4-D6 → VERIFIED
+  Direction A → D2(design-md) → DESIGN.md 보존 → D3(새 프로젝트) → D4-D6 → VERIFIED
+  Direction B → D2(design-md) → DESIGN.md 보존 → D3(새 프로젝트) → D4-D6 → VERIFIED
+  Direction C → D2(design-md) → DESIGN.md 보존 → D3(새 프로젝트) → D4-D6 → VERIFIED
 Feature 2:
-  Direction A → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
-  Direction B → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
-  Direction C → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
+  Direction A → DESIGN.md 복원 → D3(새 프로젝트, 같은 DESIGN.md) → D4-D6 → VERIFIED
+  Direction B → DESIGN.md 복원 → D3(새 프로젝트, 같은 DESIGN.md) → D4-D6 → VERIFIED
+  Direction C → DESIGN.md 복원 → D3(새 프로젝트, 같은 DESIGN.md) → D4-D6 → VERIFIED
 ...
 ```
+
+**핵심:** 같은 Direction 내의 모든 Feature 프로젝트는 동일한 DESIGN.md를 공유한다.
