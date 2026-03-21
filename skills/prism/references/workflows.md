@@ -315,7 +315,11 @@ Skill("stitch-design") 호출
 → 현재 Direction의 prompts.md에서 Feature 프롬프트 전달
 → 프로젝트 이름: "{App} — {Direction 이름}"
 → 생성된 프로젝트 ID를 .prism/directions/{direction}/project-id에 기록
+→ 모델: 반드시 modelId: "GEMINI_3_1_PRO" 사용 (필수)
 ```
+
+**⚠️ 모델 강제 규칙:**
+`generate_screen_from_text` 호출 시 반드시 `modelId: "GEMINI_3_1_PRO"`를 명시한다. 생략하거나 다른 모델(GEMINI_3_FLASH 등)을 사용하지 않는다.
 
 **⚠️ Stitch API 중복 생성 방지 규칙 (필수):**
 
