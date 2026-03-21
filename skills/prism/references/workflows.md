@@ -17,13 +17,22 @@
 
 **Screen State Matrix 6축에 대응하는 코드 패턴을 모두 추출한다.**
 
-> **⚠️ 노이즈 제거:** grep 실행 시 `--glob '!*.g.dart' --glob '!*.freezed.dart'` (또는 presentation/ 폴더에 한정)하여 코드 생성 파일과 테마/설정 파일의 false positive를 제거한다.
+> **스택별 참고:** 아래 grep 패턴은 **Flutter** 기준이다. React/Next.js 프로젝트에서는 동일한 축의 의미를 유지하되 패턴을 스택에 맞게 변환한다:
+> - Overlays: `showModalBottomSheet` → `Modal|Dialog|Sheet|Drawer` (React 컴포넌트명)
+> - Screen States: `CircularProgressIndicator` → `Skeleton|Loading|Spinner` (React 컴포넌트명)
+> - Interaction: `_isEditMode` → `isEditing|editMode|useState.*edit` (React hooks 패턴)
+
+> **⚠️ 노이즈 제거:**
+> - Flutter: `--glob '!*.g.dart' --glob '!*.freezed.dart'` 또는 `presentation/` 폴더에 한정
+> - React/Next.js: `--glob '!node_modules' --glob '!.next' --glob '!dist'` 또는 `src/` 폴더에 한정
+> - 공통: 테마/설정 파일, 타입 정의 파일의 false positive 주의
 
 #### 축 1: Primary Screens
 ```
 Flutter: Grep: class.*Screen|class.*Page in lib/
 Flutter: Grep: GoRoute|path: in router file (라우트 구조)
-React/Next: Grep: export default|export function in page files
+React: Grep: export default in src/pages/ or src/views/ (page 컴포넌트)
+Next.js: Glob: app/**/page.{tsx,jsx} (파일 기반 라우팅이므로 page 파일 = Primary Screen)
 ```
 
 #### 축 2: Screen States
@@ -201,7 +210,11 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 
 **Steps:**
 
-1. 화면을 기능 단위(Feature)로 그룹화
+1. 화면을 기능 단위(Feature)로 그룹화한다. **Feature 분리 기준:**
+   - 앱의 **하단 네비게이션 탭** 또는 **주요 섹션**이 자연스러운 Feature 경계
+   - 코드 폴더 구조 (`features/auth/`, `features/books/`, `features/stats/`)를 참고
+   - Feature당 Primary Screen **3~8개** 수준이 적절. 1~2개면 다른 Feature에 병합, 10개 이상이면 분할
+   - 전체 Feature 수는 **6~10개** 목표
 2. 각 Feature의 화면을 **Screen State Matrix**로 분해한다. 모든 축을 검토하여 빠진 화면이 없는지 확인한다:
 
 **Screen State Matrix — 모바일 앱 화면 분류 체계:**
@@ -250,14 +263,13 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 **Output:** Feature 목록 + Screen State Matrix 기반 화면 목록 (전체 40~60개). 각 화면에 해당 축 태그를 표시한다:
 
 ```markdown
-| # | 화면 | 축 태그 | 소스 |
-|---|------|--------|------|
-| 1 | 서재 (책장, 데이터 있음) | Primary | 코드 발견 |
-| 2 | 서재 (빈 상태) | Screen States: empty | 코드 발견 |
-| 3 | 서재 (스켈레톤 로딩) | Screen States: skeleton | 디자인 필수 추가 |
-| 4 | 서재 (편집 모드) | Interaction: edit-mode | 코드 발견 |
-| 5 | 정렬/필터 바텀시트 | Overlay: bottom-sheet | 코드 발견 |
-| 6 | 오프라인 배너 | System: offline | 디자인 필수 추가 |
+| # | 화면 | 축 태그 | 우선순위 | 소스 |
+|---|------|--------|---------|------|
+| 1 | 서재 (책장, 데이터 있음) | Primary | P1 | 코드 발견 |
+| 2 | 서재 (빈 상태) | States: empty | P2 | 코드 발견 |
+| 3 | 서재 (편집 모드) | Interaction: edit-mode | P4 | 코드 발견 |
+| 4 | 정렬/필터 바텀시트 | Overlay: bottom-sheet | P3 | 디자인 필수 |
+| 5 | 서재 (스켈레톤 로딩) | States: skeleton | P6 | 디자인 필수 |
 ```
 
 ### A4: Feature별 원시 프롬프트 작성
