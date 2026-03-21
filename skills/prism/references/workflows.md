@@ -307,9 +307,9 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 
 ### A4.5: Direction 생성 (멀티 모드 전용)
 
-> `--directions 1`이면 이 단계를 건너뛴다. Direction은 `default`로 자동 설정.
+> `--directions` 미지정 시 이 단계를 건너뛴다. Direction은 `default`로 자동 설정.
 
-**Goal:** `--directions N` (N >= 2)일 때, 3축 기반으로 **N × 3개** 디자인 방향 시안을 제시하고, 사용자가 그중 **N개를 선택**한다.
+**Goal:** `--directions N` (N >= 1)일 때, 3축 기반으로 **N × 3개** 디자인 방향 시안을 제시하고, 사용자가 그중 **N개를 선택**한다.
 
 **시안 수 규칙:** `--directions N` → **N × 3개** 시안 생성 → 사용자가 N개 선택
 - `--directions 1` → 3개 시안 → 1개 선택
@@ -485,13 +485,15 @@ Skill("enhance-prompt") 호출 1회
 
 **⚠️ 핵심 규칙: Feature별 프로젝트를 분리하되, 디자인 시스템(DESIGN.md)은 반드시 동일해야 한다.**
 
-**첫 Feature에서:**
+**판단 기준:** `.prism/directions/{direction}/DESIGN.md` 파일 존재 여부로 결정한다.
+
+**파일 미존재 (첫 Feature 또는 새 Direction):**
 ```
 Skill("design-md") 호출 → ./DESIGN.md 생성
 원본 보존: cp ./DESIGN.md .prism/directions/{direction}/DESIGN.md
 ```
 
-**이후 Feature에서 (같은 Direction):**
+**파일 존재 (이후 Feature, 같은 Direction):**
 ```
 .prism/directions/{direction}/DESIGN.md를 ./DESIGN.md로 복원
 D2 재호출 불필요 — 동일 DESIGN.md가 새 프로젝트에도 적용됨
@@ -518,7 +520,10 @@ Feature별로 별도 Stitch 프로젝트를 생성한다:
 → 예시: "ReadCodex — Cozy — 1. Auth & Onboarding"
 → 예시: "ReadCodex — Cozy — 2. Library"
 → 각 프로젝트에 해당 Feature의 모든 화면 (메인 + 서브 + 모달 + 상태)을 생성
-→ 생성된 프로젝트 ID를 .prism/directions/{direction}/project-ids.md에 기록
+→ 생성된 프로젝트 ID를 .prism/directions/{direction}/project-ids.md에 기록:
+   | Feature | Project ID | Stitch URL |
+   |---------|-----------|------------|
+   | 1. Auth | 1234567890 | https://stitch.withgoogle.com/projects/1234567890 |
 ```
 
 **실행:**
