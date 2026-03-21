@@ -68,10 +68,9 @@ Google Stitch AI design tool orchestration command.
    Read: references/workflows.md
    ```
 
-4. **Phase D1-D6 실행**:
+4. **Phase D1-D6 실행** (D2는 제거됨):
    - D1: analysis.md 로드 (prism)
-   - D2: Skill("design-md") → 디자인 시스템
-   - D3: Skill("stitch-design") → 디자인 생성
+   - D3: Design Identity 판단 + Skill("stitch-design") → 디자인 생성
    - D4-D6: 검증 루프 (Stop hook 자동)
 
 > **멀티 모드 (`--directions N`)**: A4.5에서 N개 Direction 생성 후 각 Direction별 D1-D6 순차 실행. workflows.md 참조.

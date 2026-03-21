@@ -86,7 +86,7 @@ completed_directions: ${NEW_COMPLETED_DIRS}" "$STATE_FILE"
       cat <<HOOK_OUTPUT
 {
   "decision": "block",
-  "reason": "Direction '${CURRENT_DIRECTION}' 검증 완료! (${NEXT_DIR_INDEX}/${TOTAL_DIRECTIONS})\\n\\n다음 Direction: '${NEXT_DIRECTION}'\\n\\n1. Read .claude/prism-design-pipeline.local.md → 현재 direction 확인\\n2. .prism/directions/${NEXT_DIRECTION}/DESIGN.md → ./DESIGN.md 복원 또는 D2 실행\\n3. .prism/directions/${NEXT_DIRECTION}/prompts.md 로드\\n4. Skill(stitch-design)으로 디자인 생성\\n5. 생성 완료 후 phase를 verify로 변경\\n\\nreferences/workflows.md Design Pipeline 절차를 따르세요."
+  "reason": "Direction '${CURRENT_DIRECTION}' 검증 완료! (${NEXT_DIR_INDEX}/${TOTAL_DIRECTIONS})\\n\\n다음 Direction: '${NEXT_DIRECTION}'\\n\\n1. Read .claude/prism-design-pipeline.local.md → 현재 direction 확인\\n2. .prism/directions/${NEXT_DIRECTION}/design-identity.md 존재 시 Read → 앵커 준비\\n3. .prism/directions/${NEXT_DIRECTION}/prompts.md 로드\\n4. Skill(stitch-design)으로 디자인 생성 (앵커 포함)\\n5. 생성 완료 후 phase를 verify로 변경\\n\\nreferences/workflows.md Design Pipeline 절차를 따르세요."
 }
 HOOK_OUTPUT
       exit 0
