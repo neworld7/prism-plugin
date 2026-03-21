@@ -212,9 +212,11 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 
 1. 화면을 기능 단위(Feature)로 그룹화한다. **Feature 분리 기준:**
    - 앱의 **하단 네비게이션 탭** 또는 **주요 섹션**이 자연스러운 Feature 경계
-   - 코드 폴더 구조 (`features/auth/`, `features/books/`, `features/stats/`)를 참고
-   - Feature당 Primary Screen **3~8개** 수준이 적절. 1~2개면 다른 Feature에 병합, 10개 이상이면 분할
-   - 전체 Feature 수는 **6~10개** 목표
+   - 코드 폴더 구조 (`features/auth/`, `features/books/`, `features/stats/`)를 참고하되 1:1 매핑은 아님
+   - Feature당 Primary Screen **3~8개** 수준이 적절
+   - **병합 규칙**: Primary Screen 1~2개인 폴더는 가장 관련성 높은 Feature에 병합 (예: `explore` → Library, `focus` → Reading Session)
+   - **분할 규칙**: Primary Screen 10개 이상이면 사용자 흐름 기준으로 분할 (예: `reading/` → "Book Detail" + "Reading Session"으로 분리)
+   - 전체 Feature 수는 **6~10개** 목표 (Feature 0: Common/System 포함)
 2. 각 Feature의 화면을 **Screen State Matrix**로 분해한다. 모든 축을 검토하여 빠진 화면이 없는지 확인한다:
 
 **Screen State Matrix — 모바일 앱 화면 분류 체계:**
