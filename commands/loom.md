@@ -11,9 +11,9 @@ Google Stitch AI design tool orchestration command.
 
 | Subcommand | Usage | Action |
 |------------|-------|--------|
-| `analyze` | `/loom analyze [app]` | 코드+시뮬레이터 분석 → Feature별 프롬프트 → analysis.md 산출 |
-| `design` | `/loom design <feature\|all>` | 공식 스킬로 디자인 생성 + 검증 루프 |
-| `pipeline` | `/loom pipeline [app]` | analyze → design 전체 자동화 (원스텝) |
+| `analyze` | `/loom analyze [app]` | 코드+시뮬레이터 분석 → Feature별 프롬프트 → .loom/analysis.md + directions/ 산출 |
+| `design` | `/loom design <feature\|all> [--directions N]` | 공식 스킬로 디자인 생성 + 검증 루프. N개 Direction (기본 1) |
+| `pipeline` | `/loom pipeline [app] [--directions N]` | analyze → design 전체 자동화 (원스텝) |
 
 ## `/loom analyze [app]`
 
@@ -23,20 +23,20 @@ Google Stitch AI design tool orchestration command.
 
 1. **파이프라인 레퍼런스 로드**:
    ```
-   Read: references/workflows-pipeline.md
+   Read: references/workflows.md
    ```
 
 2. **Phase A1-A6 실행**:
    - A1-A4: loom 자체 (코드 분석, 시뮬레이터, Feature 분리, 원시 프롬프트)
    - A5: Skill("enhance-prompt") 호출 → 프롬프트 최적화
-   - A6: `.loom/{date}-{app}-analysis.md` 작성
+   - A6: `.loom/analysis.md` 작성 + `.loom/directions/default/prompts.md` 작성
 
 3. **사용자 확인 요청**
 
 `app` 인자 예시: `/loom analyze readcodex`, `/loom analyze bookflip`
 인자 없으면 현재 프로젝트 이름 사용.
 
-## `/loom design <feature|all>`
+## `/loom design <feature|all> [--directions N]`
 
 공식 Stitch 스킬을 호출하여 디자인을 생성하고 검증한다.
 
@@ -47,6 +47,11 @@ Google Stitch AI design tool orchestration command.
    ---
    phase: generation
    feature: {feature}
+   direction: "default"
+   direction_index: 0
+   total_directions: 1
+   all_directions: "default"
+   completed_directions: ""
    session_id: {현재 세션 ID}
    iteration: 0
    max_iterations: 5
@@ -56,12 +61,11 @@ Google Stitch AI design tool orchestration command.
    ---
    ```
 
-2. **analysis.md 확인**: `.loom/*-analysis.md` 존재 필수. 없으면 `/loom analyze` 먼저 실행 안내.
+2. **analysis.md 확인**: `.loom/analysis.md` 존재 필수. 없으면 `/loom analyze` 먼저 실행 안내.
 
 3. **파이프라인 레퍼런스 로드**:
    ```
-   Read: references/workflows-pipeline.md
-   Read: references/sheet-template.md
+   Read: references/workflows.md
    ```
 
 4. **Phase D1-D6 실행**:
@@ -70,10 +74,12 @@ Google Stitch AI design tool orchestration command.
    - D3: Skill("stitch-design") → 디자인 생성
    - D4-D6: 검증 루프 (Stop hook 자동)
 
+> **멀티 모드 (`--directions N`)**: A4.5에서 N개 Direction 생성 후 각 Direction별 D1-D6 순차 실행. workflows.md 참조.
+
 `feature` 인자 예시: `/loom design library`, `/loom design all`
 인자 없으면 analysis.md의 Feature 목록 표시 후 선택 요청.
 
-## `/loom pipeline [app]`
+## `/loom pipeline [app] [--directions N]`
 
 analyze → design을 원스텝으로 자동 실행한다.
 
@@ -81,7 +87,7 @@ analyze → design을 원스텝으로 자동 실행한다.
 
 1. `/loom analyze [app]` 실행
 2. 분석 요약 표시 후 자동 진행 (간략 요약만 출력, 명시적 거부 없으면 진행)
-3. `/loom design all` 실행
+3. `/loom design all [--directions N]` 실행
 4. 전체 Feature 순차 처리
 
 ## Execution
