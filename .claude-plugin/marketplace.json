@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Google Stitch AI design tool orchestrator — code→design pipeline via official skills",
-    "version": "1.0.0"
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "loom",
       "source": "./",
       "description": "Google Stitch AI design tool orchestrator — analyze, design pipeline, verification loops",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Taekwan Kim"
       },
