@@ -15,7 +15,9 @@
    - React: `Glob: src/**/*.{tsx,jsx}`
    - Next.js: `Glob: app/**/*.{tsx,jsx}`
 
-**Screen State Matrix 6축에 대응하는 코드 패턴을 모두 추출한다:**
+**Screen State Matrix 6축에 대응하는 코드 패턴을 모두 추출한다.**
+
+> **⚠️ 노이즈 제거:** grep 실행 시 `--glob '!*.g.dart' --glob '!*.freezed.dart'` (또는 presentation/ 폴더에 한정)하여 코드 생성 파일과 테마/설정 파일의 false positive를 제거한다.
 
 #### 축 1: Primary Screens
 ```
