@@ -174,6 +174,46 @@ enhance-prompt는 LLM 기반 스킬이므로 프롬프트 텍스트에 포함된
 
 단일 모드(`--directions 1`)에서는 Direction 섹션 없이 기존 구조 유지.
 
+## DESIGN.md 관리
+
+### 파일 위치
+
+`DESIGN.md`는 **프로젝트 최상위 디렉토리**에 위치한다 (공식 `design-md` 스킬 요구사항). `.loom/`이 아님.
+
+- `./DESIGN.md` — 활성 디자인 시스템 (작업 파일). `design-md`와 `stitch-design` 스킬이 이 파일을 읽고 씀.
+- `.loom/DESIGN-{direction-name}.md` — Direction별 원본 보존.
+
+### Direction 전환 시 DESIGN.md 스와핑
+
+```
+Direction A 시작:
+  1. D2: Skill("design-md") → ./DESIGN.md 생성 (프로젝트 루트)
+  2. 원본 보존: cp DESIGN.md .loom/DESIGN-cozy-reading-nook.md
+  3. D3-D6: stitch-design이 ./DESIGN.md를 참조하여 디자인 생성 + 검증
+
+Direction B 시작:
+  1. D2: Skill("design-md") → ./DESIGN.md 덮어쓰기
+  2. 원본 보존: cp DESIGN.md .loom/DESIGN-tech-library.md
+  3. D3-D6: stitch-design이 ./DESIGN.md를 참조하여 디자인 생성 + 검증
+
+Direction C 시작:
+  1. D2: Skill("design-md") → ./DESIGN.md 덮어쓰기
+  2. 원본 보존: cp DESIGN.md .loom/DESIGN-illustrated-journey.md
+  3. D3-D6: 디자인 생성 + 검증
+```
+
+### 최종 선택
+
+모든 Direction 완료 후, 사용자가 선호하는 Direction을 선택하면:
+```
+cp .loom/DESIGN-{selected-direction}.md ./DESIGN.md
+```
+`./DESIGN.md`는 항상 "현재 활성/선택된 디자인 시스템"을 가리키는 작업 파일.
+
+### 단일 모드 (--directions 1)
+
+Direction 스와핑 없음. `design-md`가 `./DESIGN.md`를 직접 생성하고 그대로 사용. 기존 동작과 100% 동일.
+
 ## Phase D3 × N: 멀티 프로젝트 생성
 
 각 Direction별로 별도 Stitch 프로젝트를 생성한다:
@@ -218,18 +258,19 @@ Direction C 프로젝트 검증:
 
 ```
 Feature 1:
-  Direction A → D2(design-md) → D3(stitch-design) → D4-D6(검증) → VERIFIED
-  Direction B → D2(design-md) → D3(stitch-design) → D4-D6(검증) → VERIFIED
-  Direction C → D2(design-md) → D3(stitch-design) → D4-D6(검증) → VERIFIED
+  Direction A → D2(design-md) → DESIGN.md 보존 → D3(stitch-design) → D4-D6(검증) → VERIFIED
+  Direction B → D2(design-md) → DESIGN.md 보존 → D3(stitch-design) → D4-D6(검증) → VERIFIED
+  Direction C → D2(design-md) → DESIGN.md 보존 → D3(stitch-design) → D4-D6(검증) → VERIFIED
 Feature 2:
-  Direction A → D2 → D3 → D4-D6 → VERIFIED
-  Direction B → D2 → D3 → D4-D6 → VERIFIED
-  Direction C → D2 → D3 → D4-D6 → VERIFIED
+  Direction A → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
+  Direction B → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
+  Direction C → DESIGN.md 복원 → D3 → D4-D6 → VERIFIED
 ...
 마지막 Feature × 마지막 Direction → VERIFIED → 상태 파일 삭제
 ```
 
-각 Direction의 프로젝트마다 D2(design-md)를 개별 호출하여 Direction에 맞는 디자인 시스템을 생성한다.
+- 첫 Feature에서는 D2(design-md)로 DESIGN.md를 생성하고 `.loom/DESIGN-{name}.md`로 보존
+- 이후 Feature에서는 이미 보존된 DESIGN.md를 `./DESIGN.md`로 복원하여 사용 (D2 재호출 불필요)
 
 ## State Management
 
