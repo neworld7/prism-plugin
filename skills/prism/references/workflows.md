@@ -32,7 +32,7 @@ React/Next: Grep: export default|export function in page files
 Grep: empty.*state|EmptyState|no.*data|아직.*없|등록된.*없|검색.*결과.*없|없어요|없습니다
 
 # 로딩/스켈레톤 (loading/skeleton)
-Grep: CircularProgressIndicator|Shimmer|skeleton|loading|Loading|isLoading|shimmer
+Grep: CircularProgressIndicator|Shimmer|skeleton|isLoading|shimmer
 
 # 에러 (error)
 Grep: error.*widget|ErrorWidget|오류|실패|Error.*state|hasError|onError
@@ -43,10 +43,10 @@ Grep: error.*widget|ErrorWidget|오류|실패|Error.*state|hasError|onError
 #### 축 3: Overlays
 ```
 # 모달/바텀시트
-Grep: showModalBottomSheet|showBottomSheet|BottomSheet|showDialog
+Grep: showModalBottomSheet|showBottomSheet|BottomSheet
 
 # 다이얼로그/확인
-Grep: AlertDialog|SimpleDialog|showDialog|confirm|삭제.*할까|정말
+Grep: showDialog|AlertDialog|SimpleDialog|삭제.*할까|정말
 
 # 스낵바/토스트
 Grep: ScaffoldMessenger|showSnackBar|SnackBar|Toast|toast
@@ -88,7 +88,7 @@ Grep: requestPermission|openAppSettings|Permission\.request|getNotificationPermi
 Grep: ConnectivityResult|isOffline|noInternet|NetworkException|InternetConnection
 
 # 강제 업데이트
-Grep: forceUpdate|RemoteConfig|PackageInfo|version.*check
+Grep: forceUpdate|RemoteConfig|upgradeRequired|minimumVersion
 
 # 딥링크
 Grep: deepLink|universalLink|dynamicLink|getInitialLink
@@ -220,11 +220,12 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 
 ```
 예시 — "서재" Primary Screen 분해:
-- Primary: 서재 (책장, 그리드 뷰), 서재 (리스트 뷰), 서재 (읽고 있는 책)
-- Screen States: 서재 (empty), 서재 (skeleton loading)
-- Overlays: 정렬/필터 바텀시트, 책 삭제 확인 다이얼로그
-- Interaction Modes: 서재 (edit mode + 선택 바), 서재 (search active + 키보드)
-- Transitions: 서재 첫 방문 코치마크
+- Primary: 서재 (책장, 그리드 뷰) [코드], 서재 (리스트 뷰) [코드], 서재 (읽고 있는 책) [코드]
+- Screen States: 서재 (empty) [코드], 서재 (skeleton loading) [디자인 필수]
+- Overlays: 정렬/필터 바텀시트 [디자인 필수], 책 삭제 확인 다이얼로그 [코드]
+- Interaction Modes: 서재 (edit mode + 선택 바) [코드], 서재 (search active) [코드]
+- System: (해당 없음 — Feature 0에서 관리)
+- Transitions: (해당 없음)
 ```
 
 3. **코드에 없더라도 앱에 필수적인 화면은 추가한다:**
@@ -356,6 +357,7 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 ```
 Skill("enhance-prompt") 호출 1회
 → A4에서 작성한 원시 프롬프트를 전달
+→ enhance-prompt 스킬이 .stitch/DESIGN.md 또는 .prism/directions/{direction}/DESIGN.md를 자동 Read
 → 결과를 .prism/directions/default/prompts.md에 저장
 ```
 
@@ -363,6 +365,7 @@ Skill("enhance-prompt") 호출 1회
 ```
 각 Direction에 대해 Skill("enhance-prompt") 호출:
 → 원시 프롬프트 + Direction Context 블록 삽입
+→ DESIGN.md 경로를 명시: ".prism/directions/{direction-name}/DESIGN.md"
 → 결과를 .prism/directions/{direction-name}/prompts.md에 저장
 ```
 

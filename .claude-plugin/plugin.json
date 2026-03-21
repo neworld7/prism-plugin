@@ -1,6 +1,6 @@
 {
   "name": "prism",
-  "version": "2.8.0",
+  "version": "2.8.1",
   "description": "Google Stitch AI design tool orchestrator for Claude Code — code analysis, design pipeline via official Stitch skills",
   "author": {
     "name": "Taekwan Kim"
