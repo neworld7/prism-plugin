@@ -379,6 +379,28 @@ Interaction Modes:
 | **레이아웃** | 화면 구조/배치 | Centered Stack, Split Screen, Bottom Sheet, Full-bleed Hero, Card-based |
 | **레퍼런스 앱** | 참조 디자인 DNA | Notion, Linear, Duolingo, 밀리의서재, Spotify |
 
+**5개 시안 다양성 보장 규칙:**
+
+시안은 아래 5가지 디자인 스펙트럼을 **각각 1개씩** 커버해야 한다:
+
+| # | 스펙트럼 위치 | 아키타입 예시 | 특성 |
+|---|-------------|------------|------|
+| 1 | 따뜻한/감성적 | Warm Organic, Cozy Editorial | Serif 서체, 따뜻한 크림/브라운 톤, 둥근 모서리 |
+| 2 | 차분한/미니멀 | Japanese Zen, Scandinavian Clean | 여백 중심, 모노톤, 절제된 색상 |
+| 3 | 어두운/몰입형 | Dark Minimalism, Midnight Noir | 다크 모드, 고대비 악센트, 시네마틱 |
+| 4 | 밝은/모던 | Flat Modern, Material You | 라이트 모드, 체계적 그리드, 산세리프 |
+| 5 | 대담한/표현적 | Glassmorphism, Playful Pastel, Brutalist | 실험적 레이아웃, 강한 색상, 비대칭 |
+
+**금지 규칙:**
+- 같은 colorMode(DARK/LIGHT)가 3개 이상이면 안 됨
+- 같은 font family가 3개 이상이면 안 됨
+- 같은 레퍼런스 앱을 2개 이상 사용하면 안 됨
+- 5개 아키타입이 위 스펙트럼의 서로 다른 행에서 와야 함
+
+**앱 맥락 반영:**
+- 앱의 타겟 사용자와 도메인에 맞지 않는 극단적 방향은 제외 (예: 아동용 앱에 Brutalist, 금융 앱에 Playful Pastel)
+- 대신 해당 스펙트럼 위치에서 앱에 맞는 변형을 선택
+
 **실행:**
 ```
 1. 핵심 화면 5개 선정 → 사용자 확인
