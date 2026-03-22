@@ -11,9 +11,10 @@ Google Stitch AI design tool orchestration command.
 
 | Subcommand | Usage | Action |
 |------------|-------|--------|
-| `analyze` | `/prism analyze [app]` | 코드+시뮬레이터 분석 → Feature별 프롬프트 → .prism/analysis.md + directions/ 산출 |
-| `design` | `/prism design <feature\|all> [--directions N]` | 공식 스킬로 디자인 생성 + 검증 루프. N개 Direction (기본 1) |
-| `pipeline` | `/prism pipeline [app] [--directions N]` | analyze → design 전체 자동화 (원스텝) |
+| `analyze` | `/prism analyze [app]` | 코드+시뮬레이터 분석 → Feature별 프롬프트 → .prism/analysis.md + prompts.md 산출 |
+| `preview` | `/prism preview` | 핵심 화면 5개 × 5개 Direction 시안 생성 → 사용자 선택 → design-identity.md |
+| `design` | `/prism design <feature\|all>` | 디자인 생성 + 검증 루프 |
+| `pipeline` | `/prism pipeline [app]` | analyze → preview → design 전체 자동화 (원스텝) |
 
 ## `/prism analyze [app]`
 
@@ -29,14 +30,27 @@ Google Stitch AI design tool orchestration command.
 2. **Phase A1-A6 실행**:
    - A1-A4: prism 자체 (코드 분석, 시뮬레이터, Feature 분리, 원시 프롬프트)
    - A5: Skill("enhance-prompt") 호출 → 프롬프트 최적화
-   - A6: `.prism/analysis.md` 작성 + `.prism/directions/default/prompts.md` 작성
+   - A6: `.prism/analysis.md` 작성 + `.prism/prompts.md` 작성
 
 3. **사용자 확인 요청**
 
 `app` 인자 예시: `/prism analyze readcodex`, `/prism analyze bookflip`
 인자 없으면 현재 프로젝트 이름 사용.
 
-## `/prism design <feature|all> [--directions N]`
+## `/prism preview`
+
+A4.5 Design Preview 단계를 실행한다. 핵심 화면 5개로 5가지 디자인 시안을 생성하고 사용자가 선택한다.
+
+### 실행 절차
+
+1. `.prism/analysis.md` 존재 확인 (없으면 `/prism analyze` 먼저 실행 안내)
+2. 핵심 화면 5개 선정 → 사용자 확인
+3. 5개 Direction 시안 정의 (3축 프레임워크)
+4. Direction별 Stitch 프로젝트 생성 + 화면 5개 배치 생성
+5. 25개 화면 스크린샷 비교 → 사용자 선택
+6. 선택된 Direction의 designTheme → `.prism/design-identity.md` 저장
+
+## `/prism design <feature|all>`
 
 공식 Stitch 스킬을 호출하여 디자인을 생성하고 검증한다.
 
@@ -47,11 +61,6 @@ Google Stitch AI design tool orchestration command.
    ---
    phase: generation
    feature: {feature}
-   direction: "default"
-   direction_index: 0
-   total_directions: 1
-   all_directions: "default"
-   completed_directions: ""
    session_id: {현재 세션 ID}
    iteration: 0
    max_iterations: 5
@@ -73,21 +82,20 @@ Google Stitch AI design tool orchestration command.
    - D3: Design Identity 판단 + Skill("stitch-design") → 디자인 생성
    - D4-D6: 검증 루프 (Stop hook 자동)
 
-> **멀티 모드 (`--directions N`)**: A4.5에서 N개 Direction 생성 후 각 Direction별 D1-D6 순차 실행. workflows.md 참조.
-
 `feature` 인자 예시: `/prism design library`, `/prism design all`
 인자 없으면 analysis.md의 Feature 목록 표시 후 선택 요청.
 
-## `/prism pipeline [app] [--directions N]`
+## `/prism pipeline [app]`
 
-analyze → design을 원스텝으로 자동 실행한다.
+analyze → preview → design을 원스텝으로 자동 실행한다.
 
 ### 실행 절차
 
 1. `/prism analyze [app]` 실행
 2. 분석 요약 표시 후 자동 진행 (간략 요약만 출력, 명시적 거부 없으면 진행)
-3. `/prism design all [--directions N]` 실행
-4. 전체 Feature 순차 처리
+3. `/prism preview` 실행
+4. `/prism design all` 실행
+5. 전체 Feature 순차 처리
 
 ## Execution
 

@@ -361,94 +361,85 @@ Interaction Modes:
 
 **Output:** Feature별 원시 UX-First 프롬프트 (Feature당 15~20개). 디자인 시스템 토큰은 미포함.
 
-### A4.5: Direction 생성 (멀티 모드 전용)
+### A4.5: Design Preview — 5개 시안 생성
 
-> `--directions` 미지정 시 이 단계를 건너뛴다. Direction은 `default`로 자동 설정.
+**Goal:** 핵심 화면 5개로 5가지 디자인 방향을 시각적으로 미리보기한다. 사용자가 선호하는 디자인을 선택하면 해당 디자인 시스템으로 전체 앱을 생성한다.
 
-**Goal:** `--directions N` (N >= 1)일 때, 3축 기반으로 **N × 3개** 디자인 방향 시안을 제시하고, 사용자가 그중 **N개를 선택**한다.
+**핵심 화면 선정 기준:**
+- 디자인 요소가 풍부한 Feature에서 선정 (리스트, 카드, 차트, 상세 화면 등)
+- 로그인, 온보딩, 스플래시 등 디자인 차별화가 어려운 화면은 제외
+- 앱의 핵심 사용자 흐름을 대표하는 화면 우선 (예: 서재, 책 상세, 통계 대시보드)
+- A3의 Feature 목록에서 Primary Screen이 가장 많고 다양한 Feature에서 5개 선정
 
-**시안 수 규칙:** `--directions N` → **N × 3개** 시안 생성 → 사용자가 N개 선택
-- `--directions 1` → 3개 시안 → 1개 선택
-- `--directions 2` → 6개 시안 → 2개 선택
-- `--directions 3` → 9개 시안 → 3개 선택
-
-**3축 프레임워크:**
+**3축 프레임워크 (방향 다양성 보장):**
 
 | 축 | 역할 | 예시 값 |
 |---|---|---|
-| **아키타입** | 전체 디자인 언어 결정 | Editorial Elegance, Flat Modern, Glassmorphism, Dark Minimalism, Playful Pastel, Japanese Zen, Warm Organic |
-| **레이아웃** | 화면 구조/배치 패턴 | Centered Stack, Split Screen, Bottom Sheet, Full-bleed Hero, Card-based, Centered Narrow |
-| **레퍼런스 앱** | AI가 참조할 구체적 디자인 DNA | Notion, Linear, Stripe, Duolingo, Airbnb, 밀리의서재, Spotify |
+| **아키타입** | 전체 디자인 언어 | Editorial Elegance, Dark Minimalism, Playful Pastel, Japanese Zen, Warm Organic |
+| **레이아웃** | 화면 구조/배치 | Centered Stack, Split Screen, Bottom Sheet, Full-bleed Hero, Card-based |
+| **레퍼런스 앱** | 참조 디자인 DNA | Notion, Linear, Duolingo, 밀리의서재, Spotify |
 
-**시안 다양성 규칙:** N × 3개 시안은 서로 충분히 다른 방향이어야 한다. 아키타입, 레이아웃, 레퍼런스 축에서 최대한 중복을 피한다.
+**실행:**
+```
+1. 핵심 화면 5개 선정 → 사용자 확인
+2. 5개 Direction 시안 정의 (3축 기반, 서로 충분히 다른 방향)
+3. Direction별 Stitch 프로젝트 생성:
+   → 프로젝트 이름: "{App} — Preview — {Direction 이름}"
+   → 예시: "ReadCodex — Preview — Warm Organic"
+4. 각 프로젝트에 핵심 화면 5개 생성 (배치 호출 1회)
+5. 총 5개 프로젝트 × 5개 화면 = 25개 화면
+6. get_project로 각 프로젝트의 스크린샷 다운로드
+7. 사용자에게 5개 Direction 비교 제시 → 1개 선택
+8. 선택된 Direction의 get_project → designTheme 추출
+9. design-identity.md 저장 (이름 + 메타데이터 + designMd 전문)
+10. .prism/preview/ 에 프로젝트 ID 기록
+```
 
 **출력 형식:**
-
 ```
-📐 시안 1: "{Direction 이름}"
+📐 Direction 1: "{Direction 이름}"
   아키타입: {아키타입} — {핵심 특성 1줄}
   레이아웃: {레이아웃} — {구조 설명 1줄}
   레퍼런스: {레퍼런스 앱} — {해당 앱의 어떤 측면을 참조하는지}
+  프로젝트: {Stitch URL}
+  스크린샷: 5개 화면 썸네일
 
-  {이 방향이 앱에 적합한 이유 2-3줄.}
-
-📐 시안 2: ...
+📐 Direction 2: ...
 ...
-📐 시안 {N×3}: ...
 
-→ 위 {N×3}개 시안 중 {N}개를 선택해주세요. (예: "1, 5, 7")
+→ 위 5개 Direction 중 1개를 선택해주세요.
 ```
 
 **사용자 응답 처리:**
-- "1, 5, 7" → 선택된 시안을 Direction으로 확정, A5로 진행
-- "3번을 X로 바꿔주세요" → 교체 후 재표시
-- "하나 더 추가" → 추가 시안 생성
-- 숫자만 응답 → 해당 시안 선택
+- "3" → 선택된 Direction 확정, A6으로 진행
+- "3번을 X로 바꿔주세요" → 해당 프로젝트 재생성 후 재표시
+- 전체 재생성 요청 → A4.5 처음부터 재실행
 
 ### A5: 프롬프트 최적화 — 공식 스킬 위임
 
 **Goal:** 원시 프롬프트를 Stitch에 최적화된 프롬프트로 변환한다.
 
-**단일 모드 (--directions 1):**
 ```
 Skill("enhance-prompt") 호출 1회
 → A4에서 작성한 원시 프롬프트를 전달
 → DESIGN.md 경로 전달 안 함 (디자인 토큰은 Stitch가 D3에서 자체 결정)
-→ 결과를 .prism/directions/default/prompts.md에 저장
-```
-
-**멀티 모드 (--directions N):**
-```
-각 Direction에 대해 Skill("enhance-prompt") 호출:
-→ 원시 프롬프트 + Direction Context 블록 삽입
-→ DESIGN.md 경로 전달 안 함 (디자인 토큰은 Stitch가 D3에서 자체 결정)
-→ 결과를 .prism/directions/{direction-name}/prompts.md에 저장
-```
-
-**Direction Context 삽입 예시:**
-```
-원시 프롬프트 앞에 삽입:
-
-**Direction: Cozy Reading Nook**
-- Archetype: Warm Organic — natural textures, paper-like, serif typography
-- Layout: Centered Generous — ample margins, vertical stack
-- Reference: Inspired by 밀리의서재's warm, trustworthy onboarding
+→ 결과를 .prism/prompts.md에 저장
 ```
 
 ### A6: 산출물 저장
 
 **Goal:** 분석 결과를 저장하고 사용자 확인을 받는다.
 
-**파일 구조 (단일/멀티 동일):**
+**파일 구조:**
 
 ```
 .prism/
   analysis.md                    ← 공통 (A1-A4 산출물)
-  directions/
-    default/                     ← 단일 모드
-      prompts.md                 ← A5 결과
-    {direction-name}/            ← 멀티 모드
-      prompts.md                 ← A5 결과
+  design-identity.md             ← A4.5에서 선택된 Direction의 designTheme
+  prompts.md                     ← A5 결과
+  preview/                       ← A4.5 시안 프로젝트
+    project-ids.md               ← 5개 시안 프로젝트 ID
+  project-ids.md                 ← D3 생성 프로젝트 ID
 ```
 
 **analysis.md 템플릿:**
@@ -482,21 +473,12 @@ Skill("enhance-prompt") 호출 1회
 | # | 화면 | 축 태그 | 소스 | 코드 파일 |
 |---|------|--------|------|-----------|
 | 1 | 로그인 | Primary | 코드 발견 | login_screen.dart |
-| 2 | 로그인 에러 | States: error | 코드 발견 | login_screen.dart |
-| 3 | 비밀번호 재설정 | Overlay: bottom-sheet | 코드 발견 | login_screen.dart |
-| 4 | 로그인 로딩 | States: loading | 디자인 필수 | — |
-
-### 사용자 흐름
-
-이메일/비밀번호 입력 → 로그인 → (에러 시) 에러 메시지 → (성공 시) 홈으로 이동
 ```
 
-**prompts.md 템플릿 (Direction별):**
+**prompts.md 템플릿:**
 
 ```markdown
-# Direction: {Direction 이름}
-
-아키타입: {아키타입} / 레이아웃: {레이아웃} / 레퍼런스: {레퍼런스}
+# {App} Prompts
 
 ## Feature 1: {feature name}
 
@@ -513,25 +495,19 @@ Skill("enhance-prompt") 호출 1회
 
 ## Design Pipeline — `/prism design <feature|all>`
 
-### Direction Routing
-
-1. `.prism/directions/` 에서 현재 Direction 디렉토리 확인
-2. 해당 Direction의 `prompts.md`에서 Feature 프롬프트 로드
-3. 해당 Direction의 `design-identity.md` 존재 시 Read → 앵커 문구 준비
-
 ### Feature Routing (all 모드 전용)
 
 > 단일 Feature 모드에서는 건너뛴다.
 
 1. Read `.claude/prism-design-pipeline.local.md` → `feature` 필드 확인
-2. 현재 Direction의 prompts.md에서 해당 Feature 프롬프트만 추출
+2. `.prism/prompts.md`에서 해당 Feature 프롬프트만 추출
 
 ### D1: prompts.md 로드
 
-**Goal:** 현재 Direction의 프롬프트를 로드한다.
+**Goal:** 프롬프트를 로드한다.
 
 **Steps:**
-1. `.prism/directions/{direction}/prompts.md` 존재 확인
+1. `.prism/prompts.md` 존재 확인
 2. 없으면 `/prism analyze` 먼저 실행 안내
 3. 있으면 해당 Feature의 프롬프트 로드
 
@@ -547,9 +523,9 @@ Skill("enhance-prompt") 호출 1회
 
 **Design Identity 판단 (D3 시작 시):**
 
-`.prism/directions/{direction}/design-identity.md` 존재 여부로 분기:
+`.prism/design-identity.md` 존재 여부로 분기:
 
-**미존재 (첫 Feature 또는 새 Direction):**
+**미존재 (첫 Feature):**
 ```
 1. create_project → 첫 화면 generate_screen_from_text
 2. get_project → designTheme에서 추출:
@@ -571,7 +547,7 @@ Skill("enhance-prompt") 호출 1회
    Continue using the "{Name}" design system established in this project.
 ```
 
-**존재 (이후 Feature, 같은 Direction):**
+**존재 (이후 Feature):**
 ```
 1. Read design-identity.md → Design System Spec (designMd 전문) 추출
 2. create_project → 첫 화면 프롬프트에 designMd 전문 삽입:
@@ -582,17 +558,17 @@ Skill("enhance-prompt") 호출 1회
 4. generate_screen_from_text (전체 화면 순차)
 ```
 
-> **핵심:** 같은 Direction의 이후 Feature에서는 첫 화면 프롬프트에만 designMd 전문을 삽입하여 디자인 시스템을 정착시키고, 나머지 화면은 프로젝트 내부 일관성에 의존한다.
+> **핵심:** 이후 Feature에서는 첫 화면 프롬프트에만 designMd 전문을 삽입하여 디자인 시스템을 정착시키고, 나머지 화면은 프로젝트 내부 일관성에 의존한다.
 
 **⚠️ 프로젝트 구조: Feature별 프로젝트 분리**
 
 ```
 Feature별로 별도 Stitch 프로젝트를 생성한다:
-→ 프로젝트 이름: "{App} — {Direction} — {Feature번호}. {Feature명}"
-→ 예시: "ReadCodex — Cozy — 1. Auth & Onboarding"
-→ 예시: "ReadCodex — Cozy — 2. Library"
+→ 프로젝트 이름: "{App} — {Feature번호}. {Feature명}"
+→ 예시: "ReadCodex — 1. Auth & Onboarding"
+→ 예시: "ReadCodex — 2. Library"
 → 각 프로젝트에 해당 Feature의 모든 화면 (메인 + 서브 + 모달 + 상태)을 생성
-→ 생성된 프로젝트 ID를 .prism/directions/{direction}/project-ids.md에 기록:
+→ 생성된 프로젝트 ID를 .prism/project-ids.md에 기록:
    | Feature | Project ID | Stitch URL |
    |---------|-----------|------------|
    | 1. Auth | 1234567890 | https://stitch.withgoogle.com/projects/1234567890 |
@@ -696,26 +672,20 @@ Skill("stitch-design") 호출
 
 1. `<promise>DESIGN_VERIFIED</promise>` 출력
 2. Stop hook이 감지:
-   - Direction 내부 루프: 다음 Direction → block
-   - Feature 외부 루프: 다음 Feature → block
-   - 모두 완료 → 상태 파일 삭제 → allow
+   - 다음 Feature → block
+   - 모든 Feature 완료 → 상태 파일 삭제 → allow
 
 ---
 
-## 이중 루프: Feature(외부) × Direction(내부)
+## Feature 루프
 
-`/prism design all --directions 3`일 때:
+`/prism design all`일 때:
 
 ```
-Feature 1:
-  Direction A → D3(첫 화면 → 이름 추출 → identity 저장 → 나머지) → D4-D6 → VERIFIED
-  Direction B → D3(첫 화면 → 이름 추출 → identity 저장 → 나머지) → D4-D6 → VERIFIED
-  Direction C → D3(첫 화면 → 이름 추출 → identity 저장 → 나머지) → D4-D6 → VERIFIED
-Feature 2:
-  Direction A → identity Read → D3(앵커 포함 프롬프트로 전체 생성) → D4-D6 → VERIFIED
-  Direction B → identity Read → D3(앵커 포함 프롬프트로 전체 생성) → D4-D6 → VERIFIED
-  Direction C → identity Read → D3(앵커 포함 프롬프트로 전체 생성) → D4-D6 → VERIFIED
+Feature 1 → design-identity.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
+Feature 2 → design-identity.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
+Feature 3 → design-identity.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
 ...
 ```
 
-**핵심:** 같은 Direction 내의 모든 Feature 프로젝트는 동일한 디자인 시스템 이름 앵커를 공유한다.
+**핵심:** 모든 Feature 프로젝트는 A4.5에서 선택된 동일한 디자인 시스템(design-identity.md)을 공유한다.
