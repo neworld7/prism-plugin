@@ -204,74 +204,103 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 
 **Output:** 화면별 스크린샷 + 시각 분석 메모.
 
-### A3: Feature 분리 (심층 — 서브 화면 포함)
+### A3: Feature 분리 (심층 — 빠짐없는 화면 도출)
 
-**Goal:** 코드 분석 + 스크린샷 분석 결과를 종합하여 Feature 단위로 **모든 화면과 상태 변형**을 빠짐없이 분류한다.
+**Goal:** 코드 분석 + 스크린샷 분석 결과를 종합하여 Feature 단위로 **모든 화면, 상태 변형, 오버레이, 인터랙션 모드**를 빠짐없이 분류한다. 디자인 완성도가 개발 속도에 직결되므로 화면 수를 제한하지 않는다.
 
 **Steps:**
 
 1. 화면을 기능 단위(Feature)로 그룹화한다. **Feature 분리 기준:**
    - 앱의 **하단 네비게이션 탭** 또는 **주요 섹션**이 자연스러운 Feature 경계
-   - 코드 폴더 구조 (`features/auth/`, `features/books/`, `features/stats/`)를 참고하되 1:1 매핑은 아님
-   - Feature당 Primary Screen **3~8개** 수준이 적절
-   - **병합 규칙**: Primary Screen 1~2개인 폴더는 가장 관련성 높은 Feature에 병합 (예: `explore` → Library, `focus` → Reading Session)
-   - **분할 규칙**: Primary Screen 10개 이상이면 사용자 흐름 기준으로 분할 (예: `reading/` → "Book Detail" + "Reading Session"으로 분리)
-   - 전체 Feature 수는 **6~10개** 목표 (Feature 0: Common/System 포함)
-2. 각 Feature의 화면을 **Screen State Matrix**로 분해한다. 모든 축을 검토하여 빠진 화면이 없는지 확인한다:
+   - 코드 폴더 구조 (`features/auth/`, `features/books/`, `features/stats/`)가 가장 신뢰할 수 있는 기준
+   - **Feature는 코드 구조를 존중한다** — 코드에 독립 폴더가 있으면 독립 Feature로 유지
+   - **병합 금지**: Feature를 합치지 않는다. 화면이 적은 Feature(예: 스플래시, 설정)도 독립 Feature로 유지
+   - **분할 규칙**: Primary Screen 10개 이상이면 사용자 흐름 기준으로 분할
+   - Feature 0: Common/System (스플래시, 오프라인, 강제 업데이트 등 공통 화면)
+
+2. 각 Feature의 화면을 **Screen State Matrix**로 분해한다. **모든 축의 모든 항목을 빠짐없이 생성한다:**
 
 **Screen State Matrix — 모바일 앱 화면 분류 체계:**
 
-| 축 | 분류 | 포함 항목 |
-|---|------|----------|
-| **Primary Screens** | 라우트가 있는 독립 화면 | 메인 화면, 상세 화면, 폼/에디터, 설정 하위 화면 |
-| **Screen States** | 같은 화면의 상태 변형 | `empty` (데이터 없음), `loading` (스켈레톤/시머), `error` (에러 표시), `populated` (데이터 있음), `disabled` (비활성), `skeleton` (초기 로딩) |
-| **Overlays** | 화면 위에 뜨는 UI | `modal`, `bottom-sheet`, `dialog` (확인/삭제), `snackbar/toast`, `tooltip`, `popover`, `drawer`, `action-sheet`, `context-menu` |
-| **Interaction Modes** | 사용자 인터랙션에 의한 모드 전환 | `edit-mode`, `selection-mode`, `drag-reorder`, `swipe-actions`, `long-press-menu`, `keyboard-up` (입력 포커스), `search-active` (검색 활성), `filter-panel` |
-| **System States** | 앱/OS 수준 상태 | `splash`, `permission-prompt` (알림/카메라), `offline-banner`, `force-update`, `deep-link-landing`, `app-review-prompt` |
-| **Transitions** | 화면 간 전환/가이드 | `onboarding-tour`, `coach-marks`, `walkthrough`, `completion-celebration`, `first-use-hint` |
+| 축 | 분류 | 포함 항목 | 필수 여부 |
+|---|------|----------|----------|
+| **Primary Screens** | 라우트가 있는 독립 화면 | 메인 화면, 상세 화면, 폼/에디터, 설정 하위 화면 | 전부 필수 |
+| **Screen States** | 같은 화면의 상태 변형 | `empty`, `loading`/`skeleton`, `error`, `populated`, `disabled` | 전부 필수 — 주요 Primary Screen마다 empty + skeleton + error 3종 생성 |
+| **Overlays** | 화면 위에 뜨는 UI | `modal`, `bottom-sheet`, `dialog`, `snackbar/toast`, `tooltip`, `popover`, `drawer`, `action-sheet`, `context-menu` | 코드에서 발견된 것 전부 + 디자인 필수 항목 |
+| **Interaction Modes** | 사용자 인터랙션에 의한 모드 전환 | `edit-mode`, `selection-mode`, `drag-reorder`, `swipe-actions`, `long-press-menu`, `keyboard-up`, `search-active`, `filter-panel` | 코드에서 발견된 것 전부 |
+| **System States** | 앱/OS 수준 상태 | `splash`, `permission-prompt`, `offline-banner`, `force-update`, `deep-link-landing`, `app-review-prompt` | Feature 0에 전부 배정 |
+| **Transitions** | 화면 간 전환/가이드 | `onboarding-tour`, `coach-marks`, `walkthrough`, `completion-celebration`, `first-use-hint` | 해당 Feature에 전부 배정 |
 
-**적용 방법:**
-각 Feature의 Primary Screen마다 위 매트릭스를 적용하여 필요한 화면을 도출한다.
+**적용 방법 — 빠짐없는 화면 도출:**
+각 Feature의 Primary Screen마다 위 매트릭스의 **모든 축**을 순회하여 필요한 화면을 도출한다. "없어도 될 것 같다"가 아니라 "있어야 하는가"로 판단한다.
 
 ```
-예시 — "서재" Primary Screen 분해:
-- Primary: 서재 (책장, 그리드 뷰) [코드], 서재 (리스트 뷰) [코드], 서재 (읽고 있는 책) [코드]
-- Screen States: 서재 (empty) [코드], 서재 (skeleton loading) [디자인 필수]
-- Overlays: 정렬/필터 바텀시트 [디자인 필수], 책 삭제 확인 다이얼로그 [코드]
-- Interaction Modes: 서재 (edit mode + 선택 바) [코드], 서재 (search active) [코드]
-- System: (해당 없음 — Feature 0에서 관리)
-- Transitions: (해당 없음)
+예시 — "Library" Feature (15개 화면):
+
+Primary Screens (5개):
+  1. 서재 (책장, 그리드 뷰)
+  2. 서재 (리스트 뷰)
+  3. 읽고 있는 책
+  4. 책 상세
+  5. 책 검색
+
+Screen States (4개):
+  6. 서재 (empty — "아직 등록된 책이 없어요")
+  7. 서재 (skeleton loading)
+  8. 책 검색 (결과 없음 — "검색 결과가 없습니다")
+  9. 책 상세 (error — "책 정보를 불러올 수 없습니다")
+
+Overlays (3개):
+  10. 정렬/필터 바텀시트
+  11. 책 삭제 확인 다이얼로그
+  12. 책 추가 방법 선택 바텀시트
+
+Interaction Modes (3개):
+  13. 서재 (edit mode + 다중 선택 바)
+  14. 서재 (search active + 검색 바)
+  15. 책 상세 (읽기 상태 변경 바텀시트)
 ```
 
 3. **코드에 없더라도 앱에 필수적인 화면은 추가한다:**
-   - A1에서 `offline` 패턴이 발견되지 않아도 → "오프라인 배너" 화면은 추가
-   - A1에서 `skeleton` 패턴이 없어도 → 주요 화면의 "로딩 스켈레톤" 화면은 추가
-   - A1에서 `splash` 패턴이 없어도 → "스플래시 스크린" 화면은 추가
-   - A1에서 `snackbar` 패턴이 없어도 → 주요 액션의 "피드백 토스트" 화면은 추가
-   - 이는 **디자인 완성도**를 위한 것이며, 코드 존재 여부와 무관하다.
-   - **Feature 배정 규칙**: 특정 Feature에 속하지 않는 공통 화면(스플래시, 오프라인 배너, 강제 업데이트 등)은 **"0. Common / System"** Feature를 만들어 배정한다.
+   - 주요 Primary Screen마다: `empty`, `skeleton`, `error` 상태 화면 필수 추가
+   - 삭제/수정 액션이 있는 화면: 확인 다이얼로그 필수 추가
+   - 검색 기능이 있는 화면: `search-active`, `검색 결과 없음` 필수 추가
+   - 리스트/그리드 화면: `empty`, `skeleton`, 필터/정렬 오버레이 필수 추가
+   - 폼 화면: `keyboard-up` (입력 포커스), 유효성 에러 상태 필수 추가
+   - **Feature 배정 규칙**: 특정 Feature에 속하지 않는 공통 화면은 **"0. Common / System"** Feature에 배정
 
-4. **화면 수 목표**: 전체 앱 기준 **40~60개 화면**. Feature당 최소 5개 이상.
+4. **화면 수 목표:**
+   - **Feature당 15~20개** 화면 (Primary + States + Overlays + Interaction Modes)
+   - **전체 앱 화면 수 제한 없음** — Feature별 독립 Stitch 프로젝트이므로 관리 부담 없음
+   - Feature당 화면이 12개 미만이면 Screen State Matrix를 재검토하여 빠진 화면이 없는지 확인
+   - Feature당 화면이 25개 이상이면 Feature 분할을 검토
 
-**화면 우선순위 (전체 수가 60개를 초과할 경우 하위 우선순위부터 제거):**
-   - **P1 (필수)**: Primary Screen (populated 상태) — 반드시 포함
-   - **P2 (필수)**: Primary Screen의 empty 상태 — 반드시 포함
-   - **P3 (중요)**: 핵심 Overlay (바텀시트, 확인 다이얼로그) — 앱 흐름에 필수적인 것만
-   - **P4 (중요)**: Interaction Mode (편집, 검색 활성) — 해당 Feature의 핵심 인터랙션
-   - **P5 (권장)**: System States, Transitions — 스플래시, 온보딩 등
-   - **P6 (선택)**: 로딩/스켈레톤, 에러 상태 — 중요 화면만 선별
+**화면은 삭제하지 않는다.** 모든 화면이 디자인 → 코드 구현에 직접 활용되므로 우선순위에 의한 제거 없음.
+
 5. 각 Feature에 매핑: 포함 화면 목록 (축 태그 포함), 인터랙션, 상태
 
-**Output:** Feature 목록 + Screen State Matrix 기반 화면 목록 (전체 40~60개). 각 화면에 해당 축 태그를 표시한다:
+**Output:** Feature 목록 + Screen State Matrix 기반 화면 목록. 각 화면에 해당 축 태그를 표시한다:
 
 ```markdown
-| # | 화면 | 축 태그 | 우선순위 | 소스 |
-|---|------|--------|---------|------|
-| 1 | 서재 (책장, 데이터 있음) | Primary | P1 | 코드 발견 |
-| 2 | 서재 (빈 상태) | States: empty | P2 | 코드 발견 |
-| 3 | 서재 (편집 모드) | Interaction: edit-mode | P4 | 코드 발견 |
-| 4 | 정렬/필터 바텀시트 | Overlay: bottom-sheet | P3 | 디자인 필수 |
-| 5 | 서재 (스켈레톤 로딩) | States: skeleton | P6 | 디자인 필수 |
+## Feature 2: Library (15개)
+
+| # | 화면 | 축 | 소스 |
+|---|------|---|------|
+| 1 | 서재 (책장, 그리드 뷰) | Primary | 코드 |
+| 2 | 서재 (리스트 뷰) | Primary | 코드 |
+| 3 | 읽고 있는 책 | Primary | 코드 |
+| 4 | 책 상세 | Primary | 코드 |
+| 5 | 책 검색 | Primary | 코드 |
+| 6 | 서재 (empty) | States: empty | 코드 |
+| 7 | 서재 (skeleton) | States: skeleton | 디자인 필수 |
+| 8 | 책 검색 (결과 없음) | States: empty | 코드 |
+| 9 | 책 상세 (error) | States: error | 디자인 필수 |
+| 10 | 정렬/필터 바텀시트 | Overlay: bottom-sheet | 디자인 필수 |
+| 11 | 책 삭제 확인 | Overlay: dialog | 코드 |
+| 12 | 책 추가 방법 선택 | Overlay: bottom-sheet | 코드 |
+| 13 | 서재 (edit mode) | Interaction: edit-mode | 코드 |
+| 14 | 서재 (search active) | Interaction: search-active | 코드 |
+| 15 | 읽기 상태 변경 | Overlay: bottom-sheet | 코드 |
 ```
 
 ### A4: Feature별 원시 프롬프트 작성
@@ -293,17 +322,30 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 모든 서브 화면에도 별도 프롬프트를 작성한다:
 
 ```
-예시 — Library Feature:
-1. 서재 (책장, 데이터 있음) — 2열 그리드에 책 8권
-2. 서재 (책장, 빈 상태) — "아직 등록된 책이 없어요" + 추가 CTA
-3. 서재 (읽고 있는 책) — 커버 캐러셀 + 진행률
-4. 서재 (읽고 있는 책, 빈 상태) — "현재 읽고 있는 책이 없어요"
-5. 서재 (편집 모드) — 체크박스 + 삭제/태그 하단 바
-6. 서재 (리스트 뷰) — 리스트 형태 전환
-7. 책 추가 — 3가지 옵션 카드
-8. 책 검색 (결과 있음) — 검색 결과 4개
-9. 책 검색 (결과 없음) — "검색 결과가 없습니다"
-10. 책 등록 폼 — 제목/저자/페이지수 입력
+예시 — Library Feature (15개 화면):
+
+Primary Screens:
+1. 서재 (책장, 그리드 뷰) — 2열 그리드에 책 8권, 상단 필터 탭
+2. 서재 (리스트 뷰) — 리스트 형태 전환, 표지+제목+저자+진행률
+3. 읽고 있는 책 — 커버 캐러셀 + 진행률 바 + 이어읽기 CTA
+4. 책 상세 — 표지 히어로 + 메타데이터 + 독서 기록 타임라인
+5. 책 검색 — 검색 바 + 최근 검색어 + 검색 결과 4개
+
+Screen States:
+6. 서재 (empty) — "아직 등록된 책이 없어요" + 책 추가 CTA 카드
+7. 서재 (skeleton) — 2열 그리드 스켈레톤 시머 애니메이션
+8. 책 검색 (결과 없음) — "검색 결과가 없습니다" + 추천 검색어
+9. 책 상세 (error) — "책 정보를 불러올 수 없습니다" + 재시도 버튼
+
+Overlays:
+10. 정렬/필터 바텀시트 — 정렬 옵션(최근/제목/저자) + 상태 필터 칩
+11. 책 삭제 확인 다이얼로그 — 표지 썸네일 + 경고 메시지 + 취소/삭제 버튼
+12. 책 추가 방법 선택 바텀시트 — ISBN 스캔 / 직접 입력 / 검색 3가지 옵션 카드
+
+Interaction Modes:
+13. 서재 (edit mode) — 체크박스 + 다중 선택 바 + 삭제/태그 하단 액션
+14. 서재 (search active) — 검색 바 포커스 + 최근/추천 검색어 드롭다운
+15. 읽기 상태 변경 바텀시트 — 읽기 전/읽는 중/완독 라디오 + 날짜 선택
 ```
 
 **A4 원시 프롬프트 규칙 (디자인 시스템 미포함):**
@@ -317,7 +359,7 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 - 프롬프트 지시문은 영어
 - 마지막에 반드시: `All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).`
 
-**Output:** Feature별 원시 UX-First 프롬프트 (전체 40개+). 디자인 시스템 토큰은 미포함.
+**Output:** Feature별 원시 UX-First 프롬프트 (Feature당 15~20개). 디자인 시스템 토큰은 미포함.
 
 ### A4.5: Direction 생성 (멀티 모드 전용)
 
