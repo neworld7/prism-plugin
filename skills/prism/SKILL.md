@@ -33,20 +33,16 @@ npx skills add google-labs-code/stitch-skills --skill stitch-design --global 2>/
 
 ### 2. Stitch MCP 인증 체크
 
-**1. STITCH_API_KEY 확인:**
+Stitch MCP는 `~/.claude.json`의 `mcpServers.stitch.headers.x-goog-api-key`로 인증한다.
+
+**현재 연결 계정 확인:**
 ```bash
-echo "${STITCH_API_KEY:0:10}" 2>/dev/null
+python3 -c "import json; d=json.load(open('$HOME/.claude/prism-accounts.json')); print(f'Active: {d[\"active\"]}')"
 ```
 
-**2. gcloud ADC 확인 (API Key 없을 때):**
-```bash
-gcloud auth application-default print-access-token 2>/dev/null | head -c 20
-```
+**계정 전환:** `/prism account switch <name>` 후 세션 재시작.
 
-**둘 다 실패 시:**
-> Stitch 인증이 필요합니다. 아래 중 하나를 설정해주세요:
-> - `STITCH_API_KEY` 환경변수 (Stitch 웹 → 프로필 → Exports에서 발급)
-> - `gcloud auth login` → `gcloud auth application-default login`
+**계정 관리:** `~/.claude/prism-accounts.json` — 3개 Google 계정의 API 키 저장 (일일 400 크레딧 × 3 = 1200).
 
 ### 3. Stitch MCP 도구 확인
 
