@@ -361,57 +361,60 @@ Interaction Modes:
 
 **Output:** Feature별 원시 UX-First 프롬프트 (Feature당 15~20개). 디자인 시스템 토큰은 미포함.
 
-### A4.5: Design Preview — 5개 시안 생성
+### A4.5: Design Preview — 7개 시안 생성
 
-**Goal:** 핵심 화면 5개로 5가지 디자인 방향을 시각적으로 미리보기한다. 사용자가 선호하는 디자인을 선택하면 해당 디자인 시스템으로 전체 앱을 생성한다.
+**Goal:** 핵심 화면 4-5개로 7가지 디자인 방향을 시각적으로 미리보기한다. 모두 LIGHT 모드. 사용자가 선호하는 디자인을 선택하면 해당 디자인 시스템으로 전체 앱을 생성한다. (다크 모드는 별도 진행)
 
 **핵심 화면 선정 기준:**
 - 디자인 요소가 풍부한 Feature에서 선정 (리스트, 카드, 차트, 상세 화면 등)
 - 로그인, 온보딩, 스플래시 등 디자인 차별화가 어려운 화면은 제외
 - 앱의 핵심 사용자 흐름을 대표하는 화면 우선 (예: 서재, 책 상세, 통계 대시보드)
-- A3의 Feature 목록에서 Primary Screen이 가장 많고 다양한 Feature에서 5개 선정
+- A3의 Feature 목록에서 Primary Screen이 가장 많고 다양한 Feature에서 4-5개 선정
 
 **3축 프레임워크 (방향 다양성 보장):**
 
 | 축 | 역할 | 예시 값 |
 |---|---|---|
-| **아키타입** | 전체 디자인 언어 | Editorial Elegance, Dark Minimalism, Playful Pastel, Japanese Zen, Warm Organic |
-| **레이아웃** | 화면 구조/배치 | Centered Stack, Split Screen, Bottom Sheet, Full-bleed Hero, Card-based |
-| **레퍼런스 앱** | 참조 디자인 DNA | Notion, Linear, Duolingo, 밀리의서재, Spotify |
+| **아키타입** | 전체 디자인 느낌 | Editorial Elegance, Scandinavian Clean, Playful Pastel, Japanese Zen, Warm Organic, Glassmorphism, Neo-Brutalist |
+| **레이아웃** | 화면 구조/창의적 배치 | Centered Stack, Split Screen, Bottom Sheet, Full-bleed Hero, Card-based, Magazine Grid, Asymmetric |
+| **레퍼런스 앱** | 참조 디자인 DNA | Notion, Linear, Duolingo, 밀리의서재, Spotify, Airbnb, Apple Books |
 
-**5개 시안 다양성 보장 규칙:**
+**7개 시안 다양성 보장 규칙:**
 
-시안은 아래 5가지 디자인 스펙트럼을 **각각 1개씩** 커버해야 한다:
+모든 시안은 **LIGHT 모드 고정**. 차별화는 느낌, 레이아웃, 창의적 구조로 한다.
+시안은 아래 7가지 디자인 스펙트럼을 **각각 1개씩** 커버해야 한다:
 
-| # | 스펙트럼 위치 | 아키타입 예시 | 특성 |
-|---|-------------|------------|------|
-| 1 | 따뜻한/감성적 | Warm Organic, Cozy Editorial | Serif 서체, 따뜻한 크림/브라운 톤, 둥근 모서리 |
-| 2 | 차분한/미니멀 | Japanese Zen, Scandinavian Clean | 여백 중심, 모노톤, 절제된 색상 |
-| 3 | 어두운/몰입형 | Dark Minimalism, Midnight Noir | 다크 모드, 고대비 악센트, 시네마틱 |
-| 4 | 밝은/모던 | Flat Modern, Material You | 라이트 모드, 체계적 그리드, 산세리프 |
-| 5 | 대담한/표현적 | Glassmorphism, Playful Pastel, Brutalist | 실험적 레이아웃, 강한 색상, 비대칭 |
+| # | 스펙트럼 | 아키타입 예시 | 차별화 포인트 |
+|---|---------|------------|-------------|
+| 1 | 따뜻한/감성적 | Warm Organic, Cozy Editorial | Serif 서체, 크림/브라운 톤, 둥근 모서리, 종이 질감 |
+| 2 | 차분한/미니멀 | Japanese Zen, Scandinavian Clean | 넓은 여백, 모노톤, 절제된 색상, 직선 구조 |
+| 3 | 세련된/프리미엄 | Editorial Elegance, Swiss Design | 고급 타이포, 절제된 골드/네이비, 매거진 레이아웃 |
+| 4 | 밝은/모던 | Flat Modern, Material You | 체계적 그리드, 산세리프, 컬러풀 악센트, 카드 기반 |
+| 5 | 친근한/유쾌 | Playful Pastel, Rounded Friendly | 파스텔 톤, 큰 둥근 모서리, 일러스트 강조, 부드러운 그림자 |
+| 6 | 대담한/표현적 | Glassmorphism, Neo-Brutalist | 비대칭 레이아웃, 블러 효과 또는 강한 타이포, 실험적 구조 |
+| 7 | 자연적/유기적 | Earthy Natural, Botanical | 자연 색상(그린/테라코타), 유기적 곡선, 텍스처 배경, 핸드메이드 느낌 |
 
 **금지 규칙:**
-- 같은 colorMode(DARK/LIGHT)가 3개 이상이면 안 됨
+- colorMode는 **전부 LIGHT** 고정 (다크 모드는 별도 진행)
 - 같은 font family가 3개 이상이면 안 됨
 - 같은 레퍼런스 앱을 2개 이상 사용하면 안 됨
-- 5개 아키타입이 위 스펙트럼의 서로 다른 행에서 와야 함
+- 7개 아키타입이 위 스펙트럼의 서로 다른 행에서 와야 함
 
 **앱 맥락 반영:**
-- 앱의 타겟 사용자와 도메인에 맞지 않는 극단적 방향은 제외 (예: 아동용 앱에 Brutalist, 금융 앱에 Playful Pastel)
+- 앱의 타겟 사용자와 도메인에 맞지 않는 극단적 방향은 제외
 - 대신 해당 스펙트럼 위치에서 앱에 맞는 변형을 선택
 
 **실행:**
 ```
-1. 핵심 화면 5개 선정 → 사용자 확인
-2. 5개 Direction 시안 정의 (3축 기반, 서로 충분히 다른 방향)
+1. 핵심 화면 4-5개 선정 → 사용자 확인
+2. 7개 Direction 시안 정의 (3축 기반, 7개 스펙트럼 각 1개)
 3. Direction별 Stitch 프로젝트 생성:
    → 프로젝트 이름: "{App} — Preview — {Direction 이름}"
    → 예시: "ReadCodex — Preview — Warm Organic"
-4. 각 프로젝트에 핵심 화면 5개 생성 (배치 호출 1회)
-5. 총 5개 프로젝트 × 5개 화면 = 25개 화면
+4. 각 프로젝트에 핵심 화면 4-5개 생성 (배치 호출 1회)
+5. 총 7개 프로젝트 × 4-5개 화면 = 약 35개 화면
 6. get_project로 각 프로젝트의 스크린샷 다운로드
-7. 사용자에게 5개 Direction 비교 제시 → 1개 선택
+7. 사용자에게 7개 Direction 비교 제시 → 1개 선택
 8. 선택된 Direction의 get_project → designTheme 추출
 9. design-identity.md 저장 (이름 + 메타데이터 + designMd 전문)
 10. .prism/preview/ 에 프로젝트 ID 기록
@@ -424,12 +427,13 @@ Interaction Modes:
   레이아웃: {레이아웃} — {구조 설명 1줄}
   레퍼런스: {레퍼런스 앱} — {해당 앱의 어떤 측면을 참조하는지}
   프로젝트: {Stitch URL}
-  스크린샷: 5개 화면 썸네일
+  스크린샷: 4-5개 화면 썸네일
 
 📐 Direction 2: ...
 ...
+📐 Direction 7: ...
 
-→ 위 5개 Direction 중 1개를 선택해주세요.
+→ 위 7개 Direction 중 1개를 선택해주세요.
 ```
 
 **사용자 응답 처리:**

@@ -12,7 +12,7 @@ Google Stitch AI design tool orchestration command.
 | Subcommand | Usage | Action |
 |------------|-------|--------|
 | `analyze` | `/prism analyze [app]` | 코드+시뮬레이터 분석 → Feature별 프롬프트 → .prism/analysis.md + prompts.md 산출 |
-| `preview` | `/prism preview` | 핵심 화면 5개 × 5개 Direction 시안 생성 → 사용자 선택 → design-identity.md |
+| `preview` | `/prism preview` | 핵심 화면 4-5개 × 7개 Direction 시안 생성 (LIGHT 모드) → 사용자 선택 → design-identity.md |
 | `design` | `/prism design <feature\|all>` | 디자인 생성 + 검증 루프 |
 | `pipeline` | `/prism pipeline [app]` | analyze → preview → design 전체 자동화 (원스텝) |
 
@@ -39,15 +39,15 @@ Google Stitch AI design tool orchestration command.
 
 ## `/prism preview`
 
-A4.5 Design Preview 단계를 실행한다. 핵심 화면 5개로 5가지 디자인 시안을 생성하고 사용자가 선택한다.
+A4.5 Design Preview 단계를 실행한다. 핵심 화면 4-5개로 7가지 디자인 시안(모두 LIGHT 모드)을 생성하고 사용자가 선택한다.
 
 ### 실행 절차
 
 1. `.prism/analysis.md` 존재 확인 (없으면 `/prism analyze` 먼저 실행 안내)
-2. 핵심 화면 5개 선정 → 사용자 확인
-3. 5개 Direction 시안 정의 (3축 프레임워크)
-4. Direction별 Stitch 프로젝트 생성 + 화면 5개 배치 생성
-5. 25개 화면 스크린샷 비교 → 사용자 선택
+2. 핵심 화면 4-5개 선정 → 사용자 확인
+3. 7개 Direction 시안 정의 (7가지 스펙트럼 각 1개)
+4. Direction별 Stitch 프로젝트 생성 + 화면 4-5개 배치 생성
+5. 약 35개 화면 스크린샷 비교 → 사용자 선택
 6. 선택된 Direction의 designTheme → `.prism/design-identity.md` 저장
 
 ## `/prism design <feature|all>`
