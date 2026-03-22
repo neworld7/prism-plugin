@@ -364,7 +364,7 @@ All UI text must be in Korean (한국어).
 6. get_project로 각 프로젝트의 스크린샷 다운로드
 7. 사용자에게 7개 Direction 비교 제시 → 1개 선택
 8. 선택된 Direction의 get_project → designTheme 추출
-9. design-identity.md 저장 (이름 + 메타데이터 + designMd 전문)
+9. ./DESIGN.md 저장 (프로젝트 최상위, 이름 + 메타데이터 + designMd 전문)
 10. .prism/preview/ 에 프로젝트 ID 기록
 ```
 
@@ -407,9 +407,9 @@ Skill("enhance-prompt") 호출 1회
 **파일 구조:**
 
 ```
+./DESIGN.md                      ← A4.5에서 선택된 Direction의 designTheme (프로젝트 최상위)
 .prism/
   analysis.md                    ← 공통 (A1-A4 산출물)
-  design-identity.md             ← A4.5에서 선택된 Direction의 designTheme
   prompts.md                     ← A5 결과
   preview/                       ← A4.5 시안 프로젝트
     project-ids.md               ← 5개 시안 프로젝트 ID
@@ -497,7 +497,7 @@ Skill("enhance-prompt") 호출 1회
 
 **Design Identity 판단 (D3 시작 시):**
 
-`.prism/design-identity.md` 존재 여부로 분기:
+`./DESIGN.md` 존재 여부로 분기:
 
 **미존재 (첫 Feature):**
 ```
@@ -507,7 +507,7 @@ Skill("enhance-prompt") 호출 1회
    - designMd 전문: designTheme.designMd (전체 디자인 시스템 스펙)
    - 메타데이터: colorMode, roundness, font, headlineFont, bodyFont
    - Fallback: designMd 미생성 → 2번째 화면 후 get_project 재시도 / 2회 실패 → 앵커 없이 진행
-3. design-identity.md 저장:
+3. DESIGN.md 저장 (프로젝트 최상위):
    | 항목 | 값 |
    |------|------|
    | Name | {추출된 이름} |
@@ -523,16 +523,13 @@ Skill("enhance-prompt") 호출 1회
 
 **존재 (이후 Feature):**
 ```
-1. Read design-identity.md → Design System Spec (designMd 전문) 추출
-2. create_project → 첫 화면 프롬프트에 designMd 전문 삽입:
-   **MANDATORY DESIGN SYSTEM:**
-   {design-identity.md의 Design System Spec 전문}
+1. enhance-prompt 스킬이 ./DESIGN.md를 자동으로 읽어서 프롬프트에 디자인 시스템 토큰을 주입한다. 수동 삽입 불필요.
+2. create_project → generate_screen_from_text (전체 화면 순차)
 3. 나머지 화면 프롬프트 끝에 간결한 앵커 삽입:
    Continue using the "{Name}" design system established in this project.
-4. generate_screen_from_text (전체 화면 순차)
 ```
 
-> **핵심:** 이후 Feature에서는 첫 화면 프롬프트에만 designMd 전문을 삽입하여 디자인 시스템을 정착시키고, 나머지 화면은 프로젝트 내부 일관성에 의존한다.
+> **핵심:** 이후 Feature에서는 enhance-prompt 스킬이 ./DESIGN.md를 자동 주입하므로 수동 삽입이 불필요하다. 나머지 화면은 프로젝트 내부 일관성에 의존한다.
 
 **⚠️ 프로젝트 구조: Feature별 프로젝트 분리**
 
@@ -697,10 +694,10 @@ Skill("stitch-design") 호출
 `/prism design all`일 때:
 
 ```
-Feature 1 → design-identity.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
-Feature 2 → design-identity.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
-Feature 3 → design-identity.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
+Feature 1 → ./DESIGN.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
+Feature 2 → ./DESIGN.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
+Feature 3 → ./DESIGN.md에서 designMd 추출 → D3(배치 생성) → D4-D6 → VERIFIED
 ...
 ```
 
-**핵심:** 모든 Feature 프로젝트는 A4.5에서 선택된 동일한 디자인 시스템(design-identity.md)을 공유한다.
+**핵심:** 모든 Feature 프로젝트는 A4.5에서 선택된 동일한 디자인 시스템(./DESIGN.md)을 공유한다.
