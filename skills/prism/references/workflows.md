@@ -598,41 +598,74 @@ Feature별로 별도 Stitch 프로젝트를 생성한다:
    | 1. Auth | 1234567890 | https://stitch.withgoogle.com/projects/1234567890 |
 ```
 
-**실행:**
+**실행 — 축 단위 배치 생성:**
 ```
 1. create_project 호출 → 프로젝트 생성 (프로젝트 이름에 Feature 포함)
-2. 해당 Feature의 모든 화면 프롬프트를 순차 생성
-3. 각 화면: generate_screen_from_text 호출 (1회만)
-4. 생성 확인 후 다음 화면으로
+2. 해당 Feature의 화면을 축(Axis) 단위로 묶어서 배치 생성:
+   - 1차 호출: Primary Screens (5-7개) — 핵심 화면 전체
+   - 2차 호출: Screen States (3-5개) — empty, skeleton, error 상태
+   - 3차 호출: Overlays (3-4개) — 바텀시트, 다이얼로그, 액션시트
+   - 4차 호출: Interaction Modes (2-4개) — edit, search, filter 모드
+3. 각 호출: generate_screen_from_text 1회 (프롬프트에 해당 축의 모든 화면 상세 기술)
+4. 생성 확인 후 다음 축으로
+```
+
+**배치 프롬프트 구조:**
+
+한 번의 `generate_screen_from_text` 호출로 같은 축의 화면을 모두 생성한다.
+프롬프트는 압축하지 않고 각 화면의 상세 설명을 유지한다.
+
+```
+Design {N} screens for the {Feature} feature of {App}.
+
+{디자인 시스템 앵커 — 첫 호출이면 designMd 전문, 이후면 이름 앵커}
+
+**Screen 1: {화면명}**
+{화면 설명 — A4에서 작성한 원시 프롬프트 그대로}
+
+**Screen 2: {화면명}**
+{화면 설명}
+
+...
+
+**Screen N: {화면명}**
+{화면 설명}
+
+All UI text, labels, buttons, placeholders, and content must be in Korean (한국어).
 ```
 
 **모델 강제 규칙:**
 `generate_screen_from_text` 호출 시 반드시 `modelId: "GEMINI_3_1_PRO"`를 명시한다.
 
-**⚠️ Stitch API 중복 생성 방지 규칙 (필수):**
+**⚠️ Stitch API 배치 생성 규칙 (필수):**
 
-Stitch `generate_screen_from_text`는 비동기적으로 동작한다. 다음 규칙을 반드시 지킨다:
+Stitch `generate_screen_from_text`는 비동기적으로 동작한다. 배치 생성 시 다음 규칙을 반드시 지킨다:
 
 1. **"no output" 응답 ≠ 실패** — API가 `(completed with no output)`을 반환해도 화면이 생성되었을 수 있다. **절대 즉시 재시도하지 않는다.**
 
 2. **생성 확인은 `get_project`로** — `list_screens`는 빈 결과를 반환할 수 있으므로 사용하지 않는다. 대신 `get_project`의 `screenInstances` 배열에서 실제 화면 수를 확인한다.
 
-3. **생성 후 확인 절차:**
+3. **배치 생성 후 확인 절차:**
    ```
-   generate_screen_from_text 호출 (1회만)
+   generate_screen_from_text 호출 (1회, N개 화면 기술)
    ↓
-   outputComponents 있으면 → 성공, screenId 기록
-   outputComponents 없으면 ("no output") → 15초 간격 폴링 시작 (최대 60초)
+   outputComponents 있으면 → 성공, 생성된 화면 수 확인
+   outputComponents 없으면 ("no output") → 15초 간격 폴링 시작 (최대 120초)
    ↓
    매 15초마다 get_project → screenInstances 배열 확인
    ↓
-   화면 수 증가 감지 → 즉시 성공 처리, 새 screenId 확인
-   60초까지 미증가 → 1회만 재시도 (최대)
+   N개 이상 증가 감지 → 즉시 성공 처리
+   120초까지 미증가 → 축을 2분할하여 재시도 (예: 5개 → 3개 + 2개)
    ```
 
-4. **재시도 전 중복 체크** — 같은 title의 화면이 `screenInstances`에 이미 존재하면 재생성하지 않는다.
+4. **재시도 전 중복 체크** — `screenInstances`에 이미 존재하는 화면은 재생성하지 않는다.
 
-5. **화면 수 기록** — 각 생성 호출 전에 `get_project`로 현재 `screenInstances.length`를 기록해두어 생성 후 비교한다.
+5. **화면 수 기록** — 각 배치 호출 전에 `get_project`로 현재 `screenInstances.length`를 기록해두어 생성 후 비교한다.
+
+6. **배치 실패 시 분할 전략** — N개 배치가 실패하면 축을 2분할:
+   - 5개 → 3개 + 2개
+   - 7개 → 4개 + 3개
+   - 분할 후에도 실패 → 1개씩 개별 생성으로 폴백
 
 ### D4: 검증
 

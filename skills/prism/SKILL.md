@@ -81,7 +81,7 @@ Read: references/workflows.md
 ```
 
 Phase D1-D6을 따른다 (D2는 제거됨):
-- D3: Design Identity 판단 + Skill("stitch-design") → 디자인 생성
+- D3: Design Identity 판단 + Skill("stitch-design") → 축 단위 배치 생성 (Primary → States → Overlays → Interactions)
 - D4: prism이 직접 검증 (읽기 전용 MCP)
 - D5: Skill("stitch-design") → 수정
 
