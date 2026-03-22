@@ -147,15 +147,27 @@ Direction 정리: `rm -rf .prism/directions/{name}/`
 
 ## Design Identity
 
-디자인 시스템 이름은 D3에서 Stitch가 자동 생성한다.
+디자인 시스템은 D3에서 Stitch가 자동 생성한다. 첫 Feature 프로젝트의 `designTheme.designMd` 전문을 저장하여 이후 Feature 프로젝트에서 동일한 디자인 시스템을 재현한다.
 
 **판단 기준:** `.prism/directions/{direction}/design-identity.md` 존재 여부
-- **미존재**: D3 첫 화면 생성 후 `get_project` → `designTheme`에서 이름 + 메타데이터 추출 → 저장
-- **존재**: Read → 앵커 문구를 프롬프트에 삽입
+- **미존재**: D3 첫 화면 생성 후 `get_project` → `designTheme`에서 이름 + 메타데이터 + designMd 전문 추출 → 저장
+- **존재**: Read → 새 Feature 프로젝트의 첫 프롬프트에 designMd 전문 삽입 (크로스 프로젝트 일관성 80-90%)
 
-이름 추출 소스:
-1. `outputComponents` 텍스트: `'{NAME}' design system/aesthetic/palette` 패턴
-2. `designTheme.designMd` 첫 `#` 헤딩 파싱 (더 안정적)
+**design-identity.md 포맷:**
+```
+# Design Identity
+| 항목 | 값 |
+|------|------|
+| Name | {디자인 시스템 이름} |
+| Source Project | projects/{projectId} |
+| Color Mode | {colorMode} |
+| Roundness | {roundness} |
+| Primary Font | {font} |
+| Body Font | {bodyFont} |
+
+## Design System Spec
+{designTheme.designMd 전문}
+```
 
 ## Critical Patterns
 

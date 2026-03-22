@@ -510,10 +510,11 @@ Skill("enhance-prompt") 호출 1회
 **미존재 (첫 Feature 또는 새 Direction):**
 ```
 1. create_project → 첫 화면 generate_screen_from_text
-2. get_project → designTheme에서 이름 추출:
-   - 소스 1: outputComponents 텍스트에서 '{NAME}' design system/aesthetic/palette 패턴
-   - 소스 2: designTheme.designMd 첫 # 헤딩 파싱 (더 안정적)
-   - Fallback: 소스 1 실패 → get_project로 소스 2 / 소스 2도 실패 → 2번째 화면 후 재시도 / 2회 실패 → 앵커 없이 진행
+2. get_project → designTheme에서 추출:
+   - 이름: designTheme.designMd 첫 # 헤딩 파싱 또는 outputComponents 텍스트
+   - designMd 전문: designTheme.designMd (전체 디자인 시스템 스펙)
+   - 메타데이터: colorMode, roundness, font, headlineFont, bodyFont
+   - Fallback: designMd 미생성 → 2번째 화면 후 get_project 재시도 / 2회 실패 → 앵커 없이 진행
 3. design-identity.md 저장:
    | 항목 | 값 |
    |------|------|
@@ -523,17 +524,23 @@ Skill("enhance-prompt") 호출 1회
    | Roundness | {designTheme.roundness} |
    | Primary Font | {designTheme.font 또는 headlineFont} |
    | Body Font | {designTheme.bodyFont} |
+   + "## Design System Spec" 섹션에 designMd 전문 포함
 4. 나머지 화면 생성 시 프롬프트 끝에 앵커 삽입:
    Continue using the "{Name}" design system established in this project.
 ```
 
 **존재 (이후 Feature, 같은 Direction):**
 ```
-1. Read design-identity.md → Name, Color Mode, Primary Font, Roundness 추출
-2. 모든 화면 프롬프트에 앵커 삽입:
-   Use the same "{Name}" design system — {Color Mode} mode, {Primary Font} typography, {Roundness} corners.
-3. create_project → generate_screen_from_text (전체 화면 순차)
+1. Read design-identity.md → Design System Spec (designMd 전문) 추출
+2. create_project → 첫 화면 프롬프트에 designMd 전문 삽입:
+   **MANDATORY DESIGN SYSTEM:**
+   {design-identity.md의 Design System Spec 전문}
+3. 나머지 화면 프롬프트 끝에 간결한 앵커 삽입:
+   Continue using the "{Name}" design system established in this project.
+4. generate_screen_from_text (전체 화면 순차)
 ```
+
+> **핵심:** 같은 Direction의 이후 Feature에서는 첫 화면 프롬프트에만 designMd 전문을 삽입하여 디자인 시스템을 정착시키고, 나머지 화면은 프로젝트 내부 일관성에 의존한다.
 
 **⚠️ 프로젝트 구조: Feature별 프로젝트 분리**
 
