@@ -11,7 +11,7 @@ Google Stitch AI design tool orchestration command.
 
 | Subcommand | Usage | Action |
 |------------|-------|--------|
-| `analyze` | `/prism analyze [app]` | 코드+시뮬레이터 분석 → Feature별 프롬프트 → .prism/analysis.md + prompts.md 산출 |
+| `analyze` | `/prism analyze [app]` | 코드 분석 → Feature별 프롬프트 → .prism/analysis.md + prompts.md 산출 |
 | `preview` | `/prism preview` | 핵심 화면 4-5개 × 7개 Direction 시안 생성 (LIGHT 모드) → 사용자 선택 → design-identity.md |
 | `design` | `/prism design <feature\|all>` | 디자인 생성 + 검증 루프 |
 | `pipeline` | `/prism pipeline [app]` | analyze → preview → design 전체 자동화 (원스텝) |
@@ -28,7 +28,7 @@ Google Stitch AI design tool orchestration command.
    ```
 
 2. **Phase A1-A6 실행**:
-   - A1-A4: prism 자체 (코드 분석, 시뮬레이터, Feature 분리, 원시 프롬프트)
+   - A1-A4: prism 자체 (코드 분석, Feature 분리, 원시 프롬프트)
    - A5: Skill("enhance-prompt") 호출 → 프롬프트 최적화
    - A6: `.prism/analysis.md` 작성 + `.prism/prompts.md` 작성
 

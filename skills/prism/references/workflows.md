@@ -154,59 +154,13 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 
 **중요:** 표가 비어있는 축도 반드시 포함한다. 빈 축은 A3에서 "코드에는 없지만 앱에 필요한 화면"을 추가하는 힌트가 된다.
 
-### A2: 시뮬레이터 스크린샷 캡처 및 분석
+### A2: (제거됨)
 
-**Goal:** 실제 실행 화면을 캡처하고 시각적으로 분석하여 현재 디자인 상태를 파악한다.
-
-**Steps:**
-
-1. 앱 실행 확인:
-   - Flutter: iOS 시뮬레이터 또는 Android 에뮬레이터 실행 여부 확인
-   - React/Next.js: dev 서버 실행 여부 확인 (`localhost:{port}`)
-   - 미실행 시 사용자에게 앱 실행 요청
-
-2. **[필수] idb를 이용한 화면 조작 + 스크린샷 캡처:**
-
-   코드 분석에서 발견된 화면/라우트를 **idb(iOS Development Bridge)로 직접 조작**하여 각 화면에 도달한 후 스크린샷을 캡처한다.
-
-   - Flutter (iOS 시뮬레이터 — idb 사용):
-     ```bash
-     idb --help 2>/dev/null || pip install fb-idb
-     idb list-targets
-     idb ui tap {x} {y}
-     idb ui swipe {x1} {y1} {x2} {y2}
-     idb ui text "검색어"
-     idb screenshot /tmp/analyze-{screen}.png
-     sips -Z 1200 /tmp/analyze-{screen}.png
-     ```
-
-   - Flutter (idb 없을 시 폴백):
-     ```bash
-     xcrun simctl io booted screenshot /tmp/analyze-{screen}.png
-     sips -Z 1200 /tmp/analyze-{screen}.png
-     ```
-
-   - React/Next.js:
-     - chrome-viewer: `cv_navigate` → `cv_click` → `cv_screenshot`
-     - Playwright: `browser_navigate` → `browser_click` → `browser_take_screenshot`
-
-   **필수 절차:**
-   1. A1에서 발견된 **모든 화면 목록**을 순회
-   2. 각 화면에 idb 조작으로 도달
-   3. 도달 후 스크린샷 캡처
-   4. 스크롤이 필요한 화면은 상단/하단 모두 캡처
-   5. 상태별 화면(로딩, 에러, 빈 상태)도 가능하면 트리거하여 캡처
-
-3. 각 스크린샷 Read → 시각 분석:
-   - 레이아웃 구조, 컴포넌트 유형, 색상 팔레트, 타이포그래피
-   - 현재 디자인 품질/문제점
-   - idb 조작 중 발견한 인터랙션 특성
-
-**Output:** 화면별 스크린샷 + 시각 분석 메모.
+> A2(시뮬레이터 스크린샷)는 v3.2.0에서 제거되었다. A1 코드 분석만으로 화면/상태/오버레이를 충분히 추출할 수 있고, A4.5 Design Preview에서 새 디자인 방향을 결정하므로 기존 앱 스크린샷 분석이 불필요하다.
 
 ### A3: Feature 분리 (심층 — 빠짐없는 화면 도출)
 
-**Goal:** 코드 분석 + 스크린샷 분석 결과를 종합하여 Feature 단위로 **모든 화면, 상태 변형, 오버레이, 인터랙션 모드**를 빠짐없이 분류한다. 디자인 완성도가 개발 속도에 직결되므로 화면 수를 제한하지 않는다.
+**Goal:** 코드 분석 결과를 바탕으로 Feature 단위로 **모든 화면, 상태 변형, 오버레이, 인터랙션 모드**를 빠짐없이 분류한다. 디자인 완성도가 개발 속도에 직결되므로 화면 수를 제한하지 않는다.
 
 **Steps:**
 
