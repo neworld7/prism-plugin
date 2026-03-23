@@ -1,6 +1,6 @@
 # Prism — Google Stitch AI Design Orchestrator
 
-**Version:** 3.2.0
+**Version:** 3.3.0
 **Author:** Taekwan Kim
 
 Claude Code 플러그인으로, Google Stitch AI 디자인 도구를 오케스트레이션하여 코드 분석부터 디자인 생성까지 자동화합니다.
@@ -46,6 +46,7 @@ claude plugins add prism-plugins
 | `preview use` | `/prism preview use <name>` | 시안 전환 (./DESIGN.md 교체) |
 | `preview remove` | `/prism preview remove <name>` | 시안 삭제 |
 | `design` | `/prism design <feature\|all>` | 디자인 생성 + 검증 루프 |
+| `design resume` | `/prism design resume` | 중단된 design all 이어하기 |
 | `pipeline` | `/prism pipeline [app]` | analyze → preview → design 원스텝 |
 
 ### `/prism account`
@@ -90,6 +91,11 @@ Design (D1 → D3 → D4 → D5 → D6)
 ```
 프로젝트/
 ├── DESIGN.md                        ← 활성 시안 (enhance-prompt 자동 읽기)
+├── .claude/
+│   ├── prism-design-pipeline.local.md   ← 현재 활성 상태 파일
+│   └── prism-pipelines/                 ← 시안별 상태 백업
+│       ├── warm-organic.local.md
+│       └── editorial-elegance.local.md
 ├── .prism/
 │   ├── analysis.md                  ← 코드 분석 결과
 │   ├── prompts.md                   ← 최적화된 프롬프트
@@ -158,9 +164,29 @@ Design (D1 → D3 → D4 → D5 → D6)
 
 ```bash
 /prism preview list                    # 저장된 시안 목록
-/prism preview use warm-organic        # 시안 전환
+/prism preview use warm-organic        # 시안 전환 (상태 파일 자동 스왑)
 /prism preview remove playful-pastel   # 시안 삭제
 ```
+
+## 크레딧 소진 시 이어하기
+
+```bash
+# Warm Organic 시안으로 design all → Feature 3에서 크레딧 소진
+
+# 방법 1: 계정 전환 후 이어하기
+/prism account neworld                 # 다른 계정으로 전환 → 세션 재시작
+/prism design resume                   # Feature 3부터 이어서
+
+# 방법 2: 다른 시안으로 전환 작업
+/prism preview use editorial-elegance  # 시안 전환 (Warm Organic 상태 자동 백업)
+/prism design all                      # Editorial Elegance 독립 진행
+
+# 방법 3: 다시 Warm Organic으로 돌아와서 이어하기
+/prism preview use warm-organic        # 상태 자동 복원
+/prism design resume                   # Feature 3부터 이어서
+```
+
+시안별 진행 상황은 `.claude/prism-pipelines/{시안이름}.local.md`에 독립 보존됩니다.
 
 ## 7가지 디자인 스펙트럼 (LIGHT 모드 고정)
 
@@ -187,7 +213,8 @@ Design (D1 → D3 → D4 → D5 → D6)
 
 | 버전 | 변경 |
 |------|------|
-| 3.2.0 | 공식 프롬프트 가이드 개편, A2 제거, ./DESIGN.md 전환, 리서치 기반 시안, preview add/list/use/remove |
+| 3.3.0 | design resume (크레딧 소진 이어하기), 시안별 상태 파일 분리, 시안 10개 화면, 시장 리서치 제안 |
+| 3.2.0 | 공식 프롬프트 가이드 개편, A2 제거, ./DESIGN.md 전환, preview add/list/use/remove |
 | 3.1.0 | /prism account 멀티 계정 전환 (x-goog-api-key) |
 | 3.0.0 | Design Preview 완성 (7시안 × LIGHT), Direction 제거 |
 | 2.12.0 | Direction 멀티 시스템 제거, /prism preview 도입 |
