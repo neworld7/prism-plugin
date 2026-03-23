@@ -362,10 +362,12 @@ All UI text must be in Korean (한국어).
 4. 각 프로젝트에 핵심 화면 4-5개 생성 (배치 호출 1회)
 5. 총 7개 프로젝트 × 4-5개 화면 = 약 35개 화면
 6. get_project로 각 프로젝트의 스크린샷 다운로드
-7. 사용자에게 7개 Direction 비교 제시 → 1개 선택
-8. 선택된 Direction의 get_project → designTheme 추출
-9. ./DESIGN.md 저장 (프로젝트 최상위, 이름 + 메타데이터 + designMd 전문)
-10. .prism/preview/ 에 프로젝트 ID 기록
+7. 사용자에게 7개 Direction 비교 제시
+8. "저장할 시안을 선택하세요 (예: 1, 3, 5)" → 선택된 시안만 저장:
+   - .prism/preview/{direction-name}/DESIGN.md ← designTheme.designMd
+   - .prism/preview/{direction-name}/screenshots/ ← 화면 스크린샷
+9. "활성 시안을 선택하세요 (예: 3)" → 해당 시안의 DESIGN.md를 ./DESIGN.md로 복사
+10. .prism/preview/project-ids.md에 프로젝트 ID 기록
 ```
 
 **출력 형식:**
@@ -381,13 +383,15 @@ All UI text must be in Korean (한국어).
 ...
 📐 Direction 7: ...
 
-→ 위 7개 Direction 중 1개를 선택해주세요.
+→ 저장할 시안을 선택하세요 (예: "1, 3, 5")
+→ 활성 시안을 선택하세요 (예: "3")
 ```
 
 **사용자 응답 처리:**
-- "3" → 선택된 Direction 확정, A6으로 진행
+- "1, 3, 5 저장 / 3 활성" → 3개 저장, 3번을 ./DESIGN.md로 복사, A6으로 진행
 - "3번을 X로 바꿔주세요" → 해당 프로젝트 재생성 후 재표시
 - 전체 재생성 요청 → A4.5 처음부터 재실행
+- 나중에 전환: `/prism preview use {name}` → 저장된 시안을 ./DESIGN.md로 교체
 
 ### A5: 프롬프트 최적화 — 공식 스킬 위임
 
@@ -407,12 +411,15 @@ Skill("enhance-prompt") 호출 1회
 **파일 구조:**
 
 ```
-./DESIGN.md                      ← A4.5에서 선택된 Direction의 designTheme (프로젝트 최상위)
+./DESIGN.md                      ← 활성 시안의 DESIGN.md 복사본 (프로젝트 최상위)
 .prism/
   analysis.md                    ← 공통 (A1-A4 산출물)
   prompts.md                     ← A5 결과
-  preview/                       ← A4.5 시안 프로젝트
-    project-ids.md               ← 5개 시안 프로젝트 ID
+  preview/                       ← A4.5 시안 저장
+    project-ids.md               ← 시안 프로젝트 ID
+    {direction-name}/            ← 저장된 시안별 디렉토리
+      DESIGN.md                  ← 해당 시안의 designTheme.designMd
+      screenshots/               ← 해당 시안의 화면 스크린샷
   project-ids.md                 ← D3 생성 프로젝트 ID
 ```
 
