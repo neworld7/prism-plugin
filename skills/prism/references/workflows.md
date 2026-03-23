@@ -595,9 +595,9 @@ Skill("enhance-prompt") 호출 1회
 
 ```
 Feature별로 별도 Stitch 프로젝트를 생성한다:
-→ 프로젝트 이름: "{App} — {Feature번호}. {Feature명}"
-→ 예시: "ReadCodex — 1. Auth & Onboarding"
-→ 예시: "ReadCodex — 2. Library"
+→ 프로젝트 이름: "{App} — {시안명} — {Feature번호}. {Feature명}"
+→ 예시: "ReadCodex — Warm Organic — 1. Auth & Onboarding"
+→ 예시: "ReadCodex — Warm Organic — 2. Library"
 → 각 프로젝트에 해당 Feature의 모든 화면 (메인 + 서브 + 모달 + 상태)을 생성
 → 생성된 프로젝트 ID를 .prism/project-ids.md에 기록:
    | Feature | Project ID | Stitch URL |
