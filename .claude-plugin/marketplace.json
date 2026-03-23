@@ -4,15 +4,15 @@
     "name": "Taekwan Kim"
   },
   "metadata": {
-    "description": "Google Stitch AI design tool orchestrator — code→design pipeline via official skills",
-    "version": "2.9.1"
+    "description": "Google Stitch AI design tool orchestrator — code analysis, design preview, multi-account, market research",
+    "version": "3.2.0"
   },
   "plugins": [
     {
       "name": "prism",
       "source": "./",
-      "description": "Google Stitch AI design tool orchestrator — analyze, design pipeline, verification loops",
-      "version": "2.9.1",
+      "description": "Google Stitch AI design tool orchestrator — analyze, design preview, multi-account, market research",
+      "version": "3.2.0",
       "author": {
         "name": "Taekwan Kim"
       },
