@@ -379,8 +379,8 @@ All UI text must be in Korean (한국어).
 2. 핵심 화면 10개 선정 → 사용자 확인
 3. 리서치 기반 7개 Direction 시안 정의 (스펙트럼 × 리서치 결합)
 4. Direction별 Stitch 프로젝트 생성:
-   → 프로젝트 이름: "{App} — Preview — {Direction 이름}"
-   → 예시: "ReadCodex — Preview — Warm Organic"
+   → 프로젝트 이름: "{App} · Preview · {Direction 이름}"
+   → 예시: "ReadCodex · Preview · Warm Organic"
 4. 각 프로젝트에 핵심 화면 10개 생성 (배치 호출 1회)
 5. 총 7개 프로젝트 × 10개 화면 = 약 70개 화면
 6. get_project로 각 프로젝트의 스크린샷 다운로드
@@ -595,9 +595,9 @@ Skill("enhance-prompt") 호출 1회
 
 ```
 Feature별로 별도 Stitch 프로젝트를 생성한다:
-→ 프로젝트 이름: "{App} — {시안명} — {Feature번호}. {Feature명}"
-→ 예시: "ReadCodex — Warm Organic — 1. Auth & Onboarding"
-→ 예시: "ReadCodex — Warm Organic — 2. Library"
+→ 프로젝트 이름: "{App} · {시안명} · {Feature번호}. {Feature명}"
+→ 예시: "ReadCodex · Warm Organic · 1. Auth & Onboarding"
+→ 예시: "ReadCodex · Warm Organic · 2. Library"
 → 각 프로젝트에 해당 Feature의 모든 화면 (메인 + 서브 + 모달 + 상태)을 생성
 → 생성된 프로젝트 ID를 .prism/project-ids.md에 기록:
    | Feature | Project ID | Stitch URL |
