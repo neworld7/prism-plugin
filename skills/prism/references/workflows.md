@@ -282,6 +282,197 @@ A1에서 발견된 각 Primary Screen 파일에 대해:
 
 > **실용적 적용:** Primary Screen이 많을 경우 (20개+), 핵심 화면(P0 우선순위)만 Deep Scan하고 나머지는 A1 grep 결과만 사용해도 된다. 단, 바텀시트/다이얼로그의 내용은 반드시 읽어야 한다 — grep으로는 "존재"만 알고 "내용"은 알 수 없기 때문이다.
 
+### A1.6: Navigation Flow Graph (v3.5.0 신규)
+
+**Goal:** 라우터 파일을 읽어서 화면 간 이동 맵(Navigation Flow Graph)을 생성한다. 이 정보가 없으면 각 화면이 고립된 디자인이 되어 뒤로가기, 딥링크, 탭 전환 등의 흐름이 누락된다.
+
+**Steps:**
+
+1. **라우터 파일 탐색 및 Read:**
+```
+Flutter: Glob: **/router.dart, **/routes.dart, **/app.dart (GoRouter 정의)
+React:   Glob: **/routes.{tsx,jsx}, **/App.{tsx,jsx} (React Router 정의)
+Next.js: Glob: app/**/page.{tsx,jsx} + app/**/layout.{tsx,jsx} (파일 기반 라우팅)
+```
+
+2. **추출할 요소:**
+
+| 요소 | 추출 방법 | 역할 |
+|------|----------|------|
+| **라우트 트리** | GoRoute 중첩 구조, path 파라미터 | 부모-자식 화면 관계 |
+| **네비게이션 셸** | StatefulShellRoute, BottomNavigationBar | 탭 구조, 병렬 네비게이션 |
+| **딥링크** | path 파라미터 `:id`, `/:slug` | 외부에서 진입 가능한 화면 |
+| **리다이렉트** | redirect, guard 로직 | 인증 필요 화면, 조건부 진입 |
+
+3. **A1.6 Output — Navigation Flow Graph:**
+
+```markdown
+## A1.6 Navigation Flow Graph
+
+### 탭 구조
+| 탭 | 경로 | 화면 |
+|----|------|------|
+| 0 | / | HomeScreen (LibraryScreen) |
+| 1 | /stats | StatsScreen |
+| 2 | /learning | LearningTabScreen |
+| 3 | /community | CommunityScreen |
+| 4 | /profile | ProfileScreen |
+
+### 라우트 트리 (들여쓰기 = 부모-자식)
+```
+/ (HomeScreen)
+  ├── items/add → AddScreen
+  │   └── register → RegisterScreen
+  ├── items/:id → DetailScreen
+  │   ├── edit → EditScreen
+  │   ├── timer → TimerScreen → complete → CompletionScreen
+  │   ├── notes → NotesListScreen
+  │   └── search → SearchScreen
+/settings → SettingsScreen
+  ├── export → ExportScreen
+  └── subscription → SubscriptionScreen
+/ai/chat → ChatScreen
+  └── :conversationId → ChatDetailScreen
+```
+
+### 인증 가드
+| 경로 | 가드 | 미인증 시 |
+|------|------|----------|
+| /* (전체) | isLoggedIn | → /login |
+| /login | !isLoggedIn | → / |
+| /onboarding | !isOnboardingComplete | → / |
+```
+
+> **A1.6 → A4 연결:** 프롬프트에서 "Back" 버튼, 탭 바 구조, 하위 화면 개수를 정확히 기술할 수 있다. 또한 딥링크 가능한 화면은 독립적으로 렌더링되어야 하므로 헤더/네비게이션이 완전해야 한다.
+
+### A1.7: Data Model Scan (v3.5.0 신규)
+
+**Goal:** 엔티티/모델 클래스를 읽어서 각 화면에 표시되는 데이터의 구조와 관계를 파악한다. 이 정보가 없으면 프롬프트에서 "제목, 저자" 같은 추상적 표현만 가능하고, 실제 데이터 필드(ISBN, 출판일, 장르 enum 등)를 놓친다.
+
+**Steps:**
+
+1. **모델/엔티티 파일 탐색 및 Read:**
+```
+Flutter: Glob: **/domain/*_entity.dart, **/models/*.dart, **/tables/*_table.dart
+React:   Glob: **/types/*.ts, **/models/*.ts, **/schema/*.ts
+Next.js: Glob: **/prisma/schema.prisma, **/drizzle/schema.ts
+```
+
+2. **추출할 요소:**
+
+| 요소 | 추출 방법 | 역할 |
+|------|----------|------|
+| **필드 목록** | 클래스 프로퍼티, 컬럼 정의 | 화면에 표시할 데이터 항목 |
+| **필드 타입** | String, int, DateTime, enum | 데이터 포맷 (날짜, 숫자, 상태 칩 등) |
+| **Enum 값** | enum Status { active, completed, ... } | 상태 필터, 칩, 드롭다운 옵션 |
+| **관계** | hasMany, belongsTo, ForeignKey | 화면 간 데이터 연결 (상세→목록) |
+| **Nullable 필드** | String?, int? | 선택적 UI 요소 (없으면 숨김) |
+
+3. **A1.7 Output — Data Model Map:**
+
+```markdown
+## A1.7 Data Model Map
+
+### Core Entities
+
+**ItemEntity**
+| 필드 | 타입 | UI 표현 |
+|------|------|--------|
+| id | String (UUID) | 숨김 |
+| title | String | Display font, 메인 제목 |
+| subtitle | String? | Body font, 부제 (nullable → 없으면 숨김) |
+| coverUrl | String? | 이미지 (nullable → 플레이스홀더) |
+| status | StatusEnum | 상태 칩/필터 |
+| progress | int (0-100) | 프로그레스 바 |
+| createdAt | DateTime | "N일 전" 형식 |
+| categoryId | FK → Category | 카테고리 라벨 |
+
+**StatusEnum**: active, pending, completed, paused
+→ UI: 필터 탭 4개, 상태 변경 바텀시트 4옵션
+
+### Relations
+| 부모 | 자식 | 관계 | UI 영향 |
+|------|------|------|--------|
+| Item | Note | 1:N | 상세 화면에 노트 수 표시, 노트 목록 탭 |
+| Item | Quote | 1:N | 인용 목록 화면 |
+| User | Item | 1:N | 서재 전체 목록 |
+| Group | Item | N:N | 그룹별 분류 |
+```
+
+> **A1.7 → A4 연결:** 프롬프트에서 데이터 필드를 정확한 타입으로 기술할 수 있다. 예: "progress as horizontal bar (0-100%)", "status chip with 4 options: active/pending/completed/paused", "createdAt as relative time '3일 전'". Nullable 필드는 empty 상태 화면의 근거가 된다.
+
+### A1.8: Theme & Asset Scan (v3.5.0 신규)
+
+**Goal:** 기존 테마 파일, 색상 정의, 아이콘 사용을 스캔하여 현재 앱의 디자인 토큰을 파악한다. 이 정보가 있으면 DESIGN.md와 기존 코드의 정합성을 보장하고, 새 디자인 시스템으로 전환 시 변경 범위를 파악할 수 있다.
+
+**Steps:**
+
+1. **테마/스타일 파일 탐색 및 Read:**
+```
+Flutter: Glob: **/theme.dart, **/colors.dart, **/typography.dart, **/app.dart (ThemeData)
+React:   Glob: **/theme.ts, tailwind.config.*, **/globals.css, **/tokens.ts
+Next.js: Glob: tailwind.config.*, app/globals.css, **/theme-provider.tsx
+```
+
+2. **추출할 요소:**
+
+| 요소 | 추출 방법 | 역할 |
+|------|----------|------|
+| **색상 팔레트** | Color(0xFF...), const _primary, --color-primary | 기존 색상 토큰 목록 |
+| **폰트 설정** | GoogleFonts.*, fontFamily, --font-* | 사용 중인 폰트 패밀리 |
+| **간격/크기** | padding, margin, borderRadius 패턴 | 간격 스케일 |
+| **아이콘 세트** | Icons.*, CupertinoIcons, custom svg | 아이콘 스타일 |
+| **다크 모드** | darkTheme, @media (prefers-color-scheme) | 다크 모드 지원 여부 |
+
+3. **아이콘 사용량 집계:**
+```
+Grep: Icons\.\w+ in lib/ → 사용된 Material 아이콘 목록 (중복 제거, 빈도순)
+Grep: CupertinoIcons\.\w+ → Cupertino 아이콘 목록
+Grep: SvgPicture|svg in assets/ → 커스텀 SVG 아이콘
+```
+
+4. **A1.8 Output — Theme & Asset Report:**
+
+```markdown
+## A1.8 Theme & Asset Report
+
+### 현재 색상 팔레트
+| 토큰 | 현재 값 | 용도 |
+|------|---------|------|
+| primary | #0D1B3E | 버튼, 활성 상태 |
+| secondary | #5C6785 | 메타데이터, 보조 텍스트 |
+| surface | #F0F2F8 | 배경 |
+| error | #BA1A1A | 에러 |
+
+### 폰트
+| 용도 | 폰트 | 크기 범위 |
+|------|------|----------|
+| Display/Headline | Noto Serif KR | 20-30px |
+| Body/Label | Pretendard (system) | 10-16px |
+
+### 아이콘 세트
+| 세트 | 사용 수 | 예시 |
+|------|---------|------|
+| Material | 45개 | menu_book, insights, school, people, person |
+| Cupertino | 0개 | — |
+| Custom SVG | 3개 | logo.svg, reading.svg |
+
+### 간격 패턴
+| 패턴 | 빈도 | 값 |
+|------|------|-----|
+| horizontal padding | 높음 | 16px, 24px |
+| vertical spacing | 높음 | 8px, 12px, 16px, 24px |
+| border radius | 중간 | 0px (sharp), 12px (cards), 999px (pills) |
+
+### 다크 모드
+- 지원: 예/아니오
+- 방식: ThemeData.dark / @media / 수동
+```
+
+> **A1.8 → DESIGN.md 연결:** 새 디자인 시스템(DESIGN.md) 작성 시 기존 테마와의 차이를 명시할 수 있다. 또한 아이콘 세트 정보는 프롬프트에서 "Material Icons" 또는 "custom illustration" 등을 정확히 지정하는 근거가 된다.
+
+> **A1.8 → A4 연결:** 아이콘 사용 패턴(Material 45개, Custom SVG 3개)을 알면 프롬프트에서 "Material style icon for X" vs "custom illustration" 을 정확히 구분할 수 있다.
+
 ### A2: (제거됨)
 
 > A2(시뮬레이터 스크린샷)는 v3.2.0에서 제거되었다. A1 코드 분석만으로 화면/상태/오버레이를 충분히 추출할 수 있고, A4.5 Design Preview에서 새 디자인 방향을 결정하므로 기존 앱 스크린샷 분석이 불필요하다.
