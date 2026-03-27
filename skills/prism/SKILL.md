@@ -138,13 +138,15 @@ D3: Skill("stitch-design")
   project-ids.md                 ← D3 생성 프로젝트 ID (Feature별)
 ```
 
-## Design Identity
+## Design Identity — 단일 DESIGN.md 원칙
 
 디자인 시스템은 D3에서 Stitch가 자동 생성한다. 첫 Feature 프로젝트의 `designTheme.designMd` 전문을 저장하여 이후 Feature 프로젝트에서 동일한 디자인 시스템을 재현한다.
 
+> **핵심 규칙: `./DESIGN.md`가 존재하면, 모든 Feature 프로젝트는 반드시 이 단일 디자인 시스템을 사용한다.** Feature 1이든 Feature 10이든, enhance-prompt가 동일한 `./DESIGN.md`를 읽어서 동일한 디자인 토큰을 주입한다. Feature별로 다른 디자인 시스템을 적용하는 것은 허용되지 않는다. 다른 디자인을 원하면 `/prism preview use <name>`으로 `./DESIGN.md` 자체를 교체해야 한다.
+
 **판단 기준:** `./DESIGN.md` 존재 여부
-- **미존재**: D3 첫 화면 생성 후 `get_project` → `designTheme`에서 이름 + 메타데이터 + designMd 전문 추출 → `./DESIGN.md`로 저장 (프로젝트 최상위)
-- **존재**: enhance-prompt 스킬이 자동으로 읽어서 프롬프트에 디자인 시스템 토큰을 주입. 수동 삽입 불필요.
+- **미존재**: D3 첫 화면 생성 후 `get_project` → `designTheme`에서 이름 + 메타데이터 + designMd 전문 추출 → `./DESIGN.md`로 저장 (프로젝트 최상위). 이 시점부터 이후 모든 Feature에 동일 적용.
+- **존재**: enhance-prompt 스킬이 자동으로 읽어서 모든 Feature의 프롬프트에 디자인 시스템 토큰을 주입. 수동 삽입 불필요.
 
 **DESIGN.md 포맷 (프로젝트 최상위에 저장):**
 ```
