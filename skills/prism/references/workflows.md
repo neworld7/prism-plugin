@@ -711,12 +711,64 @@ Auth & Entitlement (2개):
 
 > **⚠️ A1.5 참조 필수 (v3.4.3):** A1.5에서 추출한 버튼 라벨, 데이터 필드, 오버레이 내용을 프롬프트에 반영해야 한다. A1.5 없이 프롬프트를 작성하면 "버튼이 있다" 수준의 추상적 프롬프트가 되어 실제 기능이 디자인에서 누락된다.
 
-**A1.5 → A4 매핑 규칙:**
-- **버튼**: A1.5의 라벨을 한국어 그대로 프롬프트에 포함 (예: `"시작하기" primary button`, `"삭제" danger text button`)
-- **데이터**: A1.5의 필드를 실제 예시 데이터로 (예: `Title "항목 제목" in display font, subtitle "부제" in body font`)
-- **네비게이션**: 연결되는 화면 수를 표기 (예: `3 action buttons leading to editor, list, progress`)
-- **조건부 UI**: 상태별로 별도 프롬프트 생성 (예: active 상태, completed 상태를 각각)
-- **오버레이 내용**: 바텀시트/다이얼로그의 실제 내용을 기술 (예: `Bottom sheet with 4 status options: 진행 중, 대기, 완료, 중단`)
+**A1.5~A1.11 → A4 통합 매핑 규칙:**
+
+각 분석 단계의 결과를 프롬프트의 **PAGE STRUCTURE** 블록에 어떻게 반영하는지 정의한다.
+
+**From A1.5 (Deep Functional Scan):**
+- **버튼**: 한국어 라벨 그대로 + 스타일 (예: `"시작하기" primary filled button`, `"삭제" danger text button`)
+- **데이터**: 실제 예시 데이터 + 폰트 역할 (예: `Title "항목 제목" in display font, subtitle "부제" in body font`)
+- **조건부 UI**: 상태별로 별도 Screen 프롬프트 생성 (예: active 상태 화면, completed 상태 화면)
+- **오버레이 내용**: 실제 옵션/메시지 포함 (예: `Bottom sheet with 4 status options: 진행 중, 대기, 완료, 중단`)
+
+**From A1.6 (Navigation Flow Graph):**
+- **탭 구조**: 화면이 탭 네비게이션 안에 있으면 `Bottom tab bar with N tabs, {탭명} active` 필수 포함
+- **Back 버튼**: 자식 화면이면 `Back arrow in top-left leading to {부모 화면명}` 포함
+- **하위 화면 수**: 상세 화면에서 이동 가능한 목적지 수 (예: `4 action rows leading to: editor, timer, notes, quotes`)
+- **딥링크 가능**: 독립 진입 가능한 화면은 `Full navigation context (header + tabs) must be visible — this screen can be entered directly via deep link` 명시
+- **인증 가드**: 미인증 접근 불가 화면은 Auth 상태 화면을 별도 생성
+
+**From A1.7 (Data Model Scan):**
+- **필드 타입 → UI 위젯 매핑**:
+  - `String` → text label
+  - `int (0-100)` → horizontal progress bar with percentage
+  - `DateTime` → relative time "3일 전" or formatted date
+  - `enum { a, b, c, d }` → filter chips / status selector with N options
+  - `String?` (nullable) → "shown only when available, hidden otherwise"
+  - `List<T>` → "scrollable list of N items" or "count badge showing N"
+- **관계 → 네비게이션**: `Item hasMany Notes` → 상세 화면에 "N개 메모" 카운트 표시 + 메모 목록 링크
+- **Enum → 오버레이 옵션**: `StatusEnum { active, pending, completed, paused }` → 바텀시트에 정확히 4개 옵션
+
+**From A1.9 (String & Copy Inventory):**
+- **빈 상태 문구**: A1.9에서 수집한 실제 메시지를 프롬프트에 그대로 포함 (예: `Empty state: "아직 등록된 항목이 없어요" centered in display font, "첫 번째 항목을 추가해보세요" subtitle below`)
+- **에러 문구**: 실제 에러 메시지 포함 (예: `Error card: "불러올 수 없어요" with retry button`)
+- **앱 보이스 톤**: 프롬프트 상단에 명시 (예: `App voice: friendly Korean (존댓말 -어요 tone). All placeholder text must match this voice.`)
+- **버튼 라벨**: A1.9에서 수집한 정확한 한국어 라벨 사용 (A1.5와 교차 검증)
+
+**From A1.10 (Scroll & Layout Architecture):**
+- **SliverAppBar** → `Collapsible hero header that shrinks from {expanded}px to toolbar height on scroll. Cover image in flexible space.`
+- **TabBarView** → `{N}-tab swipeable content area. Tab labels: {탭1}, {탭2}, {탭3}. Active tab indicator in primary color.`
+- **PageView** → `Horizontal full-width card carousel with peek of adjacent cards. Page indicator dots below.`
+- **NestedScrollView** → `Complex scroll: collapsible header above, pinned tab bar in middle, scrollable list below.`
+- **ListView.builder** → `Infinite scrolling vertical list. Loading indicator at bottom when fetching more.`
+- **스크롤 없음** → `Fixed full-screen layout, no scrolling. All content visible without scroll.`
+- **고정 요소** → `Sticky bottom bar with {내용}` 또는 `Floating action button at bottom-right`
+
+**From A1.11 (External Package Detection):**
+- **차트 패키지** → `Chart area: {chart type} chart showing {data description}. X-axis: {labels}, Y-axis: {unit}. Chart colors match design system palette.` (절대 일반 카드로 대체하지 않음)
+- **카메라 패키지** → `Camera viewfinder occupying top 70% of screen. Rectangular scan frame overlay in center. Capture button at bottom center.`
+- **지도 패키지** → `Map area occupying {percentage}% of screen with markers. Search bar floating above map.`
+- **리치 텍스트 패키지** → `Rich text editor with formatting toolbar at bottom: bold, italic, heading, list, quote buttons.`
+- **결제 패키지** → `Subscription comparison cards: Free vs Premium. Feature checklist with check/lock icons. Primary CTA "프리미엄 시작".`
+- **소셜 로그인** → `Social login button with {provider} logo and "{provider}로 시작하기" text.`
+
+> **매핑 적용 순서:** PAGE STRUCTURE를 작성할 때 위에서 아래로 적용한다:
+> 1. A1.10 → 화면 전체 레이아웃 구조 결정 (스크롤 유형, 고정 요소)
+> 2. A1.6 → 네비게이션 요소 배치 (탭 바, Back 버튼, 하위 링크)
+> 3. A1.5 → 기능 요소 배치 (버튼, 데이터, 인터랙션)
+> 4. A1.7 → 데이터 필드 정밀 기술 (타입별 위젯, enum 옵션, nullable 처리)
+> 5. A1.9 → 실제 한국어 텍스트 삽입 (빈 상태, 에러, 라벨)
+> 6. A1.11 → 외부 패키지 렌더링 영역 기술 (차트, 카메라, 지도)
 
 **Stitch 공식 프롬프팅 원칙:**
 1. **Simple → Complex**: 간결하게 시작하고 edit으로 세분화
