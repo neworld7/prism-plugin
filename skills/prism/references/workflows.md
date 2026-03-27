@@ -212,7 +212,7 @@ Grep: syncStatus|isSyncing|syncConflict|staleData|lastSynced|pendingSync
 
 **Goal:** A1의 grep 결과는 "어떤 화면이 있는지"만 알려준다. A1.5는 각 화면 파일을 **실제로 읽어서** 기능적 요소(버튼, 데이터 필드, 인터랙션, 네비게이션 흐름)를 추출한다. 이 정보가 없으면 A4 프롬프트가 "버튼 있음" 수준에 머물러 실제 기능이 디자인에서 누락된다.
 
-> **⚠️ 핵심 교훈 (v3.4.3):** A1 grep만으로는 화면의 **기능적 의미**를 파악할 수 없다. "showModalBottomSheet가 있다"는 것은 알지만, 그 바텀시트에 **무엇이 들어있는지**(정렬 옵션인지, 삭제 확인인지, 읽기 상태 변경인지)는 파일을 읽어야 알 수 있다. 이 단계를 건너뛰면 프롬프트가 레이아웃만 기술하고 기능을 누락한다.
+> **⚠️ 핵심 교훈 (v3.4.3):** A1 grep만으로는 화면의 **기능적 의미**를 파악할 수 없다. "showModalBottomSheet가 있다"는 것은 알지만, 그 바텀시트에 **무엇이 들어있는지**(정렬 옵션인지, 삭제 확인인지, 상태 변경인지)는 파일을 읽어야 알 수 있다. 이 단계를 건너뛰면 프롬프트가 레이아웃만 기술하고 기능을 누락한다.
 
 **Steps:**
 
@@ -243,35 +243,35 @@ A1에서 발견된 각 Primary Screen 파일에 대해:
 **버튼/액션:**
 | 라벨 | 동작 | 코드 위치 |
 |------|------|----------|
-| "읽기 시작" | 읽기 상태 변경 + 타이머 시작 | book_detail_screen.dart:420 |
-| "삭제" | 책 삭제 확인 다이얼로그 | book_detail_screen.dart:634 |
+| "시작하기" | 상태 변경 + 진행 시작 | detail_screen.dart:420 |
+| "삭제" | 삭제 확인 다이얼로그 | detail_screen.dart:634 |
 
 **데이터 필드:**
 | 필드 | 내용 | 소스 |
 |------|------|------|
-| 제목 | book.title (Noto Serif KR) | book_detail_screen.dart:180 |
-| 저자 | book.author | book_detail_screen.dart:185 |
-| 진행률 | "${book.progress}%" | book_detail_screen.dart:210 |
+| 제목 | item.title (Display font) | detail_screen.dart:180 |
+| 부제 | item.subtitle | detail_screen.dart:185 |
+| 진행률 | "${item.progress}%" | detail_screen.dart:210 |
 
 **네비게이션:**
 | 목적지 | 트리거 | 라우트 |
 |--------|--------|-------|
-| 메모 에디터 | "메모" 탭 탭 | /reading/notes/{bookId} |
-| 인용구 목록 | "인용구" 탭 탭 | /reading/quotes/{bookId} |
-| 타이머 | "읽기 시작" 버튼 | /reading/timer/{bookId} |
+| 에디터 | "편집" 버튼 탭 | /items/{id}/edit |
+| 상세 목록 | "목록" 탭 탭 | /items/{id}/list |
+| 진행 화면 | "시작하기" 버튼 | /items/{id}/progress |
 
 **조건부 UI:**
 | 조건 | 표시 | 숨김 |
 |------|------|------|
-| book.status == reading | 진행률 바, "이어 읽기" 버튼 | "읽기 시작" 버튼 |
-| book.status == finished | 완독 배지, 리뷰 버튼 | 진행률 바 |
+| item.status == active | 진행률 바, "이어하기" 버튼 | "시작하기" 버튼 |
+| item.status == completed | 완료 배지, 리뷰 버튼 | 진행률 바 |
 
 **오버레이 내용:**
 | 유형 | 내용 | 트리거 |
 |------|------|--------|
-| bottom-sheet | 읽기 상태 선택: 읽는 중/읽고 싶은/완독/중단 | 상태 칩 탭 |
-| dialog | "이 책을 삭제하시겠어요?" + 확인/취소 | 더보기 > 삭제 |
-| bottom-sheet | 대출 기록 목록 | 대출 아이콘 탭 |
+| bottom-sheet | 상태 선택: 진행 중/대기/완료/중단 | 상태 칩 탭 |
+| dialog | "이 항목을 삭제하시겠어요?" + 확인/취소 | 더보기 > 삭제 |
+| bottom-sheet | 관련 기록 목록 | 기록 아이콘 탭 |
 ```
 
 4. **A1.5 → A4 연결:** A4 프롬프트 작성 시 A1.5의 기능 카드를 참조하여:
@@ -430,11 +430,11 @@ Auth & Entitlement (2개):
 > **⚠️ A1.5 참조 필수 (v3.4.3):** A1.5에서 추출한 버튼 라벨, 데이터 필드, 오버레이 내용을 프롬프트에 반영해야 한다. A1.5 없이 프롬프트를 작성하면 "버튼이 있다" 수준의 추상적 프롬프트가 되어 실제 기능이 디자인에서 누락된다.
 
 **A1.5 → A4 매핑 규칙:**
-- **버튼**: A1.5의 라벨을 한국어 그대로 프롬프트에 포함 (예: `"읽기 시작" primary button`, `"삭제" danger text button`)
-- **데이터**: A1.5의 필드를 실제 예시 데이터로 (예: `Book title "데미안" in serif, author "헤르만 헤세" in sans`)
-- **네비게이션**: 연결되는 화면 수를 표기 (예: `4 action buttons leading to timer, notes, quotes, OCR`)
-- **조건부 UI**: 상태별로 별도 프롬프트 생성 (예: reading 상태, finished 상태를 각각)
-- **오버레이 내용**: 바텀시트/다이얼로그의 실제 내용을 기술 (예: `Bottom sheet with 4 status options: 읽는 중, 읽고 싶은, 완독, 중단`)
+- **버튼**: A1.5의 라벨을 한국어 그대로 프롬프트에 포함 (예: `"시작하기" primary button`, `"삭제" danger text button`)
+- **데이터**: A1.5의 필드를 실제 예시 데이터로 (예: `Title "항목 제목" in display font, subtitle "부제" in body font`)
+- **네비게이션**: 연결되는 화면 수를 표기 (예: `3 action buttons leading to editor, list, progress`)
+- **조건부 UI**: 상태별로 별도 프롬프트 생성 (예: active 상태, completed 상태를 각각)
+- **오버레이 내용**: 바텀시트/다이얼로그의 실제 내용을 기술 (예: `Bottom sheet with 4 status options: 진행 중, 대기, 완료, 중단`)
 
 **Stitch 공식 프롬프팅 원칙:**
 1. **Simple → Complex**: 간결하게 시작하고 edit으로 세분화
