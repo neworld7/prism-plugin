@@ -1,6 +1,6 @@
 # Prism — Google Stitch AI Design Orchestrator
 
-**Version:** 3.3.0
+**Version:** 3.3.1
 **Author:** Taekwan Kim
 
 Claude Code 플러그인으로, Google Stitch AI 디자인 도구를 오케스트레이션하여 코드 분석부터 디자인 생성까지 자동화합니다.
@@ -101,7 +101,7 @@ Design (D1 → D3 → D4 → D5 → D6)
 │   ├── prompts.md                   ← 최적화된 프롬프트
 │   ├── project-ids.md               ← Feature별 Stitch 프로젝트 ID
 │   └── preview/
-│       ├── project-ids.md           ← 시안 프로젝트 ID
+│       ├── index.md                 ← 시안 목록 + 프로젝트 ID + 활성 시안
 │       └── {direction-name}/        ← 저장된 시안
 │           ├── DESIGN.md
 │           └── screenshots/
@@ -129,7 +129,24 @@ Design (D1 → D3 → D4 → D5 → D6)
 일일 크레딧: 400 × 3계정 = 1,200/일
 ```
 
-### 설정
+### 초기 설정
+
+최초 사용 시 `~/.claude/prism-accounts.json`을 직접 생성해야 합니다:
+
+```json
+{
+  "active": "myaccount",
+  "accounts": [
+    {
+      "name": "myaccount",
+      "email": "user@gmail.com",
+      "apiKey": "AIza..."
+    }
+  ]
+}
+```
+
+API 키는 [Google AI Studio](https://aistudio.google.com/apikey)에서 발급받습니다.
 
 계정 저장: `~/.claude/prism-accounts.json`
 인증 방식: `x-goog-api-key` 헤더 (`~/.claude.json` mcpServers.stitch.headers)
@@ -213,6 +230,7 @@ Design (D1 → D3 → D4 → D5 → D6)
 
 | 버전 | 변경 |
 |------|------|
+| 3.3.1 | loom→prism 잔존 리네임, 파일 구조 문서 정합성(index.md), D4 체크리스트 구체화, 스킬 호출 체인 문서화, sed 이식성, 계정 초기 설정 문서화, 트리거 키워드 확장 |
 | 3.3.0 | design resume (크레딧 소진 이어하기), 시안별 상태 파일 분리, 시안 10개 화면, 시장 리서치 제안 |
 | 3.2.0 | 공식 프롬프트 가이드 개편, A2 제거, ./DESIGN.md 전환, preview add/list/use/remove |
 | 3.1.0 | /prism account 멀티 계정 전환 (x-goog-api-key) |

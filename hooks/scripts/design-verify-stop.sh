@@ -13,6 +13,16 @@ STATE_FILE=".claude/prism-design-pipeline.local.md"
 COMPLETION_PROMISE="DESIGN_VERIFIED"
 DEFAULT_MAX_ITERATIONS=5
 
+# --- Cross-platform sed -i helper ---
+# macOS sed requires '' after -i, GNU sed does not
+sedi() {
+  if sed --version 2>/dev/null | grep -q 'GNU'; then
+    sed -i "$@"
+  else
+    sed -i '' "$@"
+  fi
+}
+
 # --- Read hook input from stdin ---
 INPUT=$(cat)
 
@@ -82,14 +92,14 @@ if echo "$INPUT" | grep -q "<promise>${COMPLETION_PROMISE}</promise>" 2>/dev/nul
   fi
 
   # Transition to next feature: phase→generation, iteration→0
-  sed -i '' "s/^phase:.*/phase: generation/" "$STATE_FILE"
-  sed -i '' "s/^feature:.*/feature: ${NEXT_FEATURE}/" "$STATE_FILE"
-  sed -i '' "s/^current_index:.*/current_index: ${NEXT_INDEX}/" "$STATE_FILE"
-  sed -i '' "s/^iteration:.*/iteration: 0/" "$STATE_FILE"
+  sedi "s/^phase:.*/phase: generation/" "$STATE_FILE"
+  sedi "s/^feature:.*/feature: ${NEXT_FEATURE}/" "$STATE_FILE"
+  sedi "s/^current_index:.*/current_index: ${NEXT_INDEX}/" "$STATE_FILE"
+  sedi "s/^iteration:.*/iteration: 0/" "$STATE_FILE"
   if grep -q "^completed_features:" "$STATE_FILE"; then
-    sed -i '' "s/^completed_features:.*/completed_features: ${NEW_COMPLETED}/" "$STATE_FILE"
+    sedi "s/^completed_features:.*/completed_features: ${NEW_COMPLETED}/" "$STATE_FILE"
   else
-    sed -i '' "/^---$/a\\
+    sedi "/^---$/a\\
 completed_features: ${NEW_COMPLETED}" "$STATE_FILE"
   fi
 
@@ -105,16 +115,16 @@ fi
 # --- Check iteration limit ---
 NEXT_ITER=$((ITERATION + 1))
 if [ "$NEXT_ITER" -gt "$MAX_ITER" ]; then
-  sed -i '' "s/^phase:.*/phase: done_max_iter/" "$STATE_FILE" 2>/dev/null || true
+  sedi "s/^phase:.*/phase: done_max_iter/" "$STATE_FILE" 2>/dev/null || true
   echo '{"decision": "allow"}'
   exit 0
 fi
 
 # --- Update iteration count in state file ---
 if grep -q "^iteration:" "$STATE_FILE"; then
-  sed -i '' "s/^iteration:.*/iteration: ${NEXT_ITER}/" "$STATE_FILE"
+  sedi "s/^iteration:.*/iteration: ${NEXT_ITER}/" "$STATE_FILE"
 else
-  sed -i '' "/^---$/a\\
+  sedi "/^---$/a\\
 iteration: ${NEXT_ITER}" "$STATE_FILE"
 fi
 

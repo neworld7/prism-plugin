@@ -16,6 +16,26 @@ Stitch 계정을 전환합니다.
 
 ## Execution
 
+### 초기 설정 (최초 1회)
+
+`~/.claude/prism-accounts.json`이 없으면 아래 형식으로 생성:
+
+```json
+{
+  "active": "myaccount",
+  "accounts": [
+    {
+      "name": "myaccount",
+      "email": "user@gmail.com",
+      "apiKey": "AIza..."
+    }
+  ]
+}
+```
+
+API 키: [Google AI Studio](https://aistudio.google.com/apikey)에서 발급.
+계정 추가: `accounts` 배열에 객체 추가 후 `/prism account <name>`으로 전환.
+
 ### 인자 없음 — 계정 목록
 
 ```bash
