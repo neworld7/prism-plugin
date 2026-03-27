@@ -85,16 +85,19 @@ Phase D4-D6 검증 루프는 **Stop hook**이 자동 관리한다.
 상태 파일 `.claude/prism-design-pipeline.local.md`에 `phase: verify`가 설정되면
 Stop hook이 `<promise>DESIGN_VERIFIED</promise>` 감지까지 루프를 반복한다.
 
-### 스킬 호출 체인
+### 디자인 토큰 주입 — 2-Block 패턴 (v3.4.2)
 
-D3에서 `Skill("stitch-design")`을 호출하면, stitch-design 스킬이 내부적으로 `Skill("enhance-prompt")`를 호출하여 프롬프트를 최적화한다. enhance-prompt는 `./DESIGN.md`를 자동으로 읽어서 디자인 시스템 토큰(색상, 폰트, 간격 등)을 프롬프트에 주입한다. 따라서 D3에서 디자인 토큰을 수동 삽입할 필요가 없다.
+> **⚠️ 핵심 교훈:** `"Continue using the X design system"` 텍스트 앵커만으로는 Stitch가 디자인 시스템을 인식하지 못한다. Stitch는 프롬프트 텍스트만으로 화면을 생성하므로, `./DESIGN.md`의 **실제 hex 코드, 폰트명, 스타일 규칙**을 프롬프트에 직접 포함해야 한다.
+
+**모든 `generate_screen_from_text` 프롬프트에 DESIGN SYSTEM (REQUIRED) 블록을 포함한다:**
 
 ```
-D3: Skill("stitch-design")
-  └→ 내부: Skill("enhance-prompt")
-       └→ ./DESIGN.md 자동 읽기 → 디자인 토큰 주입
-       └→ 최적화된 프롬프트 → generate_screen_from_text 호출
+D3: ./DESIGN.md 읽기 → DESIGN SYSTEM (REQUIRED) 블록 구성
+  └→ 모든 프롬프트 상단에 블록 포함
+  └→ generate_screen_from_text 호출 (MCP 직접 호출 가능)
 ```
+
+Skill("stitch-design") / Skill("enhance-prompt") 경유도 가능하지만, 핵심은 **프롬프트 자체에 실제 토큰이 포함**되는 것이다. 스킬 경유 여부와 무관하게 DESIGN SYSTEM 블록이 필수.
 
 ### All 모드: Feature-by-Feature 순차 처리
 
