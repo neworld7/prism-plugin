@@ -401,77 +401,9 @@ Next.js: Glob: **/prisma/schema.prisma, **/drizzle/schema.ts
 
 > **A1.7 → A4 연결:** 프롬프트에서 데이터 필드를 정확한 타입으로 기술할 수 있다. 예: "progress as horizontal bar (0-100%)", "status chip with 4 options: active/pending/completed/paused", "createdAt as relative time '3일 전'". Nullable 필드는 empty 상태 화면의 근거가 된다.
 
-### A1.8: Theme & Asset Scan (v3.5.0 신규)
+### A1.8: (제거됨)
 
-**Goal:** 기존 테마 파일, 색상 정의, 아이콘 사용을 스캔하여 현재 앱의 디자인 토큰을 파악한다. 이 정보가 있으면 DESIGN.md와 기존 코드의 정합성을 보장하고, 새 디자인 시스템으로 전환 시 변경 범위를 파악할 수 있다.
-
-**Steps:**
-
-1. **테마/스타일 파일 탐색 및 Read:**
-```
-Flutter: Glob: **/theme.dart, **/colors.dart, **/typography.dart, **/app.dart (ThemeData)
-React:   Glob: **/theme.ts, tailwind.config.*, **/globals.css, **/tokens.ts
-Next.js: Glob: tailwind.config.*, app/globals.css, **/theme-provider.tsx
-```
-
-2. **추출할 요소:**
-
-| 요소 | 추출 방법 | 역할 |
-|------|----------|------|
-| **색상 팔레트** | Color(0xFF...), const _primary, --color-primary | 기존 색상 토큰 목록 |
-| **폰트 설정** | GoogleFonts.*, fontFamily, --font-* | 사용 중인 폰트 패밀리 |
-| **간격/크기** | padding, margin, borderRadius 패턴 | 간격 스케일 |
-| **아이콘 세트** | Icons.*, CupertinoIcons, custom svg | 아이콘 스타일 |
-| **다크 모드** | darkTheme, @media (prefers-color-scheme) | 다크 모드 지원 여부 |
-
-3. **아이콘 사용량 집계:**
-```
-Grep: Icons\.\w+ in lib/ → 사용된 Material 아이콘 목록 (중복 제거, 빈도순)
-Grep: CupertinoIcons\.\w+ → Cupertino 아이콘 목록
-Grep: SvgPicture|svg in assets/ → 커스텀 SVG 아이콘
-```
-
-4. **A1.8 Output — Theme & Asset Report:**
-
-```markdown
-## A1.8 Theme & Asset Report
-
-### 현재 색상 팔레트
-| 토큰 | 현재 값 | 용도 |
-|------|---------|------|
-| primary | #0D1B3E | 버튼, 활성 상태 |
-| secondary | #5C6785 | 메타데이터, 보조 텍스트 |
-| surface | #F0F2F8 | 배경 |
-| error | #BA1A1A | 에러 |
-
-### 폰트
-| 용도 | 폰트 | 크기 범위 |
-|------|------|----------|
-| Display/Headline | Noto Serif KR | 20-30px |
-| Body/Label | Pretendard (system) | 10-16px |
-
-### 아이콘 세트
-| 세트 | 사용 수 | 예시 |
-|------|---------|------|
-| Material | 45개 | menu_book, insights, school, people, person |
-| Cupertino | 0개 | — |
-| Custom SVG | 3개 | logo.svg, reading.svg |
-
-### 간격 패턴
-| 패턴 | 빈도 | 값 |
-|------|------|-----|
-| horizontal padding | 높음 | 16px, 24px |
-| vertical spacing | 높음 | 8px, 12px, 16px, 24px |
-| border radius | 중간 | 0px (sharp), 12px (cards), 999px (pills) |
-
-### 다크 모드
-- 지원: 예/아니오
-- 방식: ThemeData.dark / @media / 수동
-```
-
-> **A1.8 → DESIGN.md 연결:** 새 디자인 시스템(DESIGN.md) 작성 시 기존 테마와의 차이를 명시할 수 있다. 또한 아이콘 세트 정보는 프롬프트에서 "Material Icons" 또는 "custom illustration" 등을 정확히 지정하는 근거가 된다.
-
-> **A1.8 → A4 연결:** 아이콘 사용 패턴(Material 45개, Custom SVG 3개)을 알면 프롬프트에서 "Material style icon for X" vs "custom illustration" 을 정확히 구분할 수 있다.
+> A1.8(Theme & Asset Scan)은 v3.5.0에서 추가되었으나 즉시 제거되었다. 기존 테마 토큰을 스캔하면 새 디자인 시스템의 자유도를 떨어뜨리고, Stitch가 생성하는 디자인이 기존 코드에 종속된다. 디자인 시스템은 DESIGN.md에서 자유롭게 정의하고, 코드 적용은 구현 단계에서 처리한다.
 
 ### A2: (제거됨)
 
