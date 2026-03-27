@@ -208,6 +208,80 @@ Grep: syncStatus|isSyncing|syncConflict|staleData|lastSynced|pendingSync
 
 **중요:** 표가 비어있는 축도 반드시 포함한다. 빈 축은 A3에서 "코드에는 없지만 앱에 필요한 화면"을 추가하는 힌트가 된다.
 
+### A1.5: Deep Functional Scan (v3.4.3 신규)
+
+**Goal:** A1의 grep 결과는 "어떤 화면이 있는지"만 알려준다. A1.5는 각 화면 파일을 **실제로 읽어서** 기능적 요소(버튼, 데이터 필드, 인터랙션, 네비게이션 흐름)를 추출한다. 이 정보가 없으면 A4 프롬프트가 "버튼 있음" 수준에 머물러 실제 기능이 디자인에서 누락된다.
+
+> **⚠️ 핵심 교훈 (v3.4.3):** A1 grep만으로는 화면의 **기능적 의미**를 파악할 수 없다. "showModalBottomSheet가 있다"는 것은 알지만, 그 바텀시트에 **무엇이 들어있는지**(정렬 옵션인지, 삭제 확인인지, 읽기 상태 변경인지)는 파일을 읽어야 알 수 있다. 이 단계를 건너뛰면 프롬프트가 레이아웃만 기술하고 기능을 누락한다.
+
+**Steps:**
+
+1. A1에서 발견된 **Primary Screen 파일 전부를 Read**한다 (`.g.dart`, `.freezed.dart` 제외):
+
+```
+A1에서 발견된 각 Primary Screen 파일에 대해:
+  Read: {파일 경로} (전체 읽기 또는 build() 메서드 중심)
+```
+
+2. 각 파일에서 **5가지 기능 요소**를 추출한다:
+
+| 요소 | 추출 방법 | 프롬프트에서의 역할 |
+|------|----------|-------------------|
+| **버튼/액션** | `onPressed`, `onTap`, `ElevatedButton`, `TextButton`, `IconButton` + 라벨 텍스트 | "어떤 버튼이 어떤 동작을 하는지" 기술 |
+| **데이터 필드** | `Text(`, `TextField`, `TextFormField` + 표시 내용 | "화면에 어떤 정보가 보이는지" 기술 |
+| **네비게이션** | `context.push`, `context.go`, `GoRoute`, `Navigator.pop` + 목적지 | "이 화면에서 어디로 이동하는지" 기술 |
+| **조건부 UI** | `if (`, `? :`, `when:`, `switch`, `Visibility`, `Offstage` + 조건 | "언제 무엇이 보이고 안 보이는지" 기술 |
+| **오버레이 내용** | `showModalBottomSheet` ~ 닫는 괄호 내부, `showDialog` 내부 | "바텀시트/다이얼로그에 뭐가 들어있는지" 기술 |
+
+3. **A1.5 Output** — 각 Primary Screen별 기능 카드:
+
+```markdown
+## A1.5 Functional Scan
+
+### {ScreenName} ({파일 경로})
+
+**버튼/액션:**
+| 라벨 | 동작 | 코드 위치 |
+|------|------|----------|
+| "읽기 시작" | 읽기 상태 변경 + 타이머 시작 | book_detail_screen.dart:420 |
+| "삭제" | 책 삭제 확인 다이얼로그 | book_detail_screen.dart:634 |
+
+**데이터 필드:**
+| 필드 | 내용 | 소스 |
+|------|------|------|
+| 제목 | book.title (Noto Serif KR) | book_detail_screen.dart:180 |
+| 저자 | book.author | book_detail_screen.dart:185 |
+| 진행률 | "${book.progress}%" | book_detail_screen.dart:210 |
+
+**네비게이션:**
+| 목적지 | 트리거 | 라우트 |
+|--------|--------|-------|
+| 메모 에디터 | "메모" 탭 탭 | /reading/notes/{bookId} |
+| 인용구 목록 | "인용구" 탭 탭 | /reading/quotes/{bookId} |
+| 타이머 | "읽기 시작" 버튼 | /reading/timer/{bookId} |
+
+**조건부 UI:**
+| 조건 | 표시 | 숨김 |
+|------|------|------|
+| book.status == reading | 진행률 바, "이어 읽기" 버튼 | "읽기 시작" 버튼 |
+| book.status == finished | 완독 배지, 리뷰 버튼 | 진행률 바 |
+
+**오버레이 내용:**
+| 유형 | 내용 | 트리거 |
+|------|------|--------|
+| bottom-sheet | 읽기 상태 선택: 읽는 중/읽고 싶은/완독/중단 | 상태 칩 탭 |
+| dialog | "이 책을 삭제하시겠어요?" + 확인/취소 | 더보기 > 삭제 |
+| bottom-sheet | 대출 기록 목록 | 대출 아이콘 탭 |
+```
+
+4. **A1.5 → A4 연결:** A4 프롬프트 작성 시 A1.5의 기능 카드를 참조하여:
+   - 버튼 라벨과 위치를 프롬프트에 포함
+   - 데이터 필드를 한국어 실제 텍스트로 표현
+   - 조건부 UI 상태별 화면을 별도 프롬프트로 생성
+   - 오버레이 내용을 구체적으로 기술 (예: "삭제 확인 다이얼로그" → "이 책을 삭제하시겠어요?" 텍스트 + 확인/취소 버튼)
+
+> **실용적 적용:** Primary Screen이 많을 경우 (20개+), 핵심 화면(P0 우선순위)만 Deep Scan하고 나머지는 A1 grep 결과만 사용해도 된다. 단, 바텀시트/다이얼로그의 내용은 반드시 읽어야 한다 — grep으로는 "존재"만 알고 "내용"은 알 수 없기 때문이다.
+
 ### A2: (제거됨)
 
 > A2(시뮬레이터 스크린샷)는 v3.2.0에서 제거되었다. A1 코드 분석만으로 화면/상태/오버레이를 충분히 추출할 수 있고, A4.5 Design Preview에서 새 디자인 방향을 결정하므로 기존 앱 스크린샷 분석이 불필요하다.
@@ -351,7 +425,16 @@ Auth & Entitlement (2개):
 
 ### A4: Feature별 원시 프롬프트 작성
 
-**Goal:** 각 화면에 대해 간결하고 명확한 Stitch 프롬프트를 작성한다.
+**Goal:** 각 화면에 대해 **기능적으로 정확한** Stitch 프롬프트를 작성한다. A1.5 Functional Scan의 기능 카드를 반드시 참조한다.
+
+> **⚠️ A1.5 참조 필수 (v3.4.3):** A1.5에서 추출한 버튼 라벨, 데이터 필드, 오버레이 내용을 프롬프트에 반영해야 한다. A1.5 없이 프롬프트를 작성하면 "버튼이 있다" 수준의 추상적 프롬프트가 되어 실제 기능이 디자인에서 누락된다.
+
+**A1.5 → A4 매핑 규칙:**
+- **버튼**: A1.5의 라벨을 한국어 그대로 프롬프트에 포함 (예: `"읽기 시작" primary button`, `"삭제" danger text button`)
+- **데이터**: A1.5의 필드를 실제 예시 데이터로 (예: `Book title "데미안" in serif, author "헤르만 헤세" in sans`)
+- **네비게이션**: 연결되는 화면 수를 표기 (예: `4 action buttons leading to timer, notes, quotes, OCR`)
+- **조건부 UI**: 상태별로 별도 프롬프트 생성 (예: reading 상태, finished 상태를 각각)
+- **오버레이 내용**: 바텀시트/다이얼로그의 실제 내용을 기술 (예: `Bottom sheet with 4 status options: 읽는 중, 읽고 싶은, 완독, 중단`)
 
 **Stitch 공식 프롬프팅 원칙:**
 1. **Simple → Complex**: 간결하게 시작하고 edit으로 세분화
