@@ -403,7 +403,166 @@ Next.js: Glob: **/prisma/schema.prisma, **/drizzle/schema.ts
 
 ### A1.8: (제거됨)
 
-> A1.8(Theme & Asset Scan)은 v3.5.0에서 추가되었으나 즉시 제거되었다. 기존 테마 토큰을 스캔하면 새 디자인 시스템의 자유도를 떨어뜨리고, Stitch가 생성하는 디자인이 기존 코드에 종속된다. 디자인 시스템은 DESIGN.md에서 자유롭게 정의하고, 코드 적용은 구현 단계에서 처리한다.
+> A1.8(Theme & Asset Scan)은 v3.5.0에서 추가되었으나 즉시 제거되었다. 기존 테마 토큰을 스캔하면 새 디자인 시스템의 자유도를 떨어뜨린다.
+
+### A1.9: String & Copy Inventory (v3.5.1 신규)
+
+**Goal:** 앱의 실제 한국어 텍스트(빈 상태, 에러, 버튼 라벨, 토스트 등)를 수집하여 앱의 **어투/보이스 톤**을 파악한다. 이 정보가 없으면 Stitch가 텍스트를 자체 창작하여 앱의 톤과 불일치하는 문구를 생성한다.
+
+**Steps:**
+
+1. **텍스트 소스 탐색 및 Read:**
+```
+Flutter: Glob: **/l10n/*.arb, **/generated/app_localizations*.dart
+React:   Glob: **/locales/*.json, **/i18n/*.ts
+Next.js: Glob: **/messages/*.json, **/dictionaries/*.ts
+공통:    Grep: '아직.*없|등록된.*없|없어요|없습니다|실패|오류|불러올 수|시작하기|확인|취소' in lib/ or src/
+```
+
+2. **추출할 요소:**
+
+| 요소 | 추출 방법 | 역할 |
+|------|----------|------|
+| **빈 상태 메시지** | "아직", "없어요", "없습니다" 패턴 | empty 화면의 정확한 문구 |
+| **에러 메시지** | "실패", "오류", "불러올 수 없" 패턴 | error 화면의 정확한 문구 |
+| **버튼 라벨** | "시작하기", "저장", "취소", "확인" 등 | 버튼 텍스트 정확히 반영 |
+| **어투 패턴** | 존댓말(-요)/반말(-다)/친근(-해봐요) 분석 | 앱 전체 톤 일관성 |
+| **섹션 제목** | AppBar title, 헤더 텍스트 | 네비게이션 라벨 정확히 반영 |
+
+3. **A1.9 Output — Copy Inventory:**
+
+```markdown
+## A1.9 Copy Inventory
+
+### 어투 분석
+| 패턴 | 빈도 | 예시 |
+|------|------|------|
+| 친근 존댓말 (-어요/해요) | 높음 | "아직 등록된 항목이 없어요", "시작해보세요" |
+| 정중 존댓말 (-습니다) | 중간 | "검색 결과가 없습니다", "삭제되었습니다" |
+| 명령형 (-하기) | 낮음 | "시작하기", "저장하기" |
+
+**앱 보이스**: 친근한 존댓말 (-어요) 기반. 사용자에게 격려하는 톤.
+
+### 빈 상태 메시지 (Feature별)
+| Feature | 화면 | 메시지 |
+|---------|------|--------|
+| Home | 메인 목록 | "아직 등록된 항목이 없어요" |
+| Home | 검색 결과 | "검색 결과가 없습니다" |
+| Social | 피드 | "아직 활동 기록이 없어요" |
+
+### 에러 메시지
+| 유형 | 메시지 |
+|------|--------|
+| 로드 실패 | "불러올 수 없어요" |
+| 네트워크 | "오프라인입니다" |
+| 인증 | "로그인에 실패했습니다" |
+
+### 주요 버튼 라벨
+| 라벨 | 용도 | 빈도 |
+|------|------|------|
+| "시작하기" | Primary CTA | 높음 |
+| "저장" | 폼 제출 | 높음 |
+| "취소" | 액션 취소 | 높음 |
+| "삭제" | 위험 액션 | 중간 |
+```
+
+> **A1.9 → A4 연결:** 프롬프트에서 Stitch가 텍스트를 창작하지 않도록 **실제 앱 문구를 그대로** 포함한다. 특히 빈 상태 메시지와 에러 메시지는 앱 톤의 핵심이므로 정확히 전달해야 한다. 또한 앱 보이스(친근 존댓말 vs 정중 존댓말)를 프롬프트에 명시하여 Stitch가 일관된 톤으로 텍스트를 생성하도록 한다.
+
+### A1.10: Scroll & Layout Architecture (v3.5.1 신규)
+
+**Goal:** 각 화면의 최상위 레이아웃 위젯(스크롤 구조, 앱바 유형, 탭 구조)을 감지하여 화면의 **물리적 구조**를 파악한다. SliverAppBar인지 일반 AppBar인지에 따라 디자인이 근본적으로 달라진다.
+
+**Steps:**
+
+1. **각 Primary Screen 파일에서 레이아웃 위젯 grep:**
+```
+Flutter:
+  Grep: CustomScrollView|SliverAppBar|SliverList|SliverGrid in lib/
+  Grep: TabBarView|TabBar|DefaultTabController in lib/
+  Grep: PageView|PageController in lib/
+  Grep: NestedScrollView in lib/
+  Grep: SingleChildScrollView in lib/
+  Grep: ListView\.builder|GridView\.builder in lib/
+
+React:
+  Grep: overflow-y-scroll|overflow-auto|sticky|position.*fixed in src/
+  Grep: InfiniteScroll|VirtualList|useInfiniteQuery in src/
+
+Next.js:
+  Grep: scroll|sticky|fixed in app/
+```
+
+2. **추출할 요소:**
+
+| 요소 | 감지 패턴 | 디자인 영향 |
+|------|----------|------------|
+| **SliverAppBar** | `SliverAppBar`, `expandedHeight`, `flexibleSpace` | 축소되는 헤더 — 스크롤 시 줄어드는 히어로 영역 |
+| **TabBarView** | `TabBar`, `TabBarView`, `DefaultTabController` | 스와이프 가능한 탭 레이아웃 |
+| **PageView** | `PageView`, `PageController` | 풀스크린 카드 캐러셀 (좌우 스와이프) |
+| **NestedScrollView** | `NestedScrollView` | 복합 스크롤 (헤더 + 탭 + 스크롤 리스트) |
+| **무한 스크롤** | `ListView.builder`, `ScrollController`, `addListener` | 페이지네이션 표시 필요 |
+| **고정 요소** | `bottomSheet`, `persistentFooterButtons`, `FloatingActionButton` | 하단 고정 바 |
+
+3. **A1.10 Output — Layout Architecture:**
+
+```markdown
+## A1.10 Layout Architecture
+
+| 화면 | 스크롤 유형 | 앱바 | 특수 구조 | 고정 요소 |
+|------|-----------|------|----------|----------|
+| HomeScreen | CustomScrollView | SliverAppBar (축소) | — | FAB |
+| DetailScreen | NestedScrollView | SliverAppBar + TabBar | 3탭 (소개/메모/인용) | 하단 액션 바 |
+| ListScreen | ListView.builder | 일반 AppBar | 무한 스크롤 | — |
+| EditorScreen | SingleChildScrollView | 일반 AppBar | 키보드 대응 | 하단 툴바 |
+| TimerScreen | 스크롤 없음 | 없음 | 풀스크린 | 하단 컨트롤 |
+| StatsScreen | CustomScrollView | SliverAppBar | SliverGrid + SliverList 혼합 | — |
+```
+
+> **A1.10 → A4 연결:** 프롬프트에서 "scrollable page with collapsible header" vs "fixed full-screen layout" vs "tabbed content with swipe" 등을 정확히 기술할 수 있다. SliverAppBar가 있는 화면은 반드시 "hero image that collapses on scroll" 패턴을 포함해야 하고, PageView가 있는 화면은 "horizontal carousel with peek" 패턴을 사용해야 한다.
+
+### A1.11: External Package Detection (v3.5.1 신규)
+
+**Goal:** 의존성 파일(pubspec.yaml, package.json)에서 **UI 렌더링에 영향을 주는 외부 패키지**를 감지한다. 차트, 카메라, 지도 등의 패키지는 표준 위젯과 다른 커스텀 렌더링 영역을 생성하므로 프롬프트에서 별도 처리해야 한다.
+
+**Steps:**
+
+1. **의존성 파일 Read:**
+```
+Flutter: Read: pubspec.yaml → dependencies 섹션
+React:   Read: package.json → dependencies + devDependencies
+Next.js: Read: package.json → dependencies
+```
+
+2. **UI 영향 패키지 분류:**
+
+| 카테고리 | 패키지 예시 | 프롬프트 영향 |
+|---------|-----------|-------------|
+| **차트** | fl_chart, syncfusion_charts, charts_flutter, recharts, chart.js | "차트 영역" → 구체적 차트 타입 기술 필요 |
+| **카메라** | camera, image_picker, mobile_scanner | "카메라 뷰파인더" 영역 필요 |
+| **지도** | google_maps_flutter, flutter_map, mapbox | "지도 영역" 필요 |
+| **비디오** | video_player, chewie, better_player | "비디오 플레이어" 영역 필요 |
+| **리치 텍스트** | flutter_quill, super_editor, tiptap | "리치 텍스트 에디터 + 툴바" 영역 필요 |
+| **OCR/ML** | google_mlkit_text_recognition, tflite | "카메라 + 텍스트 오버레이" 영역 필요 |
+| **결제** | purchases_flutter (RevenueCat), stripe | "페이월/구독 화면" 존재 |
+| **소셜 로그인** | google_sign_in, sign_in_with_apple | "소셜 로그인 버튼" 필요 |
+
+3. **A1.11 Output — External Package Report:**
+
+```markdown
+## A1.11 External Packages (UI-Affecting)
+
+| 패키지 | 카테고리 | 사용 화면 | 프롬프트 반영 |
+|--------|---------|----------|-------------|
+| fl_chart | 차트 | StatsScreen | 막대/선/원 차트 영역, 축 라벨 |
+| camera | 카메라 | OcrCaptureScreen | 카메라 뷰파인더 + 프레임 오버레이 |
+| mobile_scanner | 바코드 | BarcodeScannerScreen | 바코드 스캔 뷰파인더 |
+| purchases_flutter | 결제 | SubscriptionScreen | 구독 플랜 비교 카드, 구매 버튼 |
+| google_sign_in | 인증 | LoginScreen | Google 로고 소셜 로그인 버튼 |
+| flutter_quill | 리치 텍스트 | NoteEditorScreen | 에디터 + 포맷 툴바 |
+| google_mlkit_text_recognition | OCR | OcrResultScreen | 인식된 텍스트 하이라이트 오버레이 |
+```
+
+> **A1.11 → A4 연결:** 외부 패키지가 렌더링하는 영역은 Stitch가 일반 위젯으로 대체하면 안 된다. 프롬프트에서 "chart area showing bar chart with X-axis labels" 또는 "camera viewfinder with rectangular scan frame overlay" 등으로 구체적으로 기술해야 한다. 또한 RevenueCat 등 결제 패키지가 있으면 구독/페이월 화면이 존재한다는 것을 A3 Feature 분리에서 반영해야 한다.
 
 ### A2: (제거됨)
 
