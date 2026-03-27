@@ -15,17 +15,22 @@
    - React: `Glob: src/**/*.{tsx,jsx}`
    - Next.js: `Glob: app/**/*.{tsx,jsx}`
 
-**Screen State Matrix 6축에 대응하는 코드 패턴을 모두 추출한다.**
+**Screen State Matrix 7축에 대응하는 코드 패턴을 모두 추출한다.**
+
+> **7축 설계 근거:** Scott Hurff UI Stack(Partial 상태), Apple HIG 2026(접근성 격상), Material Design 3(컴포넌트 상태)을 종합하여 기존 6축에서 Transitions를 App Lifecycle에 병합하고, Auth & Entitlement/Environment Variants를 추가한 7축 구조.
 
 > **스택별 참고:** 아래 grep 패턴은 **Flutter** 기준이다. React/Next.js 프로젝트에서는 동일한 축의 의미를 유지하되 패턴을 스택에 맞게 변환한다:
 > - Overlays: `showModalBottomSheet` → `Modal|Dialog|Sheet|Drawer` (React 컴포넌트명)
-> - Screen States: `CircularProgressIndicator` → `Skeleton|Loading|Spinner` (React 컴포넌트명)
+> - Data States: `CircularProgressIndicator` → `Skeleton|Loading|Spinner` (React 컴포넌트명)
 > - Interaction: `_isEditMode` → `isEditing|editMode|useState.*edit` (React hooks 패턴)
+> - Auth: `currentUser` → `useAuth|useSession|isAuthenticated` (React hooks 패턴)
 
 > **⚠️ 노이즈 제거:**
 > - Flutter: `--glob '!*.g.dart' --glob '!*.freezed.dart'` 또는 `presentation/` 폴더에 한정
 > - React/Next.js: `--glob '!node_modules' --glob '!.next' --glob '!dist'` 또는 `src/` 폴더에 한정
 > - 공통: 테마/설정 파일, 타입 정의 파일의 false positive 주의
+
+> **실용적 적용:** 모든 축을 교차하면 조합 폭발이 발생한다. **Primary Screens × Data States**를 필수 매트릭스로, 나머지 5축은 해당 화면에 관련된 항목만 선택적으로 표기한다.
 
 #### 축 1: Primary Screens
 ```
@@ -35,10 +40,13 @@ React: Grep: export default in src/pages/ or src/views/ (page 컴포넌트)
 Next.js: Glob: app/**/page.{tsx,jsx} (파일 기반 라우팅이므로 page 파일 = Primary Screen)
 ```
 
-#### 축 2: Screen States
+#### 축 2: Data States (구 Screen States — Partial 추가)
 ```
 # 빈 상태 (empty)
 Grep: empty.*state|EmptyState|no.*data|아직.*없|등록된.*없|검색.*결과.*없|없어요|없습니다
+
+# 부분 데이터 (partial — 데이터가 1-2개뿐인 어색한 상태)
+Grep: (코드에서 직접 감지 어려움 — Primary Screen별 "데이터 1-2건일 때" 변형을 디자인 필수로 추가)
 
 # 로딩/스켈레톤 (loading/skeleton)
 Grep: CircularProgressIndicator|Shimmer|skeleton|isLoading|shimmer
@@ -47,6 +55,9 @@ Grep: CircularProgressIndicator|Shimmer|skeleton|isLoading|shimmer
 Grep: error.*widget|ErrorWidget|오류|실패|Error.*state|hasError|onError
 
 # 데이터 있음 (populated) — 코드 분석 불필요, 메인 화면이 이 상태
+
+# 비활성 (disabled)
+Grep: isDisabled|isEnabled.*false|AbsorbPointer|IgnorePointer
 ```
 
 #### 축 3: Overlays
@@ -83,9 +94,12 @@ Grep: isSearching|SearchDelegate|showSearch|searchController
 
 # 폼/에디터 (입력 화면 식별용)
 Grep: Form\(|_formKey|TextFormField|validator:
+
+# 키보드 표시 (키보드에 의한 레이아웃 변화)
+Grep: MediaQuery.*viewInsets|keyboardHeight|SingleChildScrollView.*Form|resizeToAvoidBottomInset
 ```
 
-#### 축 5: System States
+#### 축 5: App Lifecycle (구 System States + Transitions 병합)
 ```
 # 스플래시
 Grep: SplashScreen|native_splash|launch_screen|flutter_native_splash
@@ -101,18 +115,49 @@ Grep: forceUpdate|RemoteConfig|upgradeRequired|minimumVersion
 
 # 딥링크
 Grep: deepLink|universalLink|dynamicLink|getInitialLink
-```
 
-#### 축 6: Transitions
-```
-# 온보딩/투어
+# 온보딩/투어 (구 축6 Transitions에서 병합)
 Grep: Onboarding|onboarding|tutorial|coach|walkthrough|firstLaunch|isFirst
 
-# 완료/축하
+# 완료/축하 (구 축6 Transitions에서 병합)
 Grep: CompletionScreen|celebration|congrat|축하|완독
 ```
 
-> **참고:** `onTap`, `onPressed` 등 기본 인터랙션 패턴은 모든 화면에 존재하므로 별도 grep하지 않는다. A2 시뮬레이터 분석에서 인터랙션 특성을 파악한다.
+#### 축 6: Auth & Entitlement (신규)
+```
+# 로그인/비로그인 분기
+Grep: isLoggedIn|currentUser|isAuthenticated|authState|signedIn
+
+# 구독/프리미엄 분기
+Grep: isPremium|isSubscribed|subscription|freeTier|paywall|entitlement
+
+# 역할 분기 (관리자/일반)
+Grep: isAdmin|isOwner|isMember|role.*admin|canEdit|canDelete|permission
+
+# 본인/타인 프로필 분기
+Grep: isOwnProfile|isCurrentUser|isMine|userId.*==.*currentUser
+```
+
+> **Auth 축 적용 방법:** 같은 화면이 auth 상태에 따라 완전히 달라지는 경우(예: 비로그인 서재 vs 로그인 서재, 무료 vs 프리미엄 AI 채팅)만 별도 화면으로 생성한다. 단순한 버튼 숨김/표시 정도는 별도 화면 불필요.
+
+#### 축 7: Environment Variants (신규)
+```
+# 화면 크기 분기 (태블릿/폴더블)
+Grep: MediaQuery.*size|LayoutBuilder|Breakpoint|isTablet|isFoldable|AdaptiveLayout
+
+# 플랫폼 분기 (iOS/Android)
+Grep: Platform\.isIOS|Platform\.isAndroid|CupertinoSwitch|adaptive.*widget|\.adaptive
+
+# 접근성 모드
+Grep: Semantics|ExcludeSemantics|SemanticsLabel|AccessibilityFeatures|textScaleFactor|boldText
+
+# 동기화 상태 (오프라인 데이터)
+Grep: syncStatus|isSyncing|syncConflict|staleData|lastSynced|pendingSync
+```
+
+> **Environment 축 적용 방법:** 디자인 시안에서는 기본 환경(phone, primary platform, 기본 접근성)으로 생성하되, 이 축의 항목을 **체크리스트**로 관리하여 구현 시 대응 여부를 확인한다. 태블릿 레이아웃이 코드에 이미 구현된 경우에만 별도 화면을 생성한다.
+
+> **참고:** `onTap`, `onPressed` 등 기본 인터랙션 패턴은 모든 화면에 존재하므로 별도 grep하지 않는다.
 
 **각 축에서 발견된 코드 위치를 아래 형식으로 정리**하여 A3의 입력 데이터로 사용한다.
 
@@ -126,10 +171,11 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 |---|-----------|----------|-------|
 | 1 | LoginScreen | auth/login_screen.dart | /login |
 
-### 축 2: Screen States (N개)
+### 축 2: Data States (N개)
 | # | 상태 유형 | 발견 위치 | 관련 화면 |
 |---|---------|----------|----------|
 | 1 | empty | bookshelf_tab.dart:1032 "아직 등록된 책이 없어요" | 서재 |
+| 2 | partial | (디자인 필수 — 책 1-2권만 있을 때) | 서재 |
 
 ### 축 3: Overlays (N개)
 | # | 오버레이 유형 | 발견 위치 | 관련 화면 | 용도 |
@@ -140,14 +186,22 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 | # | 모드 | 발견 위치 | 관련 화면 |
 |---|-----|----------|----------|
 | 1 | edit-mode | bookshelf_tab.dart:36 _isEditMode | 서재 |
+| 2 | keyboard-visible | quote_editor_screen.dart:42 Form | 인용문 에디터 |
 
-### 축 5: System States (N개)
+### 축 5: App Lifecycle (N개)
 | # | 상태 | 발견 위치 |
 |---|-----|----------|
 | 1 | permission | push_notification_service.dart getToken |
+| 2 | onboarding | onboarding_screen.dart |
+| 3 | completion | completion_screen.dart |
 
-### 축 6: Transitions (N개)
-| # | 전환 | 발견 위치 |
+### 축 6: Auth & Entitlement (N개)
+| # | 분기 유형 | 발견 위치 | 관련 화면 |
+|---|---------|----------|----------|
+| 1 | premium | ai_chat_screen.dart:58 isPremium | AI 채팅 |
+
+### 축 7: Environment Variants (N개)
+| # | 변형 유형 | 발견 위치 |
 |---|-----|----------|
 | 1 | onboarding | onboarding_screen.dart |
 ```
@@ -174,22 +228,25 @@ Grep: CompletionScreen|celebration|congrat|축하|완독
 
 2. 각 Feature의 화면을 **Screen State Matrix**로 분해한다. **모든 축의 모든 항목을 빠짐없이 생성한다:**
 
-**Screen State Matrix — 모바일 앱 화면 분류 체계:**
+**Screen State Matrix — 모바일 앱 화면 분류 체계 (7축):**
+
+> 근거: Scott Hurff UI Stack + Apple HIG 2026 + Material Design 3
 
 | 축 | 분류 | 포함 항목 | 필수 여부 |
 |---|------|----------|----------|
 | **Primary Screens** | 라우트가 있는 독립 화면 | 메인 화면, 상세 화면, 폼/에디터, 설정 하위 화면 | 전부 필수 |
-| **Screen States** | 같은 화면의 상태 변형 | `empty`, `loading`/`skeleton`, `error`, `populated`, `disabled` | 전부 필수 — 주요 Primary Screen마다 empty + skeleton + error 3종 생성 |
+| **Data States** | 같은 화면의 데이터 상태 변형 | `empty`, `partial`, `loading`/`skeleton`, `error`, `populated`, `disabled` | 전부 필수 — 주요 Primary Screen마다 empty + partial + skeleton + error 4종 생성 |
 | **Overlays** | 화면 위에 뜨는 UI | `modal`, `bottom-sheet`, `dialog`, `snackbar/toast`, `tooltip`, `popover`, `drawer`, `action-sheet`, `context-menu` | 코드에서 발견된 것 전부 + 디자인 필수 항목 |
-| **Interaction Modes** | 사용자 인터랙션에 의한 모드 전환 | `edit-mode`, `selection-mode`, `drag-reorder`, `swipe-actions`, `long-press-menu`, `keyboard-up`, `search-active`, `filter-panel` | 코드에서 발견된 것 전부 |
-| **System States** | 앱/OS 수준 상태 | `splash`, `permission-prompt`, `offline-banner`, `force-update`, `deep-link-landing`, `app-review-prompt` | Feature 0에 전부 배정 |
-| **Transitions** | 화면 간 전환/가이드 | `onboarding-tour`, `coach-marks`, `walkthrough`, `completion-celebration`, `first-use-hint` | 해당 Feature에 전부 배정 |
+| **Interaction Modes** | 사용자 인터랙션에 의한 모드 전환 | `edit-mode`, `selection-mode`, `drag-reorder`, `swipe-actions`, `long-press-menu`, `keyboard-visible`, `search-active`, `filter-panel` | 코드에서 발견된 것 전부 |
+| **App Lifecycle** | 앱 생애주기 상태 (구 System States + Transitions 병합) | `splash`, `permission-prompt`, `offline-banner`, `force-update`, `deep-link-landing`, `onboarding-tour`, `coach-marks`, `completion-celebration` | Feature 0에 전부 배정 |
+| **Auth & Entitlement** | 인증/권한에 따른 화면 분기 | `logged-out`, `logged-in`, `guest`, `free-tier`, `premium`, `admin`, `own-profile`, `other-profile` | 같은 화면이 auth 상태에 따라 **완전히 달라지는** 경우만 별도 화면 생성 |
+| **Environment Variants** | 환경에 따른 화면 변형 | `phone`/`tablet`/`foldable`, `iOS`/`Android`, `accessibility`(VoiceOver, large-text, high-contrast), `offline-sync` | 체크리스트로 관리 — 코드에 이미 구현된 변형만 별도 화면 생성 |
 
 **적용 방법 — 빠짐없는 화면 도출:**
 각 Feature의 Primary Screen마다 위 매트릭스의 **모든 축**을 순회하여 필요한 화면을 도출한다. "없어도 될 것 같다"가 아니라 "있어야 하는가"로 판단한다.
 
 ```
-예시 — "Library" Feature (15개 화면):
+예시 — "Library" Feature (17개 화면):
 
 Primary Screens (5개):
   1. 서재 (책장, 그리드 뷰)
@@ -198,29 +255,34 @@ Primary Screens (5개):
   4. 책 상세
   5. 책 검색
 
-Screen States (4개):
+Data States (5개):
   6. 서재 (empty — "아직 등록된 책이 없어요")
-  7. 서재 (skeleton loading)
-  8. 책 검색 (결과 없음 — "검색 결과가 없습니다")
-  9. 책 상세 (error — "책 정보를 불러올 수 없습니다")
+  7. 서재 (partial — 책 1-2권만 있을 때)
+  8. 서재 (skeleton loading)
+  9. 책 검색 (결과 없음 — "검색 결과가 없습니다")
+  10. 책 상세 (error — "책 정보를 불러올 수 없습니다")
 
 Overlays (3개):
-  10. 정렬/필터 바텀시트
-  11. 책 삭제 확인 다이얼로그
-  12. 책 추가 방법 선택 바텀시트
+  11. 정렬/필터 바텀시트
+  12. 책 삭제 확인 다이얼로그
+  13. 책 추가 방법 선택 바텀시트
 
 Interaction Modes (3개):
-  13. 서재 (edit mode + 다중 선택 바)
-  14. 서재 (search active + 검색 바)
-  15. 책 상세 (읽기 상태 변경 바텀시트)
+  14. 서재 (edit mode + 다중 선택 바)
+  15. 서재 (search active + 검색 바)
+  16. 책 상세 (읽기 상태 변경 바텀시트)
+
+Auth & Entitlement (1개):
+  17. 서재 (비로그인 — "로그인하고 책을 등록해보세요")
 ```
 
 3. **코드에 없더라도 앱에 필수적인 화면은 추가한다:**
-   - 주요 Primary Screen마다: `empty`, `skeleton`, `error` 상태 화면 필수 추가
+   - 주요 Primary Screen마다: `empty`, `partial`, `skeleton`, `error` 상태 화면 필수 추가
    - 삭제/수정 액션이 있는 화면: 확인 다이얼로그 필수 추가
    - 검색 기능이 있는 화면: `search-active`, `검색 결과 없음` 필수 추가
-   - 리스트/그리드 화면: `empty`, `skeleton`, 필터/정렬 오버레이 필수 추가
-   - 폼 화면: `keyboard-up` (입력 포커스), 유효성 에러 상태 필수 추가
+   - 리스트/그리드 화면: `empty`, `partial`, `skeleton`, 필터/정렬 오버레이 필수 추가
+   - 폼 화면: `keyboard-visible` (입력 포커스), 유효성 에러 상태 필수 추가
+   - 인증 분기가 있는 화면: 비로그인/무료/프리미엄 변형 중 UI가 크게 달라지는 것만 추가
    - **Feature 배정 규칙**: 특정 Feature에 속하지 않는 공통 화면은 **"0. Common / System"** Feature에 배정
 
 4. **화면 수 목표:**
@@ -236,7 +298,7 @@ Interaction Modes (3개):
 **Output:** Feature 목록 + Screen State Matrix 기반 화면 목록. 각 화면에 해당 축 태그를 표시한다:
 
 ```markdown
-## Feature 2: Library (15개)
+## Feature 2: Library (17개)
 
 | # | 화면 | 축 | 소스 |
 |---|------|---|------|
@@ -245,16 +307,18 @@ Interaction Modes (3개):
 | 3 | 읽고 있는 책 | Primary | 코드 |
 | 4 | 책 상세 | Primary | 코드 |
 | 5 | 책 검색 | Primary | 코드 |
-| 6 | 서재 (empty) | States: empty | 코드 |
-| 7 | 서재 (skeleton) | States: skeleton | 디자인 필수 |
-| 8 | 책 검색 (결과 없음) | States: empty | 코드 |
-| 9 | 책 상세 (error) | States: error | 디자인 필수 |
-| 10 | 정렬/필터 바텀시트 | Overlay: bottom-sheet | 디자인 필수 |
-| 11 | 책 삭제 확인 | Overlay: dialog | 코드 |
-| 12 | 책 추가 방법 선택 | Overlay: bottom-sheet | 코드 |
-| 13 | 서재 (edit mode) | Interaction: edit-mode | 코드 |
-| 14 | 서재 (search active) | Interaction: search-active | 코드 |
-| 15 | 읽기 상태 변경 | Overlay: bottom-sheet | 코드 |
+| 6 | 서재 (empty) | Data: empty | 코드 |
+| 7 | 서재 (partial) | Data: partial | 디자인 필수 |
+| 8 | 서재 (skeleton) | Data: skeleton | 디자인 필수 |
+| 9 | 책 검색 (결과 없음) | Data: empty | 코드 |
+| 10 | 책 상세 (error) | Data: error | 디자인 필수 |
+| 11 | 정렬/필터 바텀시트 | Overlay: bottom-sheet | 디자인 필수 |
+| 12 | 책 삭제 확인 | Overlay: dialog | 코드 |
+| 13 | 책 추가 방법 선택 | Overlay: bottom-sheet | 코드 |
+| 14 | 서재 (edit mode) | Interaction: edit-mode | 코드 |
+| 15 | 서재 (search active) | Interaction: search-active | 코드 |
+| 16 | 읽기 상태 변경 | Overlay: bottom-sheet | 코드 |
+| 17 | 서재 (비로그인) | Auth: logged-out | 코드 |
 ```
 
 ### A4: Feature별 원시 프롬프트 작성
