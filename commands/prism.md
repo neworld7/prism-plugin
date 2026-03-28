@@ -28,10 +28,10 @@ Google Stitch AI design tool orchestration command.
    Read: references/workflows.md
    ```
 
-2. **Phase A1-A6 실행**:
-   - A1-A4: prism 자체 (코드 분석, Feature 분리, 원시 프롬프트)
-   - A5: Skill("enhance-prompt") 호출 → 프롬프트 최적화
-   - A6: `.prism/analysis.md` 작성 + `.prism/prompts.md` 작성
+2. **Phase A1-A12 실행**:
+   - A1-A9: prism 자체 (코드 분석, Feature 분리, 원시 프롬프트)
+   - A11: Skill("enhance-prompt") 호출 → 프롬프트 최적화
+   - A12: `.prism/analysis.md` 작성 + `.prism/prompts.md` 작성
 
 3. **사용자 확인 요청**
 
@@ -40,7 +40,7 @@ Google Stitch AI design tool orchestration command.
 
 ## `/prism preview`
 
-A4.5 Design Preview 단계를 실행한다. 핵심 화면 10개로 7가지 디자인 시안(모두 LIGHT 모드)을 생성하고 사용자가 선택적으로 저장한다.
+A10 Design Preview 단계를 실행한다. 핵심 화면 10개로 7가지 디자인 시안(모두 LIGHT 모드)을 생성하고 사용자가 선택적으로 저장한다.
 
 ### 실행 절차
 
