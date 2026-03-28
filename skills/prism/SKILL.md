@@ -61,7 +61,7 @@ ToolSearch query: "+stitch list_projects"
 `/prism analyze` 요청 시. 파이프라인 레퍼런스를 로드하고 실행한다:
 
 ```
-Read: references/workflows.md
+Read: references/analyze-pipeline.md
 ```
 
 Phase A1-A12를 따른다. A11에서 Skill("enhance-prompt")를 호출하여 프롬프트를 최적화.
@@ -73,7 +73,7 @@ Phase A1-A12를 따른다. A11에서 Skill("enhance-prompt")를 호출하여 프
 `/prism design` 요청 시. 파이프라인 레퍼런스를 로드하고 실행한다:
 
 ```
-Read: references/workflows.md
+Read: references/design-pipeline.md
 ```
 
 Phase D1-D6을 따른다 (D2는 제거됨):
@@ -255,4 +255,6 @@ async with websockets.connect(iframe_tab['webSocketDebuggerUrl']) as ws:
 
 | Task | Reference File |
 |------|----------------|
-| 전체 워크플로우 (analyze + design) | `references/workflows.md` |
+| 워크플로우 인덱스 | `references/workflows.md` |
+| Analyze 파이프라인 (A1-A12) | `references/analyze-pipeline.md` |
+| Design 파이프라인 (D1-D6) | `references/design-pipeline.md` |

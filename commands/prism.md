@@ -25,7 +25,7 @@ Google Stitch AI design tool orchestration command.
 
 1. **파이프라인 레퍼런스 로드**:
    ```
-   Read: references/workflows.md
+   Read: references/analyze-pipeline.md
    ```
 
 2. **Phase A1-A12 실행**:
@@ -86,7 +86,7 @@ A10 Design Preview 단계를 실행한다. 핵심 화면 10개로 7가지 디자
 
 3. **파이프라인 레퍼런스 로드**:
    ```
-   Read: references/workflows.md
+   Read: references/analyze-pipeline.md
    ```
 
 4. **Phase D1-D6 실행** (D2는 제거됨):
