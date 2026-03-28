@@ -85,17 +85,20 @@ Phase D4-D6 검증 루프는 **Stop hook**이 자동 관리한다.
 상태 파일 `.claude/prism-design-pipeline.local.md`에 `phase: verify`가 설정되면
 Stop hook이 `<promise>DESIGN_VERIFIED</promise>` 감지까지 루프를 반복한다.
 
-### 디자인 토큰 주입 — 2-Block 패턴 (v3.4.2)
+### 디자인 토큰 주입 — 2-Block 패턴 (v4.1.1)
 
-> **⚠️ 핵심 교훈:** `"Continue using the X design system"` 텍스트 앵커만으로는 Stitch가 디자인 시스템을 인식하지 못한다. Stitch는 프롬프트 텍스트만으로 화면을 생성하므로, `./DESIGN.md`의 **실제 hex 코드, 폰트명, 스타일 규칙**을 프롬프트에 직접 포함해야 한다.
+> **⚠️ 절대 규칙:** `"Continue using the X design system"` 텍스트 앵커는 **금지**한다. Stitch는 프롬프트 텍스트만으로 화면을 생성하므로, 텍스트 앵커만으로는 디자인 토큰(hex 코드, 폰트명 등)을 기억하지 못한다.
 
-**모든 `generate_screen_from_text` 프롬프트에 DESIGN SYSTEM (REQUIRED) 블록을 포함한다:**
+**모든 `generate_screen_from_text` 호출에 DESIGN SYSTEM (REQUIRED) 블록을 포함한다. 예외 없음.**
 
 ```
 D3: ./DESIGN.md 읽기 → DESIGN SYSTEM (REQUIRED) 블록 구성
-  └→ 모든 프롬프트 상단에 블록 포함
+  └→ 모든 프롬프트 상단에 블록 포함 (Feature, 프로젝트, 화면 순서 무관)
   └→ generate_screen_from_text 호출 (MCP 직접 호출 가능)
+  └→ ⚠️ "Continue using..." 앵커는 절대 사용하지 않음
 ```
+
+**왜 금지인가:** Stitch의 각 generate_screen_from_text는 독립적인 생성 요청이다. 같은 프로젝트 내에서도 이전 화면의 디자인 토큰을 자동으로 참조하지 않는다. 텍스트 앵커를 사용하면 Stitch가 자체적으로 디자인 시스템을 "해석"하여 Primary/Secondary 색상이 뒤바뀌거나 다른 폰트를 선택하는 drift가 발생한다.
 
 Skill("stitch-design") / Skill("enhance-prompt") 경유도 가능하지만, 핵심은 **프롬프트 자체에 실제 토큰이 포함**되는 것이다. 스킬 경유 여부와 무관하게 DESIGN SYSTEM 블록이 필수.
 

@@ -33,7 +33,7 @@ Analyze 파이프라인은 `references/analyze-pipeline.md` 참조.
 
 `./DESIGN.md` 존재 여부로 분기:
 
-**미존재 (첫 Feature):**
+**미존재 (첫 Feature — Preview에서 DESIGN.md가 아직 선택되지 않은 경우):**
 ```
 1. create_project → 첫 화면 generate_screen_from_text
 2. get_project → designTheme에서 추출:
@@ -51,16 +51,22 @@ Analyze 파이프라인은 `references/analyze-pipeline.md` 참조.
    | Primary Font | {designTheme.font 또는 headlineFont} |
    | Body Font | {designTheme.bodyFont} |
    + "## Design System Spec" 섹션에 designMd 전문 포함
-4. 나머지 화면 생성 시 프롬프트 끝에 앵커 삽입:
-   Continue using the "{Name}" design system established in this project.
+4. 같은 프로젝트 내 나머지 화면도 DESIGN SYSTEM (REQUIRED) 블록을 포함한다.
+   ⚠️ "Continue using the X design system" 텍스트 앵커는 사용하지 않는다.
+   Stitch는 프롬프트 텍스트만으로 화면을 생성하므로, 텍스트 앵커만으로는
+   디자인 토큰(hex 코드, 폰트명 등)을 기억하지 못한다.
 ```
 
-**존재 (이후 Feature):**
+**존재 (이후 Feature — 일반적인 경우):**
 ```
 1. ./DESIGN.md를 읽어서 DESIGN SYSTEM (REQUIRED) 블록을 구성한다
 2. create_project → generate_screen_from_text (모든 프롬프트에 DESIGN SYSTEM 블록 포함)
 3. 프로젝트 내 나머지 화면도 동일한 DESIGN SYSTEM 블록을 상단에 포함한다
 ```
+
+> **⚠️ 절대 규칙 (v4.1.1): 모든 generate_screen_from_text 호출에 DESIGN SYSTEM (REQUIRED) 블록을 포함한다.**
+> Feature, 프로젝트, 화면 순서와 무관하게 예외 없음. "Continue using..." 텍스트 앵커는 금지.
+> 이 규칙을 위반하면 Stitch가 다른 색상/폰트로 화면을 생성하여 디자인 시스템 일관성이 깨진다.
 
 > **⚠️ 핵심 교훈 (v3.4.2):** `"Continue using the X design system"` 텍스트 앵커만으로는 Stitch가 디자인 시스템을 인식하지 못한다. `./DESIGN.md`의 **실제 hex 코드, 폰트명, 스타일 규칙**을 `DESIGN SYSTEM (REQUIRED)` 블록으로 직접 포함해야 한다. 이 블록이 없으면 Stitch가 자체 해석한 **다른 색상/폰트를 생성**한다. enhance-prompt 스킬 경유 여부와 무관하게, 프롬프트에 실제 토큰이 포함되어야 한다.
 
