@@ -258,29 +258,47 @@ async with websockets.connect(iframe_tab['webSocketDebuggerUrl']) as ws:
 
 `/prism recolor` 요청 시. DESIGN.md와 Stitch 프로젝트의 색상 팔레트만 변경한다.
 
+**3가지 입력 방식:**
+- `from <시안이름>`: `.prism/preview/<시안이름>/DESIGN.md`에서 4색 추출
+- `from <파일경로>`: 지정한 DESIGN.md 파일에서 4색 추출
+- 인자 없음: 사용자가 hex 코드 직접 입력
+
+**색상 추출 방법 (from 모드):**
+```
+참조 DESIGN.md에서 다음 패턴으로 4색 추출:
+1. Design Identity 테이블의 "Primary Color", "Secondary Color" 행
+2. overridePrimaryColor, overrideSecondaryColor, overrideTertiaryColor, overrideNeutralColor 값
+3. namedColors의 primary, secondary, tertiary, surface 값
+우선순위: override > 테이블 > namedColors
+```
+
 **실행 흐름:**
 ```
 1. ./DESIGN.md 읽기 → 현재 4색 표시
-2. 사용자에게 새 색상 입력 받기 (hex 코드)
-3. .prism/project-ids.md에서 모든 프로젝트 ID 로드
-4. 각 프로젝트:
+2. 색상 소스에서 새 4색 추출 (from 또는 직접 입력)
+3. 변경 전후 비교 표시 → 사용자 확인
+4. .prism/project-ids.md에서 모든 프로젝트 ID 로드
+5. 각 프로젝트:
    a. list_design_systems → asset ID
-   b. update_design_system (새 override 색상)
-   c. get_project → screenInstances
+   b. update_design_system (새 override 색상, 나머지 유지)
+   c. get_project → 새 designTheme (namedColors + designMd 갱신됨)
    d. apply_design_system (모든 화면에 적용)
-5. ./DESIGN.md 업데이트 (색상 값 + namedColors)
-6. 결과 확인
+6. ./DESIGN.md 업데이트:
+   - Design Identity 테이블 색상
+   - Named Colors 토큰 맵 (Stitch가 재생성한 것으로 교체)
+   - Design System Spec (Stitch가 새 색상으로 재작성한 designMd로 교체)
+7. .prism/preview/{활성 시안}/DESIGN.md 동기화
+8. 결과 확인
 ```
 
 **Stitch MCP 호출:**
 - `list_design_systems(projectId)` → asset ID 확인
 - `update_design_system(name, projectId, designSystem)` → 색상 변경
   - `overridePrimaryColor`, `overrideSecondaryColor`, `overrideTertiaryColor`, `overrideNeutralColor` 변경
-  - 나머지 필드(font, roundness, colorMode, designMd) 유지
+  - `displayName`, `headlineFont`, `bodyFont`, `labelFont`, `roundness`, `colorMode`, `colorVariant` 유지
+  - `designMd`는 빈 값으로 전달 → Stitch가 새 색상에 맞게 자동 재생성
+- `get_project(name)` → 갱신된 `designTheme.designMd` + `namedColors` 가져오기
 - `apply_design_system(projectId, selectedScreenInstances, assetId)` → 기존 화면에 적용
-
-**designMd 내 hex 참조 치환:**
-update_design_system 후 Stitch가 새 namedColors를 생성한다. designMd 내의 이전 hex 코드 참조(예: "Primary (#041627)")는 get_project로 새 designMd를 가져와서 DESIGN.md에 덮어쓴다.
 
 ## Workflow Reference
 
