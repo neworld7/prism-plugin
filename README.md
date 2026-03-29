@@ -1,6 +1,6 @@
 # Prism — Google Stitch AI Design Orchestrator
 
-**Version:** 4.1.1
+**Version:** 4.2.0
 **Author:** Taekwan Kim
 
 Claude Code 플러그인으로, Google Stitch AI 디자인 도구를 오케스트레이션하여 코드 분석부터 디자인 생성까지 자동화합니다.

@@ -254,6 +254,34 @@ async with websockets.connect(iframe_tab['webSocketDebuggerUrl']) as ws:
 
 **패턴 인식:** URL에 `app-companion`, `appspot.com` 등이 있으면 CDP 직접 접근을 먼저 시도.
 
+## Recolor — 색상만 변경
+
+`/prism recolor` 요청 시. DESIGN.md와 Stitch 프로젝트의 색상 팔레트만 변경한다.
+
+**실행 흐름:**
+```
+1. ./DESIGN.md 읽기 → 현재 4색 표시
+2. 사용자에게 새 색상 입력 받기 (hex 코드)
+3. .prism/project-ids.md에서 모든 프로젝트 ID 로드
+4. 각 프로젝트:
+   a. list_design_systems → asset ID
+   b. update_design_system (새 override 색상)
+   c. get_project → screenInstances
+   d. apply_design_system (모든 화면에 적용)
+5. ./DESIGN.md 업데이트 (색상 값 + namedColors)
+6. 결과 확인
+```
+
+**Stitch MCP 호출:**
+- `list_design_systems(projectId)` → asset ID 확인
+- `update_design_system(name, projectId, designSystem)` → 색상 변경
+  - `overridePrimaryColor`, `overrideSecondaryColor`, `overrideTertiaryColor`, `overrideNeutralColor` 변경
+  - 나머지 필드(font, roundness, colorMode, designMd) 유지
+- `apply_design_system(projectId, selectedScreenInstances, assetId)` → 기존 화면에 적용
+
+**designMd 내 hex 참조 치환:**
+update_design_system 후 Stitch가 새 namedColors를 생성한다. designMd 내의 이전 hex 코드 참조(예: "Primary (#041627)")는 get_project로 새 designMd를 가져와서 DESIGN.md에 덮어쓴다.
+
 ## Workflow Reference
 
 | Task | Reference File |

@@ -16,6 +16,7 @@ Google Stitch AI design tool orchestration command.
 | `design` | `/prism design <feature\|all>` | 디자인 생성 + 검증 루프 |
 | `design resume` | `/prism design resume` | 크레딧 소진 등으로 중단된 design all 이어하기 |
 | `pipeline` | `/prism pipeline [app]` | analyze → preview → design 전체 자동화 (원스텝) |
+| `recolor` | `/prism recolor` | DESIGN.md 색상만 변경 (Primary/Secondary/Tertiary/Neutral) |
 
 ## `/prism analyze [app]`
 
@@ -128,6 +129,58 @@ analyze → preview → design을 원스텝으로 자동 실행한다.
 3. `/prism preview` 실행
 4. `/prism design all` 실행
 5. 전체 Feature 순차 처리
+
+## `/prism recolor`
+
+DESIGN.md의 색상 팔레트만 변경한다. 폰트, roundness, designMd 규칙 등은 유지.
+
+### 실행 절차
+
+1. **현재 DESIGN.md 읽기**: `./DESIGN.md` 존재 필수. 없으면 안내.
+2. **현재 색상 표시**:
+   ```
+   현재 색상:
+   Primary:   #041627 (Navy)
+   Secondary: #775a19 (Gold)
+   Tertiary:  #e9c176 (Gold Light)
+   Neutral:   #fbf9f5 (Cream)
+   ```
+3. **사용자에게 새 색상 입력 요청** (AskUserQuestion):
+   - 4개 색상 중 바꾸고 싶은 것만 입력 (나머지는 유지)
+   - 예: "Primary를 #2D4B37 (Forest Green)으로, Secondary를 #C36A4B (Terracotta)로"
+   - hex 코드 또는 색상 이름 (AI가 적절한 hex로 변환)
+4. **Stitch 프로젝트의 디자인 시스템 업데이트**:
+   - `.prism/project-ids.md`에서 모든 Feature 프로젝트 ID 로드
+   - 각 프로젝트에 대해 `list_design_systems` → asset ID 확인
+   - `update_design_system` 호출 (overridePrimaryColor, overrideSecondaryColor 등 변경)
+   - `apply_design_system`으로 각 프로젝트의 모든 화면에 적용
+5. **DESIGN.md 업데이트**:
+   - Design Identity 테이블의 색상 값 업데이트
+   - Named Colors 토큰 맵 업데이트 (Stitch가 생성한 새 토큰으로)
+   - Design System Spec 내 색상 참조 업데이트
+6. **.prism/preview/{시안명}/DESIGN.md도 동기화**
+7. **결과 확인**: 변경된 색상 표시 + Stitch 프로젝트 링크
+
+### 색상만 변경, 나머지 유지
+
+변경되는 것:
+- `overridePrimaryColor`, `overrideSecondaryColor`, `overrideTertiaryColor`, `overrideNeutralColor`
+- `namedColors` 전체 (Stitch가 새 seed 색상으로 자동 재생성)
+
+**유지되는 것:**
+- `displayName` (디자인 시스템 이름)
+- `headlineFont`, `bodyFont`, `labelFont` (서체)
+- `roundness` (모서리)
+- `colorMode` (Light/Dark)
+- `colorVariant` (Fidelity 등)
+- `designMd` (디자인 규칙, Do's/Don'ts)
+- `spacingScale`
+
+### 주의사항
+
+- recolor 후 이미 생성된 화면에는 `apply_design_system`을 통해 새 색상이 적용됨
+- designMd 내의 hex 코드 참조(예: "Primary (#041627)")는 **자동 업데이트되지 않음** → 사용자에게 확인 후 수동 또는 자동 치환
+- 크레딧 소비 없음 (update_design_system은 크레딧 미사용)
 
 ## Execution
 
