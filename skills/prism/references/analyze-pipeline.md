@@ -986,48 +986,60 @@ WebFetch(url, "Analyze design system in detail:
   - What makes this design feel sophisticated/modern?")
 ```
 
-**Step 2-B: 모바일 앱 분석 (시뮬레이터 직접 설치)**
+**Step 2-B: 모바일 앱 분석**
 
-> **⚠️ v4.3.1: 모바일 앱은 WebFetch로 웹 버전을 분석하면 안 된다.** 웹 버전과 앱 UI는 완전히 다르다. **iOS 시뮬레이터에 앱을 직접 설치하고 스크린샷을 찍어 분석한다.**
+> **⚠️ v4.3.2: 모바일 앱은 WebFetch로 웹 버전을 분석하면 안 된다.** 웹 버전과 앱 UI는 완전히 다르다.
+> **⚠️ iOS 시뮬레이터에는 상용 앱(App Store 앱)을 설치할 수 없다.** 시뮬레이터는 직접 빌드한 앱만 실행 가능.
+
+**우선순위 1 — 사용자에게 스크린샷 요청 (가장 정확):**
 
 ```
-1. 시뮬레이터에 앱 설치:
-   # App Store에서 검색하여 설치 (시뮬레이터에서 직접)
-   xcrun simctl openurl booted "https://apps.apple.com/search?term={앱이름}"
-   # 또는 앱이 이미 설치된 경우 바로 실행
-   xcrun simctl launch booted {번들ID}
+AskUserQuestion:
+  "{앱이름}은 모바일 앱이라 자동 분석이 어렵습니다.
+   혹시 폰에서 핵심 화면 2-3장 스크린샷을 찍어주실 수 있나요?
+   (홈 화면, 상세 화면, 프로필 화면 등)
+   스크린샷 파일 경로를 알려주시면 바로 분석하겠습니다."
 
-2. 핵심 화면 3-5개 스크린샷 촬영:
-   → 홈/메인 화면
-   → 상세 화면
-   → 목록/피드 화면
-   → 네비게이션/탭 구조
-   → 설정/프로필 화면
-
-   # 스크린샷 촬영 + 리사이즈
-   xcrun simctl io booted screenshot /tmp/ref_{앱이름}_{화면}.png
-   sips -Z 1200 /tmp/ref_{앱이름}_{화면}.png
-
-3. 스크린샷을 Read 도구로 시각 분석:
-   Read("/tmp/ref_{앱이름}_{화면}.png")
-   → 이미지에서 직접 추출:
-     - 배경색, 카드/서피스 색상
-     - 악센트 색상과 사용 위치/빈도
-     - 타이포 위계 (크기, 굵기, 간격)
-     - 카드/보더/그림자 스타일
-     - 모서리 라운딩 정도
-     - 아이콘 스타일 (라인/필드/크기)
-     - 네비게이션 패턴 (탭바, 헤더)
-
-4. idb ui describe-all로 텍스트 기반 UI 구조 추출 (선택):
-   → 스크린샷 시각 분석의 보조 수단으로 활용
+→ 사용자가 스크린샷 제공 시:
+  Read("{스크린샷 경로}")
+  → 이미지에서 직접 추출:
+    - 배경색, 카드/서피스 색상
+    - 악센트 색상과 사용 위치/빈도
+    - 타이포 위계 (크기, 굵기, 간격)
+    - 카드/보더/그림자 스타일
+    - 모서리 라운딩 정도
+    - 아이콘 스타일 (라인/필드/크기)
+    - 네비게이션 패턴 (탭바, 헤더)
 ```
 
-> **시뮬레이터 사용 불가 시 Fallback:**
-> 1. WebSearch "{앱이름} app UX UI design analysis color palette typography {year}"
-> 2. WebSearch "{앱이름} UI kit figma community"
-> 3. WebSearch "{앱이름} app UI design dribbble OR behance"
-> → 디자인 분석 블로그/Figma 키트/Dribbble 쇼케이스에서 간접 추출
+**우선순위 2 — 자동 리서치 (사용자가 스크린샷 제공 불가 시):**
+
+```
+다단계 검색으로 실제 앱 UI를 간접 분석한다:
+
+Step A — Mobbin (실제 앱 스크린샷 DB, 최우선):
+  WebFetch("https://mobbin.com/apps/{앱이름-소문자}/ios/screens",
+    "Describe the app's visual design: colors, typography, spacing, 
+     component styles, overall aesthetic, color restraint level")
+  실패 시 → Step B
+
+Step B — 디자인 분석 블로그 (전문가 분석):
+  WebSearch("{앱이름} app UX UI design analysis color palette typography {year}")
+  → 상위 2-3개 결과를 WebFetch로 읽어서 디자인 요소 추출
+  결과 부족 시 → Step C
+
+Step C — Figma Community UI 키트 (정확한 토큰):
+  WebSearch("{앱이름} UI kit figma community")
+  → Figma URL 발견 시 설명에서 색상/폰트/스타일 추출
+  미발견 시 → Step D
+
+Step D — Dribbble/Behance 쇼케이스:
+  WebSearch("{앱이름} app UI design dribbble OR behance")
+  → 디자인 이미지 설명에서 색상/타이포/레이아웃 추출
+```
+
+> **자체 앱 분석(예: ReadCodex 자신)은 시뮬레이터에서 직접 실행 가능:**
+> `xcrun simctl io booted screenshot /tmp/ref_self.png && sips -Z 1200 /tmp/ref_self.png`
 
 **Step 3: 분석 결과 추출 (웹/앱 공통)**
 
