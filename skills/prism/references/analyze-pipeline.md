@@ -986,59 +986,54 @@ WebFetch(url, "Analyze design system in detail:
   - What makes this design feel sophisticated/modern?")
 ```
 
-**Step 2-B: 모바일 앱 분석**
+**Step 2-B: 모바일 앱 분석 (Refero MCP)**
 
-> **⚠️ v4.3.2: 모바일 앱은 WebFetch로 웹 버전을 분석하면 안 된다.** 웹 버전과 앱 UI는 완전히 다르다.
-> **⚠️ iOS 시뮬레이터에는 상용 앱(App Store 앱)을 설치할 수 없다.** 시뮬레이터는 직접 빌드한 앱만 실행 가능.
-
-**우선순위 1 — 사용자에게 스크린샷 요청 (가장 정확):**
+> **⚠️ 모바일 앱은 WebFetch로 웹 버전을 분석하면 안 된다.** 웹 버전과 앱 UI는 완전히 다르다.
+> **Refero MCP**를 사용하여 실제 앱 스크린샷 기반으로 분석한다 (150K+ 스크린, 6K+ 플로우).
 
 ```
-AskUserQuestion:
-  "{앱이름}은 모바일 앱이라 자동 분석이 어렵습니다.
-   혹시 폰에서 핵심 화면 2-3장 스크린샷을 찍어주실 수 있나요?
-   (홈 화면, 상세 화면, 프로필 화면 등)
-   스크린샷 파일 경로를 알려주시면 바로 분석하겠습니다."
+1. refero_search_screens로 앱의 핵심 화면 검색:
 
-→ 사용자가 스크린샷 제공 시:
-  Read("{스크린샷 경로}")
-  → 이미지에서 직접 추출:
-    - 배경색, 카드/서피스 색상
-    - 악센트 색상과 사용 위치/빈도
-    - 타이포 위계 (크기, 굵기, 간격)
-    - 카드/보더/그림자 스타일
-    - 모서리 라운딩 정도
-    - 아이콘 스타일 (라인/필드/크기)
-    - 네비게이션 패턴 (탭바, 헤더)
+   mcp__refero__refero_search_screens({
+     query: "{앱이름} home feed",
+     platform: "ios"
+   })
+   
+   mcp__refero__refero_search_screens({
+     query: "{앱이름} profile",
+     platform: "ios"
+   })
+   
+   mcp__refero__refero_search_screens({
+     query: "{앱이름} detail",
+     platform: "ios"
+   })
+
+2. 반환된 description 필드에서 디자인 요소 추출:
+   → Refero는 각 스크린샷의 시각적 설명을 상세히 제공:
+     - 배경색 (hex 코드 포함)
+     - 아이콘 스타일 (outlined/filled, stroke weight)
+     - 타이포 (font family, weights, hierarchy)
+     - 레이아웃 (grid, vertical stack, spacing)
+     - 컴포넌트 (cards, buttons, navigation)
+     - 전체 스타일 (minimalistic, content-focused 등)
+
+3. 특정 화면 상세 분석이 필요하면:
+   mcp__refero__refero_get_screen({ screen_id: "{id}" })
+
+4. 사용자 플로우 분석이 필요하면:
+   mcp__refero__refero_search_flows({
+     query: "{앱이름} onboarding",
+     platform: "ios"
+   })
 ```
 
-**우선순위 2 — 자동 리서치 (사용자가 스크린샷 제공 불가 시):**
+> **Refero MCP 미설치 시 Fallback:**
+> 1. WebSearch "{앱이름} app UX UI design analysis color palette typography {year}"
+> 2. WebSearch "{앱이름} UI kit figma community"
+> → 디자인 분석 블로그/Figma 키트에서 간접 추출
 
-```
-다단계 검색으로 실제 앱 UI를 간접 분석한다:
-
-Step A — Mobbin (실제 앱 스크린샷 DB, 최우선):
-  WebFetch("https://mobbin.com/apps/{앱이름-소문자}/ios/screens",
-    "Describe the app's visual design: colors, typography, spacing, 
-     component styles, overall aesthetic, color restraint level")
-  실패 시 → Step B
-
-Step B — 디자인 분석 블로그 (전문가 분석):
-  WebSearch("{앱이름} app UX UI design analysis color palette typography {year}")
-  → 상위 2-3개 결과를 WebFetch로 읽어서 디자인 요소 추출
-  결과 부족 시 → Step C
-
-Step C — Figma Community UI 키트 (정확한 토큰):
-  WebSearch("{앱이름} UI kit figma community")
-  → Figma URL 발견 시 설명에서 색상/폰트/스타일 추출
-  미발견 시 → Step D
-
-Step D — Dribbble/Behance 쇼케이스:
-  WebSearch("{앱이름} app UI design dribbble OR behance")
-  → 디자인 이미지 설명에서 색상/타이포/레이아웃 추출
-```
-
-> **자체 앱 분석(예: ReadCodex 자신)은 시뮬레이터에서 직접 실행 가능:**
+> **자체 앱 분석**은 시뮬레이터에서 직접 실행:
 > `xcrun simctl io booted screenshot /tmp/ref_self.png && sips -Z 1200 /tmp/ref_self.png`
 
 **Step 3: 분석 결과 추출 (웹/앱 공통)**

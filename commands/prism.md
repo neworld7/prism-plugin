@@ -47,7 +47,7 @@ Google Stitch AI design tool orchestration command.
 
 1. `.prism/analysis.md` 존재 확인 (없으면 `/prism analyze` 먼저 실행 안내)
 2. **사용자 취향 인터뷰** (필수): 좋아하는 앱/사이트 URL, 싫은 스타일, 감성 키워드
-3. **레퍼런스 심층 분석**: WebFetch로 레퍼런스 사이트 디자인 시스템 분석
+3. **레퍼런스 심층 분석**: 웹사이트=WebFetch, 모바일 앱=Refero MCP (실제 앱 스크린샷 분석)
 4. **3개 Direction 정의** (레퍼런스 기반 변형): A 충실형 / B 도메인 특화 / C 차별화
 5. **핵심 화면 3개 선정** (홈 + 상세 + 인터랙션) → 사용자 확인
 6. **1화면 검증 Gate**: Direction A의 1화면만 먼저 생성 → 사용자 확인 필수
