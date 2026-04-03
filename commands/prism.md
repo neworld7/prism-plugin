@@ -41,24 +41,24 @@ Google Stitch AI design tool orchestration command.
 
 ## `/prism preview`
 
-A10 Design Preview 단계를 실행한다. 핵심 화면 10개로 7가지 디자인 시안(모두 LIGHT 모드)을 생성하고 사용자가 선택적으로 저장한다.
+사용자 취향 인터뷰 → 레퍼런스 분석 → 1화면 검증 Gate → 3화면 확장으로 디자인을 확정한다 (LIGHT 모드).
 
 ### 실행 절차
 
 1. `.prism/analysis.md` 존재 확인 (없으면 `/prism analyze` 먼저 실행 안내)
-2. 핵심 화면 10개 선정 → 사용자 확인
-3. 7개 Direction 시안 정의 (7가지 스펙트럼 각 1개)
-4. Direction별 Stitch 프로젝트 생성 + 화면 10개 배치 생성
-5. 약 70개 화면 스크린샷 비교
-6. 저장할 시안 선택 (예: "1, 3, 5") → `.prism/preview/{name}/`에 DESIGN.md + 스크린샷 저장
-7. 활성 시안 선택 (예: "3") → `./DESIGN.md`로 복사
+2. **사용자 취향 인터뷰** (필수): 좋아하는 앱/사이트 URL, 싫은 스타일, 감성 키워드
+3. **레퍼런스 심층 분석**: WebFetch로 레퍼런스 사이트 디자인 시스템 분석
+4. **3개 Direction 정의** (레퍼런스 기반 변형): A 충실형 / B 도메인 특화 / C 차별화
+5. **핵심 화면 3개 선정** (홈 + 상세 + 인터랙션) → 사용자 확인
+6. **1화면 검증 Gate**: Direction A의 1화면만 먼저 생성 → 사용자 확인 필수
+7. Gate 통과 → 나머지 2화면 확장 → DESIGN.md 확정 → `./DESIGN.md`로 복사
 
 ### 서브커맨드
 
 | Usage | Action |
 |-------|--------|
-| `/prism preview` | 시장 리서치 → 7개 시안 생성 → 선택적 저장 |
-| `/prism preview add` | 새 시안 추가 (AI 리서치 제안 / 텍스트 / 이미지) |
+| `/prism preview` | 취향 인터뷰 → 레퍼런스 분석 → 3 Direction → 1화면 Gate → 확정 |
+| `/prism preview add` | 새 시안 추가 (텍스트 / URL / 이미지 기반) |
 | `/prism preview list` | 저장된 시안 목록 + 현재 활성 표시 |
 | `/prism preview use <name>` | 저장된 시안을 `./DESIGN.md`로 활성화 |
 | `/prism preview remove <name>` | 저장된 시안 삭제 |
