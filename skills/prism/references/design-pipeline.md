@@ -79,6 +79,28 @@ D6: 완료
    - description을 읽어서 레이아웃/구성요소가 맞는지 확인
 
 3. 매칭 결과를 .prism/refero-mapping.md에 기록
+
+4. Multi-Step 플로우 화면은 refero_search_flows로 매칭:
+
+   mcp__refero__refero_search_flows({
+     query: "{플로우 검색 쿼리}",
+     platform: "ios"
+   })
+
+   | 플로우 유형 | Refero 검색 쿼리 예시 |
+   |-----------|---------------------|
+   | 온보딩 | "onboarding welcome" / "{앱} signing up" |
+   | 로그인 | "sign in" / "{앱} logging in" |
+   | OCR/카메라 | "camera capture scan" / "photo upload crop" |
+   | 완독/완료 | "completion celebration" / "goal achieved" |
+   | 타이머 세션 | "timer session start pause complete" |
+   | 구독/결제 | "subscription upgrade paywall" / "checkout" |
+   | 검색 플로우 | "search filter results" |
+
+   → flow_id로 상세 확인:
+   mcp__refero__refero_get_flow({ flow_id: {id} })
+   → 각 step의 화면 description + 화면 간 전환 로직 확보
+   → 플로우 전체를 하나의 매핑 단위로 기록
 ```
 
 **매핑 파일 형식 (.prism/refero-mapping.md):**
@@ -99,6 +121,16 @@ D6: 완료
 | 1-02 | ReadingTab 커버모드 | {screen_id} | Instagram | Home Feed | ... |
 | 1-04 | ReadingTab empty | {screen_id} | Notion | Empty State | ... |
 | 1-05 | ReadingTab skeleton | {screen_id} | Instagram | Loading | ... |
+...
+
+## Flow 매핑
+
+| # | ReadCodex 플로우 | Refero Flow ID | Refero 앱 | Steps | URL |
+|---|-----------------|----------------|----------|-------|-----|
+| F-01 | 온보딩 (Welcome→Goal→Genre→Complete) | {flow_id} | {앱} | 4 | https://refero.design/f/{id} |
+| F-02 | 로그인 (Splash→Form→Loading→Home) | {flow_id} | Instagram | 6 | ... |
+| F-03 | OCR (촬영→선택→결과) | {flow_id} | {앱} | 3 | ... |
+| F-04 | 완독 (평점→감상→축하) | {flow_id} | {앱} | 3 | ... |
 ...
 ```
 
