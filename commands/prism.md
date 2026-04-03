@@ -65,23 +65,29 @@ Google Stitch AI design tool orchestration command.
 
 ## `/prism design <feature|all>`
 
-공식 Stitch 스킬을 호출하여 디자인을 생성하고 검증한다.
+Refero MCP에서 실제 앱 스크린샷을 참조하여 디자인을 매핑하고 Flutter로 직접 구현한다.
 
-### 실행 절차
+### 실행 절차 (Refero 모드 — 기본)
 
-1. **상태 파일 초기화**: `.claude/prism-design-pipeline.local.md` 생성
-   ```yaml
-   ---
-   phase: generation
-   feature: {feature}
-   session_id: {현재 세션 ID}
-   iteration: 0
-   max_iterations: 5
-   all_features: {all일 때: feature1|feature2|...}
-   current_index: {all일 때: 0}
-   completed_features: {all일 때: 빈 값}
-   ---
-   ```
+1. **analysis.md에서 화면 목록 로드**
+2. **Refero 매핑**: 각 화면에 대해 `refero_search_screens`로 레퍼런스 매칭 → `.prism/refero-mapping.md` 생성
+3. **매핑 검토**: 사용자에게 매핑 결과 확인 (매핑률 80% 이상 목표)
+4. **구현**: Refero description의 레이아웃/구조를 그대로 Flutter 코드로 작성 (콘텐츠만 치환)
+5. **검증**: 시뮬레이터 스크린샷과 Refero 레퍼런스 비교
+6. **완료**
+
+### 상태 파일
+
+```yaml
+---
+phase: mapping | implementation | verification
+mode: refero
+feature: {feature}
+all_features: {all일 때: feature1|feature2|...}
+current_index: 0
+completed_features: 
+---
+```
 
 2. **analysis.md 확인**: `.prism/analysis.md` 존재 필수. 없으면 `/prism analyze` 먼저 실행 안내.
 
