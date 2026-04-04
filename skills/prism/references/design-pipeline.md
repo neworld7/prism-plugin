@@ -319,8 +319,10 @@ list_screens(projectId) → 화면 수 확인
 1. "내보내기" 버튼 클릭 (textContent.includes('내보내기'))
 2. Input.dispatchKeyEvent로 ⌘+A (모두 선택)
 3. "Figma" 옵션 클릭 (span.textContent === 'Figma')
-4. "변환" 버튼 클릭 (button.textContent === '변환')
-5. 변환 완료 대기 (최대 60초)
+4. "변환" 버튼 클릭 → 변환 진행 (수 초)
+5. "변환"이 "복사"로 변경될 때까지 대기 (최대 60초)
+6. "복사" 버튼 클릭 → Figma 클립보드에 복사
+7. Figma에서 ⌘+V로 붙여넣기 (사용자 수동 또는 use_figma 자동화)
 ```
 
 **경로 B — 17개 이상 (16개씩 배치):**
@@ -328,12 +330,11 @@ list_screens(projectId) → 화면 수 확인
 screens를 16개씩 chunk: [[0..15], [16..19]]
 각 배치에 대해:
   1. "내보내기" 버튼 클릭
-  2. 내보내기 패널에서 해당 배치의 화면만 개별 클릭 선택:
-     - 내보내기 패널의 화면 썸네일/체크박스 DOM 노드 수집
-     - 배치 범위의 인덱스만 클릭
+  2. 내보내기 패널에서 해당 배치의 화면만 개별 클릭 선택
   3. "Figma" 옵션 클릭 → "변환" 클릭
-  4. 변환 완료 대기
-  5. 다음 배치로 (Figma는 같은 파일에 새 페이지로 추가)
+  4. "복사" 버튼 출현 대기 → "복사" 클릭
+  5. Figma에서 ⌘+V
+  6. 다음 배치로 반복
 ```
 
 **Phase 3: 결과 기록**
@@ -407,27 +408,37 @@ async def select_screens_by_index(ws, indices):
         await ws.recv()
         await asyncio.sleep(0.1)
 
-async def click_figma_convert(ws):
-    # Figma 선택
+async def click_figma_convert_copy(ws):
+    # 1. Figma 선택
     await ws.send(json.dumps({'id': 40, 'method': 'Runtime.evaluate', 'params': {
         'expression': "(() => { const s = Array.from(document.querySelectorAll('span')).find(s => s.textContent.trim() === 'Figma'); s?.click(); s?.parentElement?.click(); })()"
     }}))
     await ws.recv()
     await asyncio.sleep(2)
-    # 변환 클릭
+    
+    # 2. "변환" 클릭 → Stitch가 Figma 포맷으로 변환
     await ws.send(json.dumps({'id': 41, 'method': 'Runtime.evaluate', 'params': {
         'expression': "Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '변환')?.click()"
     }}))
     await ws.recv()
-    # 완료 대기 (최대 60초)
+    
+    # 3. "변환" → "복사"로 버튼 변경 대기 (최대 60초)
     for _ in range(60):
         await asyncio.sleep(1)
         await ws.send(json.dumps({'id': 42, 'method': 'Runtime.evaluate', 'params': {
-            'expression': "!Array.from(document.querySelectorAll('button')).some(b => b.textContent.trim() === '변환')"
+            'expression': "!!Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '복사')"
         }}))
         resp = json.loads(await ws.recv())
-        done = resp.get('result',{}).get('result',{}).get('value', False)
-        if done: return
+        has_copy = resp.get('result',{}).get('result',{}).get('value', False)
+        if has_copy: break
+    
+    # 4. "복사" 클릭 → Figma 클립보드에 복사
+    await ws.send(json.dumps({'id': 43, 'method': 'Runtime.evaluate', 'params': {
+        'expression': "Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '복사')?.click()"
+    }}))
+    await ws.recv()
+    await asyncio.sleep(2)
+    # → 이후 Figma에서 ⌘+V로 붙여넣기
 ```
 
 **Stitch iframe 접근 패턴 (Pattern 4b 참조):**
