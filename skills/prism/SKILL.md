@@ -300,6 +300,22 @@ async with websockets.connect(iframe_tab['webSocketDebuggerUrl']) as ws:
 - `get_project(name)` → 갱신된 `designTheme.designMd` + `namedColors` 가져오기
 - `apply_design_system(projectId, selectedScreenInstances, assetId)` → 기존 화면에 적용
 
+## Figma Export & Implement
+
+Stitch 디자인을 Figma로 내보내고, 미세 조정 후 코드에 반영하는 2단계 워크플로우.
+
+```
+/prism export <feature>      → Stitch HTML → Figma 캡처 (3-Level Fallback)
+사용자 Figma 미세 조정
+/prism implement <feature>   → Figma get_design_context → 프로젝트 코드 생성
+```
+
+- **Fidelity Validation**: 최초 export 시 2종류 화면(단순+복합)으로 변환 품질 검증
+- **Fallback Level**: L1(캡처) / L2(use_figma 직접 생성) / L3(스크린샷+Stitch HTML 직접)
+- **상태 파일**: `.prism/export-state.md` (Level), `.prism/figma-ids.md` (Figma 파일 key)
+
+상세 절차: `references/design-pipeline.md` 참조.
+
 ## Workflow Reference
 
 | Task | Reference File |

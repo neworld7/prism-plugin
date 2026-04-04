@@ -10,8 +10,10 @@
 ## 실행 순서
 
 ```
-/prism analyze [app]  → analyze-pipeline.md (A1-A12)
-/prism preview        → analyze-pipeline.md (A10)
-/prism design [feat]  → design-pipeline.md (D1-D6)
-/prism pipeline [app] → analyze-pipeline.md → design-pipeline.md
+/prism analyze [app]    → analyze-pipeline.md (A1-A12)
+/prism preview          → analyze-pipeline.md (A10)
+/prism design [feat]    → design-pipeline.md (D1-D6)
+/prism export [feat]    → design-pipeline.md (Stitch → Figma)
+/prism implement [feat] → design-pipeline.md (Figma → Code)
+/prism pipeline [app]   → analyze → preview → design
 ```

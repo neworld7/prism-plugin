@@ -16,6 +16,8 @@ Google Stitch AI design tool orchestration command.
 | `design` | `/prism design <feature\|all>` | 디자인 생성 + 검증 루프 |
 | `design resume` | `/prism design resume` | 크레딧 소진 등으로 중단된 design all 이어하기 |
 | `pipeline` | `/prism pipeline [app]` | analyze → preview → design 전체 자동화 (원스텝) |
+| `export` | `/prism export <feature\|all>` | Stitch 디자인 → Figma 내보내기 (미세 조정용) |
+| `implement` | `/prism implement <feature\|all>` | Figma 디자인 → 프로젝트 코드 반영 |
 | `recolor` | `/prism recolor [from <source>]` | DESIGN.md 색상만 변경 (시안 참조 / 파일 참조 / 직접 입력) |
 
 ## `/prism analyze [app]`
@@ -135,6 +137,55 @@ analyze → preview → design을 원스텝으로 자동 실행한다.
 3. `/prism preview` 실행
 4. `/prism design all` 실행
 5. 전체 Feature 순차 처리
+
+## `/prism export <feature|all>`
+
+Stitch에서 생성한 디자인 화면을 Figma 파일로 내보낸다. 내보낸 후 Figma에서 미세 조정 가능.
+
+### 실행 절차
+
+1. `.prism/project-ids.md`에서 Stitch 프로젝트 ID 확인
+2. Fidelity validation (최초 1회 — 2종류 화면으로 HTML→Figma 변환 품질 검증)
+3. Figma 파일 생성 → Stitch 화면을 Figma로 캡처
+4. `.prism/figma-ids.md`에 Figma 파일 key 기록
+5. 안내: "Figma에서 미세 조정 후 `/prism implement <feature>` 실행"
+
+### Fidelity Fallback
+
+| Level | 방식 |
+|-------|------|
+| L1 | `generate_figma_design` 캡처 (기본) |
+| L2 | `use_figma`로 HTML → Figma 컴포넌트 직접 생성 |
+| L3 | 스크린샷만 Figma 배치 + Stitch HTML에서 직접 코드 생성 |
+
+### 사용 예시
+
+```bash
+/prism export library          # Library Feature만 Figma로
+/prism export all              # 모든 Feature를 Figma로
+```
+
+## `/prism implement <feature|all>`
+
+Figma에서 미세 조정된 디자인을 프로젝트 코드에 반영한다.
+
+### 실행 절차
+
+1. `.prism/figma-ids.md`에서 Figma 파일 key 확인 (없으면 export 먼저 안내)
+2. `get_design_context`로 Figma에서 코드 참조 + 스크린샷 추출
+3. 프로젝트 스택에 맞게 코드 변환 (Flutter/React/Next.js)
+4. 빌드/테스트 → 오류 수정
+5. 시뮬레이터/브라우저 스크린샷 → Figma 디자인과 비교 검증
+
+### 사용 예시
+
+```bash
+# 기본 흐름: design → export → Figma 수정 → implement
+/prism design all              # Stitch 디자인 생성
+/prism export all              # Figma로 내보내기
+# → 사용자가 Figma에서 미세 조정
+/prism implement all           # 코드에 반영
+```
 
 ## `/prism recolor`
 
