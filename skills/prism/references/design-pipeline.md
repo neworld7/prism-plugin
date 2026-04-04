@@ -293,23 +293,53 @@ Feature 1 → D1 → D2 → D3 → D4 → D5 → D6
 
 **실행 절차:**
 
+**Phase 0: 화면 수 사전 감지**
 ```
-1. .prism/project-ids.md에서 Feature의 Stitch 프로젝트 ID 확인
-2. Chrome CDP 연결:
-   a. http://localhost:9222/json/list에서 탭 목록 조회
-   b. app-companion iframe 탭 찾기 (WebSocket URL 확보)
-3. Stitch 프로젝트 열기:
-   a. Stitch 메인 탭에서 프로젝트 URL로 navigate
-   b. iframe 탭이 로드될 때까지 대기 (body length > 5000)
-4. 화면 모두 선택:
-   a. "내보내기" 버튼 클릭 (textContent.includes('내보내기'))
-   b. Input.dispatchKeyEvent로 ⌘+A (모두 선택)
-5. Figma 내보내기:
-   a. "Figma" 옵션 클릭 (span.textContent === 'Figma')
-   b. "변환" 버튼 클릭 (button.textContent === '변환')
-   c. 변환 완료 대기
-6. .prism/figma-ids.md에 Figma 파일 URL 기록
-7. 안내: "Figma에서 미세 조정 후 /prism implement <feature> 실행"
+list_screens(projectId) → 화면 수 확인
+16개 이하: ⌘+A 전체 선택 경로
+17개 이상: 16개씩 배치 분할 경로
+```
+
+**Phase 1: CDP 연결 + 프로젝트 열기**
+```
+1. http://localhost:9222/json/list에서 탭 목록 조회
+2. Stitch 메인 탭 찾기 (stitch.withgoogle.com)
+3. 메인 탭에서 Page.navigate로 프로젝트 URL 이동
+4. iframe 탭 polling (wait_for_iframe_ready):
+   - 1초 간격으로 탭 목록 재조회
+   - app-companion URL에 project_id가 포함된 탭 찾기
+   - body.innerHTML.length > 5000이면 로드 완료
+   - 최대 30초 타임아웃
+```
+
+**Phase 2: 화면 선택 + Figma 내보내기**
+
+**경로 A — 16개 이하 (⌘+A):**
+```
+1. "내보내기" 버튼 클릭 (textContent.includes('내보내기'))
+2. Input.dispatchKeyEvent로 ⌘+A (모두 선택)
+3. "Figma" 옵션 클릭 (span.textContent === 'Figma')
+4. "변환" 버튼 클릭 (button.textContent === '변환')
+5. 변환 완료 대기 (최대 60초)
+```
+
+**경로 B — 17개 이상 (16개씩 배치):**
+```
+screens를 16개씩 chunk: [[0..15], [16..19]]
+각 배치에 대해:
+  1. "내보내기" 버튼 클릭
+  2. 내보내기 패널에서 해당 배치의 화면만 개별 클릭 선택:
+     - 내보내기 패널의 화면 썸네일/체크박스 DOM 노드 수집
+     - 배치 범위의 인덱스만 클릭
+  3. "Figma" 옵션 클릭 → "변환" 클릭
+  4. 변환 완료 대기
+  5. 다음 배치로 (Figma는 같은 파일에 새 페이지로 추가)
+```
+
+**Phase 3: 결과 기록**
+```
+1. .prism/figma-ids.md에 Feature별 Figma 파일 URL 기록
+2. 안내: "Figma에서 미세 조정 후 /prism implement <feature> 실행"
 ```
 
 **CDP 코드 패턴:**
@@ -317,39 +347,87 @@ Feature 1 → D1 → D2 → D3 → D4 → D5 → D6
 ```python
 import urllib.request, json, asyncio, websockets
 
-async def stitch_export_to_figma(project_id):
-    tabs = json.loads(urllib.request.urlopen('http://localhost:9222/json/list').read())
-    iframe = next(t for t in tabs if 'app-companion' in t['url'] and 'projects/' in t['url'])
-    
-    async with websockets.connect(iframe['webSocketDebuggerUrl']) as ws:
-        # 1. 내보내기 클릭
-        await ws.send(json.dumps({'id': 1, 'method': 'Runtime.evaluate', 'params': {
-            'expression': "Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('내보내기'))?.click()"
+# --- iframe 탭 대기 (프로젝트 전환 후) ---
+async def wait_for_iframe_ready(project_id, timeout=30):
+    import time
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        tabs = json.loads(urllib.request.urlopen('http://localhost:9222/json/list').read())
+        for t in tabs:
+            if 'app-companion' in t.get('url','') and project_id in t.get('url',''):
+                async with websockets.connect(t['webSocketDebuggerUrl']) as ws:
+                    await ws.send(json.dumps({'id': 1, 'method': 'Runtime.evaluate',
+                        'params': {'expression': 'document.body?.innerHTML?.length || 0'}}))
+                    resp = json.loads(await ws.recv())
+                    body_len = resp.get('result',{}).get('result',{}).get('value',0)
+                    if body_len > 5000:
+                        return t['webSocketDebuggerUrl']
+        await asyncio.sleep(1)
+    raise TimeoutError(f"iframe not ready for {project_id}")
+
+# --- 단일 Feature export ---
+async def export_feature(project_id, screen_count):
+    ws_url = await wait_for_iframe_ready(project_id)
+    async with websockets.connect(ws_url) as ws:
+        if screen_count <= 16:
+            # 경로 A: ⌘+A
+            await click_export(ws)
+            await cmd_a(ws)
+            await click_figma_convert(ws)
+        else:
+            # 경로 B: 배치
+            batches = [list(range(i, min(i+16, screen_count))) for i in range(0, screen_count, 16)]
+            for batch in batches:
+                await click_export(ws)
+                await select_screens_by_index(ws, batch)
+                await click_figma_convert(ws)
+                await asyncio.sleep(3)
+
+async def click_export(ws):
+    await ws.send(json.dumps({'id': 10, 'method': 'Runtime.evaluate', 'params': {
+        'expression': "Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('내보내기'))?.click()"
+    }}))
+    await ws.recv()
+    await asyncio.sleep(1)
+
+async def cmd_a(ws):
+    for evt_type in ['keyDown', 'keyUp']:
+        await ws.send(json.dumps({'id': 20, 'method': 'Input.dispatchKeyEvent', 'params': {
+            'type': evt_type, 'modifiers': 4, 'key': 'a', 'code': 'KeyA', 'windowsVirtualKeyCode': 65
         }}))
         await ws.recv()
-        
-        # 2. ⌘+A 모두 선택
-        await ws.send(json.dumps({'id': 2, 'method': 'Input.dispatchKeyEvent', 'params': {
-            'type': 'keyDown', 'modifiers': 4, 'key': 'a', 'code': 'KeyA', 'windowsVirtualKeyCode': 65
+    await asyncio.sleep(1)
+
+async def select_screens_by_index(ws, indices):
+    """내보내기 패널에서 특정 화면만 개별 클릭 선택"""
+    for idx in indices:
+        await ws.send(json.dumps({'id': 30+idx, 'method': 'Runtime.evaluate', 'params': {
+            'expression': f"document.querySelectorAll('[data-screen-id], [role=\"checkbox\"], .screen-thumbnail')[{idx}]?.click()"
         }}))
         await ws.recv()
-        await ws.send(json.dumps({'id': 3, 'method': 'Input.dispatchKeyEvent', 'params': {
-            'type': 'keyUp', 'modifiers': 4, 'key': 'a', 'code': 'KeyA', 'windowsVirtualKeyCode': 65
+        await asyncio.sleep(0.1)
+
+async def click_figma_convert(ws):
+    # Figma 선택
+    await ws.send(json.dumps({'id': 40, 'method': 'Runtime.evaluate', 'params': {
+        'expression': "(() => { const s = Array.from(document.querySelectorAll('span')).find(s => s.textContent.trim() === 'Figma'); s?.click(); s?.parentElement?.click(); })()"
+    }}))
+    await ws.recv()
+    await asyncio.sleep(2)
+    # 변환 클릭
+    await ws.send(json.dumps({'id': 41, 'method': 'Runtime.evaluate', 'params': {
+        'expression': "Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '변환')?.click()"
+    }}))
+    await ws.recv()
+    # 완료 대기 (최대 60초)
+    for _ in range(60):
+        await asyncio.sleep(1)
+        await ws.send(json.dumps({'id': 42, 'method': 'Runtime.evaluate', 'params': {
+            'expression': "!Array.from(document.querySelectorAll('button')).some(b => b.textContent.trim() === '변환')"
         }}))
-        await ws.recv()
-        
-        # 3. Figma 옵션 선택
-        await ws.send(json.dumps({'id': 4, 'method': 'Runtime.evaluate', 'params': {
-            'expression': "Array.from(document.querySelectorAll('span')).find(s => s.textContent.trim() === 'Figma')?.click(); Array.from(document.querySelectorAll('span')).find(s => s.textContent.trim() === 'Figma')?.parentElement?.click()"
-        }}))
-        await ws.recv()
-        
-        # 4. 변환 클릭
-        await asyncio.sleep(2)
-        await ws.send(json.dumps({'id': 5, 'method': 'Runtime.evaluate', 'params': {
-            'expression': "Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '변환')?.click()"
-        }}))
-        await ws.recv()
+        resp = json.loads(await ws.recv())
+        done = resp.get('result',{}).get('result',{}).get('value', False)
+        if done: return
 ```
 
 **Stitch iframe 접근 패턴 (Pattern 4b 참조):**
@@ -362,17 +440,22 @@ stitch.withgoogle.com (메인 프레임) → 빈 셸
 
 cv 도구는 메인 프레임만 접근 가능하므로, CDP WebSocket으로 iframe 탭에 직접 연결해야 한다.
 
-**Feature별 순차 export:**
+**Feature별 순차 export (`/prism export all`):**
 
-`/prism export all` 실행 시:
 ```
 1. .prism/project-ids.md에서 모든 Feature 프로젝트 ID 로드
-2. 각 Feature에 대해:
-   a. Stitch 프로젝트 URL로 navigate
-   b. 위 절차(4-5단계) 실행
-   c. 변환 완료 대기 → 다음 Feature
-3. 모든 Feature Figma 내보내기 완료
+2. 메인 Stitch 탭 찾기 (stitch.withgoogle.com)
+3. 각 Feature에 대해:
+   a. 메인 탭에서 Page.navigate → 해당 프로젝트 URL
+   b. wait_for_iframe_ready(project_id) → iframe 로드 대기
+   c. list_screens(projectId) → 화면 수 확인
+   d. export_feature(project_id, screen_count) 실행
+   e. 실패 시: 에러 기록 + 다음 Feature 계속 진행
+4. .prism/figma-ids.md에 결과 기록
+5. 실패한 Feature 요약 표시
 ```
+
+> **개별 선택 DOM 선택자 주의:** `select_screens_by_index`의 선택자(`[data-screen-id]`, `[role="checkbox"]`, `.screen-thumbnail`)는 Stitch UI의 실제 DOM에 의존한다. 최초 실행 시 내보내기 패널의 DOM 구조를 Runtime.evaluate로 덤프하여 정확한 선택자를 확정해야 한다.
 
 ## `/prism implement <feature|all>` — Figma → Code 반영
 
