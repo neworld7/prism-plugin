@@ -76,10 +76,16 @@ Phase A1-A12를 따른다. A11에서 Skill("enhance-prompt")를 호출하여 프
 Read: references/design-pipeline.md
 ```
 
-Phase D1-D6을 따른다 (D2는 제거됨):
-- D3: Design Identity 판단 + Skill("stitch-design") → 축 단위 배치 생성
-- D4: prism이 직접 검증 (읽기 전용 MCP)
-- D5: Skill("stitch-design") → 수정
+Phase D1-D6을 따른다:
+- D1: 컨텍스트 로드 (analysis.md + DESIGN.md + preview/index.md)
+- D2: Refero 매핑 → 각 화면에 레퍼런스 매칭 → refero-mapping.md
+- D3: 콘텐츠 치환 규칙 생성 → substitution-map.md
+- D4: **Stitch 디자인 생성** → prompts.md + Refero description + 치환 규칙 + DESIGN.md 토큰 → `generate_screen_from_text`
+- D5: 검증 → 생성된 디자인과 Refero 레퍼런스 비교, gaps > 0이면 `edit_screens`로 수정
+- D6: 완료
+
+> **⚠️ `/prism design`은 시각 디자인 생성 단계이다. 코드 작성이 아니다.**
+> 코드 작성은 `/prism implement`에서 진행한다.
 
 Phase D4-D6 검증 루프는 **Stop hook**이 자동 관리한다.
 상태 파일 `.claude/prism-design-pipeline.local.md`에 `phase: verify`가 설정되면

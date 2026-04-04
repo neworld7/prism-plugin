@@ -1,20 +1,24 @@
 # Design Pipeline — `/prism design <feature|all>`
 
-> **v4.5.0:** Refero MCP의 실제 앱 스크린샷을 직접 참조하여 구현하는 **범용 파이프라인**.
-> 어떤 앱을 만들든, 어떤 레퍼런스를 선택하든 동일한 프로세스가 적용된다.
+> **v4.7.0:** Refero 레퍼런스 + Stitch AI 디자인 생성 **범용 파이프라인**.
+> Refero에서 레이아웃/구조를 참조하고, Stitch에서 시각 디자인을 생성한다.
+> 코드 작성은 `/prism implement`에서 별도로 진행한다.
 
 ---
 
 ## 전체 흐름
 
 ```
-D1: 컨텍스트 로드 → 타겟 앱 화면 목록 + 레퍼런스 앱 정보
+D1: 컨텍스트 로드 → 타겟 앱 화면 목록 + 레퍼런스 앱 정보 + 디자인 토큰
 D2: Refero 매핑 → 각 화면에 레퍼런스 스크린/플로우 매칭
 D3: 콘텐츠 치환 규칙 생성 → 레퍼런스 → 타겟 도메인 변환 맵
-D4: 구현 → Refero description + 치환 규칙 기반 코드 작성
-D5: 검증 → 레퍼런스와 구현 비교
+D4: Stitch 디자인 생성 → Refero description + 치환 규칙 + DESIGN.md 토큰 → generate_screen_from_text
+D5: 검증 → 생성된 디자인과 레퍼런스 비교
 D6: 완료
 ```
+
+> **⚠️ 중요:** `/prism design`은 **시각 디자인 생성** 단계이다. 코드 작성이 아니다.
+> 코드 작성은 `/prism implement`에서 진행한다.
 
 ---
 
@@ -199,39 +203,68 @@ mcp__refero__refero_search_flows({
 | {원본} | {타겟 — analysis.md A5 Copy에서 추출} |
 ```
 
-### D4: 구현 — Refero Description + 치환 규칙
+### D4: Stitch 디자인 생성 — Refero + 치환 규칙 + DESIGN.md 토큰
 
-**Goal:** Refero description의 레이아웃/구조/스타일을 그대로 가져오되, 치환 맵에 따라 콘텐츠를 변환하여 타겟 앱 코드를 작성한다.
+**Goal:** Refero description의 레이아웃/구조를 참조하되, 치환 맵 + DESIGN.md 토큰을 결합하여 **Stitch에서 시각 디자인 화면을 생성**한다.
 
-**구현 절차 (화면당):**
+> **⚠️ 이 단계는 코드 작성이 아니다.** Stitch `generate_screen_from_text`로 디자인 목업을 생성하는 단계이다.
+
+**프롬프트 구성 절차 (화면당):**
 
 ```
-1. refero_get_screen으로 상세 description 로드
+1. 프롬프트 소스 수집:
+   a. .prism/prompts.md에서 해당 화면의 enhanced prompt 로드 (A11 산출물)
+   b. refero_get_screen으로 Refero 레퍼런스의 상세 description 로드
+   c. .prism/substitution-map.md에서 치환 규칙 로드
+   d. ./DESIGN.md에서 디자인 시스템 토큰 로드
 
-2. description에서 구현 스펙 추출:
-   - 레이아웃 구조 (vertical stack, grid, horizontal scroll 등)
-   - 컴포넌트 목록 + 배치 순서
-   - 색상, 타이포 위계, 간격/패딩
-   - 아이콘 스타일, 모서리, 그림자
-   - 특수 효과 (gradient, blur 등)
+2. Stitch 프롬프트 합성:
+   - Refero description의 레이아웃 구조를 기본 뼈대로 사용
+   - 치환 맵으로 콘텐츠를 타겟 도메인으로 변환
+   - DESIGN.md 토큰(색상, 폰트, radius 등)을 명시적으로 포함
+   - analysis.md A5 Copy에서 UI 텍스트(한국어) 참조
+   - ⚠️ DESIGN SYSTEM (REQUIRED) 블록을 프롬프트 상단에 반드시 포함
 
-3. 치환 맵 적용:
-   - description의 원본 엔티티 → 타겟 엔티티로 교체
-   - description의 원본 텍스트 → 타겟 텍스트로 교체 (analysis.md A5 Copy 참조)
-   - description의 원본 색상 → DESIGN.md 토큰으로 교체
+3. Stitch 화면 생성:
+   mcp__stitch__generate_screen_from_text({
+     projectId: "{Stitch 프로젝트 ID}",
+     prompt: "{합성된 프롬프트}",
+     deviceType: "MOBILE",
+     modelId: "GEMINI_3_1_PRO"
+   })
 
-4. 코드 작성:
-   - description의 레이아웃 → 프레임워크 위젯/컴포넌트
-   - DESIGN.md의 디자인 토큰 적용
-   - analysis.md A2 Functional Scan의 기능 요소 반영 (버튼, 네비게이션, 인터랙션)
+4. 타임아웃 처리:
+   - 타임아웃 발생 시 25-35초 대기 후 list_screens로 생성 확인
+   - 백그라운드 생성이 완료되었으면 정상 진행
+   - 실패 시 1회 재시도
 
 5. Flow 화면의 경우:
    - refero_get_flow로 전체 step 로드
-   - step 간 전환 로직을 코드에 반영
-   - 각 step을 개별 화면 또는 상태로 구현
+   - 각 step을 개별 Stitch 화면으로 생성
+   - step 간 전환 설명을 프롬프트에 포함
 ```
 
-> **원칙:** 구조/레이아웃/스타일은 Refero에서 가져오고, 콘텐츠/기능은 analysis.md에서 가져온다. 색상/폰트는 DESIGN.md 토큰을 적용한다.
+**프롬프트 템플릿:**
+
+```
+--- DESIGN SYSTEM (REQUIRED) ---
+{DESIGN.md의 전체 디자인 규칙}
+--- END DESIGN SYSTEM ---
+
+{화면 이름} — {Feature명}
+
+레이아웃 참조 (Refero {레퍼런스 앱} {화면 유형}):
+{Refero description.layout 요약 — 치환 맵 적용 후}
+
+콘텐츠:
+{치환된 UI 요소 + 텍스트 목록}
+
+특수 요구사항:
+- {analysis.md에서 추출한 기능적 요구사항}
+- 한국어 UI, 친근 존댓말 (-어요 체)
+```
+
+> **원칙:** 구조/레이아웃은 Refero에서 가져오고, 콘텐츠는 치환 맵으로 변환하고, 색상/폰트는 DESIGN.md 토큰을 적용한다. 생성 결과는 Stitch 프로젝트에 시각 디자인으로 저장된다.
 
 ### D5: 검증
 
@@ -243,10 +276,10 @@ mcp__refero__refero_search_flows({
 - [ ] 컴포넌트 배치 순서 동일
 - [ ] 네비게이션 패턴 동일
 
-스타일 일치:
-- [ ] 색상 절제도가 레퍼런스와 유사
-- [ ] 타이포 위계 동일
-- [ ] 아이콘 스타일 일관
+디자인 시스템 일치:
+- [ ] DESIGN.md의 색상 토큰이 정확히 반영
+- [ ] 타이포 위계 (serif headline + sans body) 동일
+- [ ] 카드 스타일 (shadow only, no borders) 적용
 - [ ] 여백/간격 수준 유사
 
 콘텐츠 적합:
@@ -256,9 +289,10 @@ mcp__refero__refero_search_flows({
 ```
 
 **검증 방법:**
-1. 구현된 화면 스크린샷 촬영 (시뮬레이터 또는 브라우저)
-2. Refero 레퍼런스 URL (refero.design/s/{id})과 비교
-3. 체크리스트 pass/fail → gaps > 0이면 D4로 돌아가서 수정
+1. `get_screen`으로 Stitch 생성 화면의 스크린샷 확인
+2. Refero 레퍼런스 URL (refero.design/s/{id})과 레이아웃 비교
+3. DESIGN.md 토큰 적용 여부 확인
+4. 체크리스트 pass/fail → gaps > 0이면 `edit_screens`로 수정 후 재검증
 
 ### D6: 완료
 
@@ -271,12 +305,13 @@ mcp__refero__refero_search_flows({
 ## Feature 루프
 
 ```
-Feature 0 → D1 → D2(매핑) → D3(치환규칙) → D4(구현) → D5(검증) → D6
-Feature 1 → D1 → D2 → D3 → D4 → D5 → D6
+Feature 0 → D1 → D2(매핑) → D3(치환규칙) → D4(Stitch 생성) → D5(검증) → D6
+Feature 1 → D1 → D2 → D3 → D4(Stitch 생성) → D5(검증) → D6
 ...
 ```
 
 > **D3(치환 규칙)은 첫 Feature에서 1회 생성 후 이후 Feature에서 재사용한다.** 새로운 엔티티가 등장하면 치환 맵에 추가.
+> **D4에서 생성된 화면은 Stitch 프로젝트에 저장된다.** 코드 변환은 `/prism implement`에서 진행.
 
 ---
 
@@ -507,10 +542,11 @@ cv 도구는 메인 프레임만 접근 가능하므로, CDP WebSocket으로 ifr
 
 ---
 
-## Stitch 모드 (선택적)
+## 파이프라인 모드
 
-```
-/prism design all --stitch
-```
+`/prism design`은 항상 **Stitch 디자인 생성 모드**로 동작한다.
+Refero는 레이아웃/구조 참조용이며, 최종 결과물은 Stitch 프로젝트의 시각 디자인이다.
 
-Refero 대신 기존 Stitch AI 생성 파이프라인 사용. 기본값은 Refero 모드.
+코드 작성은 별도 단계:
+- `/prism export` → Stitch → Figma 내보내기
+- `/prism implement` → Figma 디자인 → 프로젝트 코드 반영
