@@ -1,9 +1,16 @@
 {
-  "name": "prism",
-  "version": "4.8.0",
-  "description": "Google Stitch AI design tool orchestrator for Claude Code — code analysis, design pipeline via official Stitch skills",
-  "author": {
-    "name": "Taekwan Kim"
-  },
-  "keywords": ["prism", "stitch", "design", "orchestrator", "automation", "google"]
+    "name": "prism",
+    "version": "4.9.0",
+    "description": "Google Stitch AI design tool orchestrator for Claude Code — code analysis, design pipeline via official Stitch skills",
+    "author": {
+        "name": "Taekwan Kim"
+    },
+    "keywords": [
+        "prism",
+        "stitch",
+        "design",
+        "orchestrator",
+        "automation",
+        "google"
+    ]
 }

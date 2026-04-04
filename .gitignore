@@ -1,2 +1,4 @@
 .superpowers/
 firebase-debug.log
+.omc/
+.playwright-mcp/
