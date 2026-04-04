@@ -203,68 +203,102 @@ mcp__refero__refero_search_flows({
 | {원본} | {타겟 — analysis.md A5 Copy에서 추출} |
 ```
 
-### D4: Stitch 디자인 생성 — Refero + 치환 규칙 + DESIGN.md 토큰
+### D4: Stitch 디자인 생성 — Feature별 프로젝트 + 디자인 시스템 + 화면 생성
 
-**Goal:** Refero description의 레이아웃/구조를 참조하되, 치환 맵 + DESIGN.md 토큰을 결합하여 **Stitch에서 시각 디자인 화면을 생성**한다.
+**Goal:** Feature별로 독립 Stitch 프로젝트를 생성하고, 동일한 디자인 시스템을 적용한 뒤, 각 화면을 생성한다.
 
 > **⚠️ 이 단계는 코드 작성이 아니다.** Stitch `generate_screen_from_text`로 디자인 목업을 생성하는 단계이다.
 
-**프롬프트 구성 절차 (화면당):**
+#### Step 1: Feature별 Stitch 프로젝트 생성
 
 ```
-1. 프롬프트 소스 수집:
-   a. .prism/prompts.md에서 해당 화면의 enhanced prompt 로드 (A11 산출물)
-   b. refero_get_screen으로 Refero 레퍼런스의 상세 description 로드
-   c. .prism/substitution-map.md에서 치환 규칙 로드
-   d. ./DESIGN.md에서 디자인 시스템 토큰 로드
+각 Feature에 대해:
 
-2. Stitch 프롬프트 합성:
-   - Refero description의 레이아웃 구조를 기본 뼈대로 사용
-   - 치환 맵으로 콘텐츠를 타겟 도메인으로 변환
-   - DESIGN.md 토큰(색상, 폰트, radius 등)을 명시적으로 포함
-   - analysis.md A5 Copy에서 UI 텍스트(한국어) 참조
-   - ⚠️ DESIGN SYSTEM (REQUIRED) 블록을 프롬프트 상단에 반드시 포함
+1. 프로젝트 생성:
+   mcp__stitch__create_project({
+     title: "{앱이름} — F{N}: {Feature명}"
+   })
+   → 반환된 projectId 기록
 
-3. Stitch 화면 생성:
+2. 디자인 시스템 적용:
+   mcp__stitch__create_design_system({
+     projectId: "{위에서 생성한 projectId}",
+     designSystem: {
+       displayName: "{DESIGN.md의 디자인 시스템 이름}",
+       theme: {
+         headlineFont: "{DESIGN.md의 headlineFont}",
+         bodyFont: "{DESIGN.md의 bodyFont}",
+         labelFont: "{DESIGN.md의 labelFont}",
+         roundness: "{DESIGN.md의 roundness}",
+         colorMode: "{DESIGN.md의 colorMode}",
+         colorVariant: "{DESIGN.md의 colorVariant}",
+         customColor: "{DESIGN.md의 overridePrimaryColor}",
+         overridePrimaryColor: "{DESIGN.md의 overridePrimaryColor}",
+         overrideSecondaryColor: "{DESIGN.md의 overrideSecondaryColor}",
+         overrideTertiaryColor: "{DESIGN.md의 overrideTertiaryColor}",
+         overrideNeutralColor: "{DESIGN.md의 overrideNeutralColor}",
+         designMd: "{DESIGN.md의 Design System Spec 전문}"
+       }
+     }
+   })
+
+3. .prism/project-ids.md에 기록:
+   | Feature | Project ID | Title |
+   |---------|-----------|-------|
+   | F{N}: {Feature명} | {projectId} | {앱이름} — F{N}: {Feature명} |
+```
+
+> **효율:** Feature가 적은 경우 (4개 이하) 하나의 프로젝트에 모든 화면을 넣어도 된다.
+> Feature가 많은 경우 (5개 이상) 반드시 분리하여 관리성 확보.
+> Preview 프로젝트는 건드리지 않는다 (별도 유지).
+
+#### Step 2: 화면 생성
+
+```
+각 Feature 프로젝트에 대해:
+
+1. prompts.md에서 해당 Feature의 프롬프트 블록 로드
+
+2. 각 화면 프롬프트로 generate_screen_from_text 호출:
    mcp__stitch__generate_screen_from_text({
-     projectId: "{Stitch 프로젝트 ID}",
-     prompt: "{합성된 프롬프트}",
+     projectId: "{해당 Feature의 projectId}",
+     prompt: "{prompts.md의 해당 화면 프롬프트}",
      deviceType: "MOBILE",
      modelId: "GEMINI_3_1_PRO"
    })
 
-4. 타임아웃 처리:
-   - 타임아웃 발생 시 25-35초 대기 후 list_screens로 생성 확인
+3. 타임아웃 처리:
+   - 타임아웃 발생 시 30초 대기 후 list_screens로 생성 확인
    - 백그라운드 생성이 완료되었으면 정상 진행
    - 실패 시 1회 재시도
 
-5. Flow 화면의 경우:
-   - refero_get_flow로 전체 step 로드
-   - 각 step을 개별 Stitch 화면으로 생성
-   - step 간 전환 설명을 프롬프트에 포함
+4. 진행 상황을 상태 파일에 기록:
+   .claude/prism-pipelines/{시안이름}.local.md의 completed_features 업데이트
 ```
 
-**프롬프트 템플릿:**
+#### Step 3: project-ids.md 최종 기록
 
-```
---- DESIGN SYSTEM (REQUIRED) ---
-{DESIGN.md의 전체 디자인 규칙}
---- END DESIGN SYSTEM ---
+```markdown
+# {앱이름} · Stitch Project IDs
 
-{화면 이름} — {Feature명}
-
-레이아웃 참조 (Refero {레퍼런스 앱} {화면 유형}):
-{Refero description.layout 요약 — 치환 맵 적용 후}
-
-콘텐츠:
-{치환된 UI 요소 + 텍스트 목록}
-
-특수 요구사항:
-- {analysis.md에서 추출한 기능적 요구사항}
-- 한국어 UI, 친근 존댓말 (-어요 체)
+| # | Feature | Project ID | Screens | Stitch URL |
+|---|---------|-----------|---------|------------|
+| 0 | Auth & Onboarding | {id} | {n} | https://stitch.withgoogle.com/projects/{id} |
+| 1 | Books (서재) | {id} | {n} | https://stitch.withgoogle.com/projects/{id} |
+...
 ```
 
-> **원칙:** 구조/레이아웃은 Refero에서 가져오고, 콘텐츠는 치환 맵으로 변환하고, 색상/폰트는 DESIGN.md 토큰을 적용한다. 생성 결과는 Stitch 프로젝트에 시각 디자인으로 저장된다.
+**프롬프트 규칙:**
+
+```
+⚠️ 모든 generate_screen_from_text 호출에 DESIGN SYSTEM (REQUIRED) 블록 포함 필수.
+   prompts.md의 각 프롬프트에 이미 포함되어 있으므로 그대로 사용.
+⚠️ "Continue using..." 텍스트 앵커는 절대 사용하지 않음.
+⚠️ Feature 프로젝트에 디자인 시스템이 적용되어 있어도,
+   프롬프트 자체에 토큰을 포함해야 drift를 방지할 수 있음.
+```
+
+> **원칙:** Feature별 프로젝트로 분리하여 관리하고, 동일한 디자인 시스템을 모든 프로젝트에 적용한다. 생성 결과는 각 Feature 프로젝트에 시각 디자인으로 저장된다.
 
 ### D5: 검증
 
