@@ -140,29 +140,28 @@ analyze → preview → design을 원스텝으로 자동 실행한다.
 
 ## `/prism export <feature|all>`
 
-Stitch에서 생성한 디자인 화면을 Figma 파일로 내보낸다. 내보낸 후 Figma에서 미세 조정 가능.
+Stitch 네이티브 "Figma 내보내기"를 CDP로 자동화하여 디자인을 Figma로 완벽 이전한다.
+
+### 사전 요구사항
+
+- Chrome 디버그 모드: `open -a "Google Chrome" --args --remote-debugging-port=9222`
+- chrome-viewer 서버 실행 (포트 6080)
+- Stitch에 로그인된 상태 (Chrome 브라우저)
 
 ### 실행 절차
 
 1. `.prism/project-ids.md`에서 Stitch 프로젝트 ID 확인
-2. Fidelity validation (최초 1회 — 2종류 화면으로 HTML→Figma 변환 품질 검증)
-3. Figma 파일 생성 → Stitch 화면을 Figma로 캡처
-4. `.prism/figma-ids.md`에 Figma 파일 key 기록
-5. 안내: "Figma에서 미세 조정 후 `/prism implement <feature>` 실행"
-
-### Fidelity Fallback
-
-| Level | 방식 |
-|-------|------|
-| L1 | `generate_figma_design` 캡처 (기본) |
-| L2 | `use_figma`로 HTML → Figma 컴포넌트 직접 생성 |
-| L3 | 스크린샷만 Figma 배치 + Stitch HTML에서 직접 코드 생성 |
+2. CDP로 Chrome iframe 탭에 연결
+3. Stitch 프로젝트 열기 → "내보내기" 클릭 → ⌘+A 모두 선택
+4. "Figma" 옵션 선택 → "변환" 클릭
+5. `.prism/figma-ids.md`에 Figma 파일 URL 기록
+6. 안내: "Figma에서 미세 조정 후 `/prism implement <feature>` 실행"
 
 ### 사용 예시
 
 ```bash
 /prism export library          # Library Feature만 Figma로
-/prism export all              # 모든 Feature를 Figma로
+/prism export all              # 모든 Feature를 순차 Figma로
 ```
 
 ## `/prism implement <feature|all>`

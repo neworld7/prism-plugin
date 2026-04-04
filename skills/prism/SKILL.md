@@ -302,17 +302,17 @@ async with websockets.connect(iframe_tab['webSocketDebuggerUrl']) as ws:
 
 ## Figma Export & Implement
 
-Stitch 디자인을 Figma로 내보내고, 미세 조정 후 코드에 반영하는 2단계 워크플로우.
+Stitch 네이티브 "Figma 내보내기"를 CDP로 자동화하여 디자인을 Figma로 완벽 이전하고, 미세 조정 후 코드에 반영한다.
 
 ```
-/prism export <feature>      → Stitch HTML → Figma 캡처 (3-Level Fallback)
+/prism export <feature>      → CDP로 Stitch "Figma 내보내기" 자동 실행
 사용자 Figma 미세 조정
 /prism implement <feature>   → Figma get_design_context → 프로젝트 코드 생성
 ```
 
-- **Fidelity Validation**: 최초 export 시 2종류 화면(단순+복합)으로 변환 품질 검증
-- **Fallback Level**: L1(캡처) / L2(use_figma 직접 생성) / L3(스크린샷+Stitch HTML 직접)
-- **상태 파일**: `.prism/export-state.md` (Level), `.prism/figma-ids.md` (Figma 파일 key)
+- **CDP 자동화**: Stitch cross-origin iframe에 WebSocket 연결 → 내보내기 → ⌘+A → Figma → 변환
+- **사전 요구**: Chrome 디버그 모드(9222), chrome-viewer 서버(6080), Stitch 로그인
+- **상태 파일**: `.prism/figma-ids.md` (Figma 파일 URL)
 
 상세 절차: `references/design-pipeline.md` 참조.
 

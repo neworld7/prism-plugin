@@ -282,45 +282,96 @@ Feature 1 → D1 → D2 → D3 → D4 → D5 → D6
 
 ## `/prism export <feature|all>` — Stitch → Figma 내보내기
 
-**Goal:** Stitch에서 생성한 디자인 화면을 Figma 파일로 내보내어 미세 조정할 수 있게 한다.
+**Goal:** Stitch 네이티브 "Figma 내보내기" 기능을 CDP(Chrome DevTools Protocol)로 자동화하여 디자인을 Figma로 완벽 이전한다.
 
-**Fidelity Validation (최초 1회):**
+> **왜 CDP인가:** Stitch는 cross-origin iframe(`app-companion-430619.appspot.com`)에서 렌더링되어 cv 도구로 직접 접근이 불가하다. CDP WebSocket으로 iframe 탭에 직접 연결하여 Stitch 네이티브 "Figma 내보내기" 버튼을 자동화한다. 이 방식은 Stitch "Copy to Figma"와 동일한 결과를 제공한다.
 
-export 첫 실행 시 Stitch HTML → Figma 변환 품질을 검증한다. 2종류 화면으로 테스트:
-1. 단순 화면: 리스트/그리드 기반 (예: 서재)
-2. 복합 화면: 차트/카드/인터랙션 포함 (예: 통계 대시보드)
-
-합격 기준:
-- [ ] 레이아웃 구조가 시각적으로 보존 (80% 이상 유사)
-- [ ] `get_design_context`가 nested structure 반환 (flat rectangle이 아님)
-- [ ] 텍스트 노드가 개별 편집 가능
-- [ ] 색상/폰트 정보가 Figma 속성으로 추출 가능
-
-**3-Level Fallback:**
-
-| Level | 방식 | 조건 |
-|-------|------|------|
-| L1 | `generate_figma_design` 캡처 | 합격 기준 통과 시 (기본) |
-| L2 | `use_figma`로 Stitch HTML 파싱 → Figma 컴포넌트 직접 생성 | 캡처가 flat일 때 |
-| L3 | 스크린샷만 Figma 배치 (참조용) + implement는 Stitch HTML에서 직접 | 변환 품질 완전 불량 시 |
-
-선택된 Level은 `.prism/export-state.md`에 기록하여 implement에서 참조.
+**사전 요구사항:**
+- Chrome이 디버그 모드로 실행 중: `open -a "Google Chrome" --args --remote-debugging-port=9222`
+- chrome-viewer 서버 실행 중 (포트 6080)
+- Stitch에 로그인된 상태 (Chrome 브라우저에서)
 
 **실행 절차:**
 
 ```
 1. .prism/project-ids.md에서 Feature의 Stitch 프로젝트 ID 확인
-2. Fidelity validation (최초 1회, 이후 저장된 Level 재사용)
-3. Figma 파일 생성: create_new_file("{App} · {시안명} · {Feature}")
-4. 각 화면에 대해:
-   a. get_screen → htmlCode.downloadUrl 확보
-   b. web_fetch → HTML 다운로드
-   c. Level에 따라:
-      L1: HTML 로컬 서빙 → generate_figma_design으로 캡처
-      L2: use_figma로 HTML 파싱 → Figma 컴포넌트 구성
-      L3: 스크린샷 이미지만 Figma에 배치
-5. .prism/figma-ids.md에 Figma 파일 key 기록
-6. 안내: "Figma에서 미세 조정 후 /prism implement <feature> 실행"
+2. Chrome CDP 연결:
+   a. http://localhost:9222/json/list에서 탭 목록 조회
+   b. app-companion iframe 탭 찾기 (WebSocket URL 확보)
+3. Stitch 프로젝트 열기:
+   a. Stitch 메인 탭에서 프로젝트 URL로 navigate
+   b. iframe 탭이 로드될 때까지 대기 (body length > 5000)
+4. 화면 모두 선택:
+   a. "내보내기" 버튼 클릭 (textContent.includes('내보내기'))
+   b. Input.dispatchKeyEvent로 ⌘+A (모두 선택)
+5. Figma 내보내기:
+   a. "Figma" 옵션 클릭 (span.textContent === 'Figma')
+   b. "변환" 버튼 클릭 (button.textContent === '변환')
+   c. 변환 완료 대기
+6. .prism/figma-ids.md에 Figma 파일 URL 기록
+7. 안내: "Figma에서 미세 조정 후 /prism implement <feature> 실행"
+```
+
+**CDP 코드 패턴:**
+
+```python
+import urllib.request, json, asyncio, websockets
+
+async def stitch_export_to_figma(project_id):
+    tabs = json.loads(urllib.request.urlopen('http://localhost:9222/json/list').read())
+    iframe = next(t for t in tabs if 'app-companion' in t['url'] and 'projects/' in t['url'])
+    
+    async with websockets.connect(iframe['webSocketDebuggerUrl']) as ws:
+        # 1. 내보내기 클릭
+        await ws.send(json.dumps({'id': 1, 'method': 'Runtime.evaluate', 'params': {
+            'expression': "Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('내보내기'))?.click()"
+        }}))
+        await ws.recv()
+        
+        # 2. ⌘+A 모두 선택
+        await ws.send(json.dumps({'id': 2, 'method': 'Input.dispatchKeyEvent', 'params': {
+            'type': 'keyDown', 'modifiers': 4, 'key': 'a', 'code': 'KeyA', 'windowsVirtualKeyCode': 65
+        }}))
+        await ws.recv()
+        await ws.send(json.dumps({'id': 3, 'method': 'Input.dispatchKeyEvent', 'params': {
+            'type': 'keyUp', 'modifiers': 4, 'key': 'a', 'code': 'KeyA', 'windowsVirtualKeyCode': 65
+        }}))
+        await ws.recv()
+        
+        # 3. Figma 옵션 선택
+        await ws.send(json.dumps({'id': 4, 'method': 'Runtime.evaluate', 'params': {
+            'expression': "Array.from(document.querySelectorAll('span')).find(s => s.textContent.trim() === 'Figma')?.click(); Array.from(document.querySelectorAll('span')).find(s => s.textContent.trim() === 'Figma')?.parentElement?.click()"
+        }}))
+        await ws.recv()
+        
+        # 4. 변환 클릭
+        await asyncio.sleep(2)
+        await ws.send(json.dumps({'id': 5, 'method': 'Runtime.evaluate', 'params': {
+            'expression': "Array.from(document.querySelectorAll('button')).find(b => b.textContent.trim() === '변환')?.click()"
+        }}))
+        await ws.recv()
+```
+
+**Stitch iframe 접근 패턴 (Pattern 4b 참조):**
+
+Stitch 웹 앱은 cross-origin iframe 구조:
+```
+stitch.withgoogle.com (메인 프레임) → 빈 셸
+  └── app-companion-430619.appspot.com (iframe) → 실제 UI
+```
+
+cv 도구는 메인 프레임만 접근 가능하므로, CDP WebSocket으로 iframe 탭에 직접 연결해야 한다.
+
+**Feature별 순차 export:**
+
+`/prism export all` 실행 시:
+```
+1. .prism/project-ids.md에서 모든 Feature 프로젝트 ID 로드
+2. 각 Feature에 대해:
+   a. Stitch 프로젝트 URL로 navigate
+   b. 위 절차(4-5단계) 실행
+   c. 변환 완료 대기 → 다음 Feature
+3. 모든 Feature Figma 내보내기 완료
 ```
 
 ## `/prism implement <feature|all>` — Figma → Code 반영
