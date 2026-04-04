@@ -264,22 +264,6 @@ mcp__refero__refero_search_flows({
 > Feature가 많은 경우 (5개 이상) 반드시 분리하여 관리성 확보.
 > Preview 프로젝트는 건드리지 않는다 (별도 유지).
 
-#### Step 1b: 화면 생성 후 디자인 시스템 일괄 적용 (선택)
-
-화면 생성 후 일부 화면이 디자인 시스템과 다른 경우:
-
-```
-1. get_project로 screenInstances 목록 확인
-2. apply_design_system으로 일괄 적용:
-   mcp__stitch__apply_design_system({
-     projectId: "{projectId}",
-     assetId: "{assetId}",
-     selectedScreenInstances: [
-       { id: "{screenInstanceId}", sourceScreen: "projects/{projectId}/screens/{screenId}" }
-     ]
-   })
-```
-
 #### Step 2: 화면 생성
 
 ```
@@ -304,7 +288,34 @@ mcp__refero__refero_search_flows({
    .claude/prism-pipelines/{시안이름}.local.md의 completed_features 업데이트
 ```
 
-#### Step 3: project-ids.md 최종 기록
+#### Step 3: 디자인 시스템 일괄 적용 (필수!)
+
+> **⚠️ 이 단계는 필수이다.** `generate_screen_from_text`는 각 화면마다 자체 디자인 시스템을
+> 생성할 수 있다. `apply_design_system`으로 프로젝트의 단일 디자인 시스템을 모든 화면에
+> 강제 적용해야 일관성이 보장된다. **이 단계를 건너뛰면 화면마다 다른 디자인 시스템이 적용된다.**
+
+```
+각 Feature 프로젝트에 대해:
+
+1. get_project로 screenInstances 목록 확인
+   → DESIGN_SYSTEM_INSTANCE 타입은 제외하고, 화면 인스턴스만 수집
+
+2. apply_design_system으로 모든 화면에 일괄 적용:
+   mcp__stitch__apply_design_system({
+     projectId: "{projectId}",
+     assetId: "{Step 1에서 기록한 assetId}",
+     selectedScreenInstances: [
+       { id: "{screenInstanceId}", sourceScreen: "projects/{projectId}/screens/{screenId}" }
+       // ... 모든 화면 인스턴스
+     ]
+   })
+
+3. 적용 확인:
+   - get_project로 designTheme이 프로젝트 레벨에서 일관된지 확인
+   - 화면 수가 apply 전후 동일한지 확인
+```
+
+#### Step 4: project-ids.md 최종 기록
 
 ```markdown
 # {앱이름} · Stitch Project IDs
