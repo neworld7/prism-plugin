@@ -209,7 +209,7 @@ mcp__refero__refero_search_flows({
 
 > **⚠️ 이 단계는 코드 작성이 아니다.** Stitch `generate_screen_from_text`로 디자인 목업을 생성하는 단계이다.
 
-#### Step 1: Feature별 Stitch 프로젝트 생성
+#### Step 1: Feature별 Stitch 프로젝트 생성 + 디자인 시스템 적용
 
 ```
 각 Feature에 대해:
@@ -220,7 +220,7 @@ mcp__refero__refero_search_flows({
    })
    → 반환된 projectId 기록
 
-2. 디자인 시스템 적용:
+2. 디자인 시스템 생성:
    mcp__stitch__create_design_system({
      projectId: "{위에서 생성한 projectId}",
      designSystem: {
@@ -241,16 +241,44 @@ mcp__refero__refero_search_flows({
        }
      }
    })
+   → 반환된 name (assets/{assetId}) 기록
 
-3. .prism/project-ids.md에 기록:
-   | Feature | Project ID | Title |
-   |---------|-----------|-------|
-   | F{N}: {Feature명} | {projectId} | {앱이름} — F{N}: {Feature명} |
+3. ⚠️ 디자인 시스템 활성화 (필수! 이 단계를 빠뜨리면 프로젝트에 적용되지 않음):
+   mcp__stitch__update_design_system({
+     name: "assets/{위에서 반환된 assetId}",
+     projectId: "{projectId}",
+     designSystem: { ... 위와 동일 ... }
+   })
+
+4. .prism/project-ids.md에 기록:
+   | Feature | Project ID | Asset ID | Title |
+   |---------|-----------|----------|-------|
+   | F{N}: {Feature명} | {projectId} | {assetId} | {앱이름} — F{N}: {Feature명} |
 ```
+
+> **⚠️ create → update 필수 순서:** `create_design_system`은 디자인 시스템 asset을 생성만 하고,
+> `update_design_system`을 호출해야 프로젝트에 실제 적용된다. update를 빠뜨리면
+> 화면 생성 시 Stitch가 자체 디자인 시스템을 만들어 일관성이 깨진다.
 
 > **효율:** Feature가 적은 경우 (4개 이하) 하나의 프로젝트에 모든 화면을 넣어도 된다.
 > Feature가 많은 경우 (5개 이상) 반드시 분리하여 관리성 확보.
 > Preview 프로젝트는 건드리지 않는다 (별도 유지).
+
+#### Step 1b: 화면 생성 후 디자인 시스템 일괄 적용 (선택)
+
+화면 생성 후 일부 화면이 디자인 시스템과 다른 경우:
+
+```
+1. get_project로 screenInstances 목록 확인
+2. apply_design_system으로 일괄 적용:
+   mcp__stitch__apply_design_system({
+     projectId: "{projectId}",
+     assetId: "{assetId}",
+     selectedScreenInstances: [
+       { id: "{screenInstanceId}", sourceScreen: "projects/{projectId}/screens/{screenId}" }
+     ]
+   })
+```
 
 #### Step 2: 화면 생성
 
